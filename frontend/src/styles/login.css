@@ -1,0 +1,46 @@
+.login-container {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 150px 20px 60px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.login-input,
+.login-btn,
+.signup-btn {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 8px;
+  box-sizing: border-box; /* 💡 각 요소에만 box-sizing 적용 */
+}
+
+.login-input {
+  border: 1px solid #ccc;
+  box-shadow: 0px 3px 3px 2px rgba(0, 0, 0, 0.25);
+}
+
+.login-btn {
+  background-color: royalblue;
+  color: white;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.signup-btn {
+  background-color: white;
+  border: 1px solid royalblue;
+  color: black;
+  font-size: 16px;
+  cursor: pointer;
+}
+.login-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center; /* 세로 가운데 정렬 */
+  margin-top: 10px;
+  font-size: 14px;
+  gap: 10px; /* ← 요소 사이 간격 추가 */
+}
