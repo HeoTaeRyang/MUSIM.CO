@@ -1,0 +1,66 @@
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background-color: white;
+    border-bottom: 1px solid #eee;
+    z-index: 1000;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* 위쪽: 로고 + 아이콘 */
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 24px;
+    height: 60px;
+}
+
+.logo img,
+.logo .logo-img {
+    height: 40px;
+    object-fit: contain;
+    display: block;
+}
+
+.icons {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.icon {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    color: #333;
+    transition: color 0.2s ease;
+}
+
+.icon:hover {
+    color: #3b82f6;
+}
+
+/* 아래쪽: 중앙 메뉴 */
+.menu {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    padding: 10px 0;
+    border-top: 1px solid #eee;
+    background-color: white;
+}
+
+.menu a {
+    text-decoration: none;
+    color: #000;
+    font-weight: 500;
+    font-size: 1rem;
+    transition: color 0.2s ease;
+}
+
+.menu a:hover {
+    color: #3b82f6;
+}
