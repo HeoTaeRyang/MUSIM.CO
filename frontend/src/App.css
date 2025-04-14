@@ -1,0 +1,22 @@
+.App {
+  text-align: center;
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+  justify-content: space-between;
+  /* 푸터가 항상 하단에 위치하도록 */
+}
+
+/* 메인 콘텐츠 */
+.main-content {
+  flex: 1;
+  /* 콘텐츠가 가능한 만큼 공간을 차지하도록 설정 */
+  margin-bottom: 100px;
+  /* 푸터와의 간격을 넓히기 위한 여백 추가 */
+}
+
+/* 푸터 */
+.footer-container {
+  margin-top: auto;
+  /* 푸터가 화면 하단에 고정되도록 */
+}
