@@ -1,5 +1,4 @@
 // src/components/Login.jsx
-import React from "react";
 import "../styles/Login.css"; // 스타일 파일은 따로 만들어줘야 함
 
 const Login = () => {
