@@ -1,5 +1,5 @@
 // src/components/Login.jsx
-import "../styles/Login.css"; // 스타일 파일은 따로 만들어줘야 함
+//import "../styles/Login.css"; // 스타일 파일은 따로 만들어줘야 함
 
 const Login = () => {
   return (
