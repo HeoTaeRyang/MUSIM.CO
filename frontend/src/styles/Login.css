@@ -13,7 +13,7 @@
   padding: 12px;
   margin: 10px 0;
   border-radius: 8px;
-  box-sizing: border-box; /* 💡 각 요소에만 box-sizing 적용 */
+  box-sizing: border-box;
 }
 
 .login-input {
@@ -39,8 +39,8 @@
 .login-options {
   display: flex;
   justify-content: space-between;
-  align-items: center; /* 세로 가운데 정렬 */
+  align-items: center;
   margin-top: 10px;
   font-size: 14px;
-  gap: 10px; /* ← 요소 사이 간격 추가 */
+  gap: 10px;
 }
