@@ -23,12 +23,12 @@ def login():
     db_id = user.get_user(id)
     
     if not db_id:
-        return jsonify({'error': '존재하지 않는 아이디 입니다.'}), 400
+        return jsonify({'error': '존재하지 않는 아이디 입니다.'}), 401
     
     db_password = db_id[0]['password']
     
     if not check_password_hash(db_password, password):
-        return jsonify({'error': '잘못된 비밀번호 입니다.'}), 400
+        return jsonify({'error': '잘못된 비밀번호 입니다.'}), 401
     
     return jsonify({'message': '로그인 되었습니다.'}), 200
     
