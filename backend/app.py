@@ -42,7 +42,7 @@ def register():
     if missing:
         return jsonify({'error': f"다음 항목을 입력하세요: {', '.join(missing)}"}), 400
 
-    # ✅ 아이디 유효성
+    #아이디 유효성
     if not is_valid_id(userid):
         return jsonify({'error': '아이디는 영문소문자/숫자 4~16자입니다.'}), 400
 
