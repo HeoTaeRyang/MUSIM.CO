@@ -12,7 +12,7 @@ const Login = () => {
 
     // 로그인 요청 본문
     const loginData = {
-      userId,
+      id: userId,
       password,
       rememberMe,
     };
