@@ -22,11 +22,11 @@ def register():
     phone = data.get('phone')
     email = data.get('email')
 
-    # 선택 입력값
+    #선택 입력값
     addr_detail = data.get('addr_detail', '')
     tel = data.get('tel', '')
 
-    # ✅ 필수 항목 누락 검사 (명시적으로 알려줌)
+    #필수 항목 누락 검사
     required_fields = {
         "usertype": usertype,
         "id": userid,
@@ -46,26 +46,26 @@ def register():
     if not is_valid_id(userid):
         return jsonify({'error': '아이디는 영문소문자/숫자 4~16자입니다.'}), 400
 
-    # ✅ 아이디 중복 확인
+    #아이디 중복 확인
     if user.get_user_by_id(userid):
         return jsonify({'error': '이미 존재하는 아이디입니다.'}), 400
 
-    # ✅ 비밀번호 일치 확인
+    #비밀번호 일치 확인
     if password != password_confirm:
         return jsonify({'error': '비밀번호가 일치하지 않습니다.'}), 400
 
-    # ✅ 비밀번호 유효성
+    #비밀번호 유효성
     if not is_valid_password(password):
         return jsonify({'error': '비밀번호는 영문 대소문자/숫자/특수문자 중 2가지 이상을 포함한 10~16자입니다.'}), 400
 
-    # ✅ 이메일 유효성
+    #이메일 유효성
     if not is_valid_email(email):
         return jsonify({'error': '이메일 형식이 올바르지 않습니다.'}), 400
 
-    # 🔐 비밀번호 해싱
+    #비밀번호 해싱
     hashed_pw = generate_password_hash(password)
 
-    # ✅ DB에 사용자 추가
+    #DB에 사용자 추가
     try:
         user.add_user(usertype, userid, hashed_pw, username, zipcode, addr, addr_detail, tel, phone, email)
     except Exception as e:
