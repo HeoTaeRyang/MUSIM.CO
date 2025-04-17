@@ -9,7 +9,7 @@ const Login = () => {
   const navigate = useNavigate();
 
   // 로그인 처리 함수
-  const handleLogin = async (e) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); // 폼 제출 시 새로고침 방지
 
     // 로그인 요청 본문
