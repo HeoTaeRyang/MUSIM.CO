@@ -3,7 +3,7 @@ from .db import con
 def get_user(id):
     with con.cursor() as cursor:
         cursor.execute("SELECT * FROM User WHERE id=%s", (id,))
-        return cursor.fetchone()
+        return cursor.fetchall()
 
 # 아이디 중복 확인
 def get_user_by_id(userid):
