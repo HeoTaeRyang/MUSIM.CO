@@ -1,10 +1,11 @@
 import pymysql
 
 con = pymysql.connect(
-    host='localhost',  
-    user='root',  
-    password='0000',  
-    database='musimco',  
+    host='centerbeam.proxy.rlwy.net',
+    port=21462,
+    user='root',
+    password='KnaOFbzLtjWhKWMBjCdHdBCFezdJayot',
+    database='musimco',
     charset='utf8mb4',
     cursorclass=pymysql.cursors.DictCursor
 )
