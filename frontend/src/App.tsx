@@ -4,19 +4,20 @@ import Home from "./components/Home";
 import Footer from "./components/Footer";
 import Login from "./components/Login";
 import Signup from "./components/Signup";
-
+import Diet from "./components/Diet";
 import "./App.css";
 
 function App() {
   return (
     <div className="App">
-      <BrowserRouter>
+      <BrowserRouter> 
         <Header />
         <div>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/diet" element={<Diet />} />
           </Routes>
         </div>
       </BrowserRouter>
