@@ -1,18 +1,20 @@
 import { useState } from "react";
 import "../styles/Login.css";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const navigate = useNavigate();
 
   // 로그인 처리 함수
-  const handleLogin = async (e) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); // 폼 제출 시 새로고침 방지
 
     // 로그인 요청 본문
     const loginData = {
-      id: userId,
+      userId,
       password,
       rememberMe,
     };
@@ -76,7 +78,10 @@ const Login = () => {
           로그인 하기
         </button>
       </form>
-      <button className="signup-btn">회원가입하기</button>
+      <button className="signup-btn"
+        onClick={() =>{
+        navigate("/signup");}}>
+        회원가입하기</button>
     </div>
   );
 };
