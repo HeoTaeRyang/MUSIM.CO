@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash
 from werkzeug.security import check_password_hash
 from db import user
 from utils import is_valid_id, is_valid_password, is_valid_email
+from db import video
 
 app = Flask(__name__)
 CORS(app)
@@ -12,6 +13,67 @@ CORS(app)
 @app.route('/')
 def index():
     return "백엔드 서버 실행 중입니다."
+
+# ㅡㅡㅡㅡㅡ운동 영상 관련 api
+
+# 오늘의 운동 추천
+@app.route('/video/today', methods=['GET'])
+def video_today():
+    video = video.get_random_video()
+    
+    if not video:
+        return jsonify({'error': '추천 운동 영상이 없습니다.'}), 404
+    
+    return jsonify(video), 200
+
+# 운동 목록
+@app.route('/video/list', methods=['GET'])
+def video_list():
+    videos = video.get_random_videos()
+    
+    if not videos:
+        return jsonify({'error': '운동 영상이 없습니다.'}), 404
+    
+    return jsonify(videos), 200
+
+# 자세 교정 영상만 보기
+@app.route('/video/correctable', methods=['GET'])
+def video_correctable():
+    videos = video.get_correctable_videos()
+    
+    if not videos:
+        return jsonify({'error': '자세 교정 영상이 없습니다.'}), 404
+    
+    return jsonify(videos), 200
+
+# 즐겨찾기 영상만 보기
+@app.route('/video/favorite', methods=['POST'])
+def video_favorite():
+    data = request.get_json()
+    user_id = data.get("id")
+    
+    videos = video.get_favorite_videos(user_id)
+    return  jsonify(videos), 200
+
+# 정렬
+@app.route('/video/sort', methods=['POST'])
+def video_sort():
+    data = request.get_json()
+    keyword = data.get("keyword")
+    
+    videos = video.get_sort_videos(keyword)
+    return jsonify(videos), 200
+
+# 검색
+@app.route('/video/search', methods=['POST'])
+def video_search():
+    data = request.get_json()
+    keyword = data.get("keyword")
+    
+    videos = video.get_search_videos(keyword)
+    return jsonify(videos), 200
+
+# ㅡㅡㅡㅡㅡ운동 영상 관련 api
 
 # 로그인
 @app.route('/login', methods=['POST'])
