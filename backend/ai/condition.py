@@ -1,9 +1,10 @@
-
 import cv2
 import torch
 import numpy as np
 import mediapipe as mp
 import torch.nn as nn
+import mediapipe as mp
+import os
 
 # === TSM ===
 class TemporalShift(nn.Module):
@@ -34,8 +35,10 @@ class MLPResNetBlock(nn.Module):
             nn.Linear(dim, dim),
             nn.BatchNorm1d(dim),
             nn.ReLU(),
+            nn.Dropout(0.3),
             nn.Linear(dim, dim),
             nn.BatchNorm1d(dim),
+            nn.Dropout(0.3)
         )
         self.relu = nn.ReLU()
 
@@ -81,16 +84,21 @@ def extract_mediapipe_keypoints(frame):
     return coords  # 48차원
 
 # === 영상 평가 ===
-def evaluate(frames, model_path, input_dim=48, seq_len=8, num_conditions=5, threshold=0.7):
+def evaluate(frames, model_path, input_dim=48, seq_len=8, num_conditions=5, threshold=0.8, save_dir="visualized_frames"):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = PoseCorrectionTSMClassifier(input_dim=input_dim, n_segment=seq_len, num_conditions=num_conditions).to(device)
     model.load_state_dict(torch.load(model_path, map_location=device))
     model.eval()
 
     coord_list = []
-    for frame in frames:
-        coords = extract_mediapipe_keypoints(frame)
-        if coords:
+    os.makedirs(save_dir, exist_ok=True)
+
+    for idx, frame in enumerate(frames):
+        results = pose.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        if results.pose_landmarks:
+            coords = []
+            for lm in results.pose_landmarks.landmark[:24]:
+                coords.extend([lm.x, lm.y])
             coord_list.append(coords)
 
     if len(coord_list) < seq_len:
