@@ -1,0 +1,49 @@
+.ex-container {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin-top:200px;
+    
+    width: 100%;
+    padding: 20px;
+    margin-bottom: 100px;
+    /* 푸터와의 간격을 넓히기 위한 여백 추가 */
+    flex-direction:column;
+}
+
+
+.sort-table {
+    border-collapse: collapse;
+    text-align: center;
+    margin-left: 100px;   /* 왼쪽에 붙이기 */
+    margin-top:50px;
+    margin-right: auto;  /* 오른쪽 여백 자동 */
+  }
+
+  .sort-table th {
+    padding: 20px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    
+  }
+
+  .sort-table input[type="radio"] {
+    margin-right: 8px;
+    transform: scale(1.2);
+  }
+
+
+
+  .image-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 한 줄에 4개 */
+    gap: 20px;
+    padding: 20px;
+  }
+  .image-grid img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+  

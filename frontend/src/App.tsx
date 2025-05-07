@@ -5,6 +5,7 @@ import Footer from "./components/Footer";
 import Login from "./components/Login";
 import Signup from "./components/Signup";
 import Diet from "./components/Diet";
+import Exercise from "./components/Exercise";
 import "./App.css";
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/diet" element={<Diet />} />
+            <Route path="/exercise" element={<Exercise />} />
           </Routes>
         </div>
       </BrowserRouter>
