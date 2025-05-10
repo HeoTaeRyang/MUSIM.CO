@@ -30,8 +30,12 @@ const Login = () => {
       });
 
       if (response.ok) {
+
         const data = await response.json();
         console.log("로그인 성공:", data);
+        // 로그인 성공 시 로컬 스토리지에 userId 저장 
+        localStorage.setItem("user", userId);
+
         // 로그인 성공 시, 리디렉션 처리나 추가적인 상태 변경 가능
       } else {
         console.error("로그인 실패");
@@ -79,8 +83,9 @@ const Login = () => {
         </button>
       </form>
       <button className="signup-btn"
-        onClick={() =>{
-        navigate("/signup");}}>
+        onClick={() => {
+          navigate("/signup");
+        }}>
         회원가입하기</button>
     </div>
   );
