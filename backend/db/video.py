@@ -48,3 +48,29 @@ def get_search_videos(keyword):
     with con.cursor(dictionary=True) as cursor:
         cursor.execute("SELECT * FROM Video WHERE title LIKE %s", (f"%{keyword}%",))
         return cursor.fetchall()
+    
+    # 영상 상세 조회
+def get_video_by_id(video_id):
+    with con.cursor(dictionary=True) as cursor:
+        cursor.execute("SELECT * FROM Video WHERE id = %s", (video_id,))
+        return cursor.fetchone()
+
+# 즐겨찾기 추가/삭제 (toggle 방식)
+def toggle_favorite(user_id, video_id):
+    with con.cursor() as cursor:
+        cursor.execute("SELECT * FROM Favorite WHERE user_id = %s AND video_id = %s", (user_id, video_id))
+        existing = cursor.fetchone()
+        if existing:
+            cursor.execute("DELETE FROM Favorite WHERE user_id = %s AND video_id = %s", (user_id, video_id))
+        else:
+            cursor.execute("INSERT INTO Favorite (user_id, video_id, favorite_date) VALUES (%s, %s, NOW())", (user_id, video_id))
+        con.commit()
+
+# 추천 추가 (중복 방지)
+def add_recommendation(user_id, video_id):
+    with con.cursor() as cursor:
+        cursor.execute("SELECT * FROM Recommendation WHERE user_id = %s AND video_id = %s", (user_id, video_id))
+        if not cursor.fetchone():
+            cursor.execute("INSERT INTO Recommendation (user_id, video_id) VALUES (%s, %s)", (user_id, video_id))
+            cursor.execute("UPDATE Video SET recommendations = recommendations + 1 WHERE id = %s", (video_id,))
+            con.commit()
