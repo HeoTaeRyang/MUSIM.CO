@@ -84,14 +84,13 @@ def extract_mediapipe_keypoints(frame):
     return coords  # 48차원
 
 # === 영상 평가 ===
-def evaluate(frames, model_path, input_dim=48, seq_len=8, num_conditions=5, threshold=0.8, save_dir="visualized_frames"):
+def evaluate(frames, model_path, input_dim=48, seq_len=8, num_conditions=5, threshold=0.8):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = PoseCorrectionTSMClassifier(input_dim=input_dim, n_segment=seq_len, num_conditions=num_conditions).to(device)
     model.load_state_dict(torch.load(model_path, map_location=device))
     model.eval()
 
     coord_list = []
-    os.makedirs(save_dir, exist_ok=True)
 
     for idx, frame in enumerate(frames):
         results = pose.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
