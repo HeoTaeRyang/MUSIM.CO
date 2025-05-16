@@ -15,12 +15,13 @@ def read_video_to_frames(path):
     return frames
 
 # 프레임 추출
-video_frames = read_video_to_frames("/home/elicer/exer/test/output_clip1.mp4")
+video_frames = read_video_to_frames("test.mp4")
 
-# 자세 평가
+# 자세 평가 운동마다 num_conditions 수정 필요
 result = evaluate(
     frames=video_frames,
-    model_path="1/condition.pth"
+    num_conditions=5,
+    model_path="backend/ai/1/1.pth"
 )
 
 print(result)
