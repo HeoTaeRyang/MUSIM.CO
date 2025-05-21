@@ -6,7 +6,10 @@ from db import user
 from utils import is_valid_id, is_valid_password, is_valid_email
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={
+    r"/register": {"origins": "http://localhost:5173"},
+    r"/login": {"origins": "http://localhost:5173"}
+})
 
 # 백엔드 서버 실행 확인
 @app.route('/')
@@ -33,8 +36,6 @@ def login():
     
     return jsonify({'message': '로그인 되었습니다.'}), 200
     
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
 
 # 회원가입
 @app.route('/register', methods=['POST'])
