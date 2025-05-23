@@ -1,0 +1,127 @@
+.video-purchase-container {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    box-sizing: border-box;
+}
+
+/* ─── 왼쪽: 영상 + 컨트롤바 영역 ───────────────────────────────────── */
+.video-area {
+    flex: 2;
+    position: relative;
+}
+
+/* VideoDetail.css 에 정의된 .workout-video, .video-controls 스타일이 적용됩니다 */
+
+/* ─── 오른쪽: 상품 구매 패널 ───────────────────────────────────── */
+.purchase-panel {
+    flex: 1;
+    background: #f9f9f9;
+    padding: 24px;
+    box-sizing: border-box;
+    border-left: 1px solid #ddd;
+
+    /* 초기에는 완전히 오른쪽으로 숨김 */
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    overflow-y: auto;
+}
+
+.purchase-panel.open {
+    /* open 클래스가 붙으면 슬라이드 인 */
+    transform: translateX(0);
+}
+
+/* ─── 패널 헤더 ───────────────────────────────────────────── */
+.purchase-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.purchase-header h2 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.close-btn {
+    background: transparent;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+/* ─── 상품 카드 ────────────────────────────────────────────── */
+.product-card {
+    display: flex;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+.product-image {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+}
+
+.product-info {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+}
+
+.product-info h3 {
+    margin: 0 0 8px;
+    font-size: 16px;
+    line-height: 1.2;
+}
+
+.price {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 12px;
+}
+
+/* ─── 색상 옵션 ───────────────────────────────────────────── */
+.color-options {
+    display: flex;
+    gap: 8px;
+}
+
+.color-dot {
+    width: 20px;
+    height: 20px;
+    border: 1px solid #ccc;
+    border-radius: 50%;
+}
+
+/* 예시 색상 */
+.color-dot.grey {
+    background: #999;
+}
+
+.color-dot.white {
+    background: #fff;
+}
+
+.color-dot.blue {
+    background: #0d52de;
+}
+
+/* ─── 스크롤바 커스터마이징 (선택사항) ───────────────────────── */
+.purchase-panel::-webkit-scrollbar {
+    width: 8px;
+}
+
+.purchase-panel::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+.purchase-panel::-webkit-scrollbar-track {
+    background: transparent;
+}
