@@ -6,7 +6,7 @@ const Diet_score = () => {
     const navigate = useNavigate();
     return (
         <div>
-            <div>크랙ㄴㅇㅇㄴㄹㅇㄴㄹㅇㄴㄹㅇㄴㄹㅇㄴㄹㅇㄴ</div>
+            <div>dfdd</div>
         
             </div>
         );
