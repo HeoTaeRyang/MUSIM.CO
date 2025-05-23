@@ -1,155 +1,153 @@
-/* VideoAi.css */
 .video-analyze-container {
-    display: flex;
-    width: 100%;
-    height: calc(100vh -
-            /* 헤더 높이만큼 뺍니다 */
-            110px);
-    box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  height: calc(100vh - 110px);
+  align-items: stretch; /* 세로로 위에 맞춤 */
+  box-sizing: border-box;
 }
 
-/* ─── 왼쪽 비디오 영역 ───────────────────────────────── */
 .video-area {
-    flex: 1;
-    transition: flex 0.3s ease;
-    position: relative;
-    overflow: hidden;
+  flex: 1;
+  min-width: 0;
+  transition: flex 0.3s;
+  /* 배경/패딩 없음 */
 }
-
-/* 패널이 열리면 비디오 영역도 절반 크기로 */
 .video-area.with-panel {
-    flex: 1 1 50%;
+  flex: 1 1 50%;
+  max-width: 50%;
 }
 
-/* ─── 오른쪽 분석 패널 ───────────────────────────────── */
 .analyze-panel {
-    flex: 1;
-    max-width: 50%;
-    background-color: #fff;
-    border-left: 1px solid #eee;
-    display: flex;
-    flex-direction: column;
-    box-sizing: border-box;
-    padding: 20px;
-    animation: fadeIn 0.3s ease;
+  flex: 1;
+  max-width: 50%;
+  min-width: 340px;
+  background: #fff;
+  border-left: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch; /* 자식도 stretch */
+  justify-content: flex-start; /* 위로 붙임 */
+  box-sizing: border-box;
+  padding: 20px;
+  height: 100%;
 }
 
 /* 닫기 버튼 */
 .analyze-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
 }
 
 .analyze-header h2 {
-    margin: 0;
-    font-size: 1.25rem;
-    font-weight: 600;
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
 }
 
 .close-btn {
-    background: transparent;
-    border: none;
-    font-size: 1.25rem;
-    cursor: pointer;
-    color: #999;
-    transition: color 0.2s;
+  background: transparent;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: #999;
+  transition: color 0.2s;
 }
 
 .close-btn:hover {
-    color: #666;
+  color: #666;
 }
 
 /* 업로드 영역 */
 .upload-area {
-    flex: 0 0 auto;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border: 2px dashed #ddd;
-    border-radius: 8px;
-    height: 200px;
-    margin-bottom: 20px;
-    position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  height: 200px;
+  margin-top: 150px;
 }
 
 .upload-label {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    color: #777;
-    cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #777;
+  cursor: pointer;
 }
 
 .upload-label input {
-    display: none;
+  display: none;
 }
 
 .upload-icon {
-    font-size: 2rem;
-    margin-bottom: 8px;
+  font-size: 2rem;
+  margin-bottom: 8px;
 }
 
 /* 업로드된 영상 */
 .uploaded-video {
-    width: 100%;
-    height: auto;
-    border-radius: 8px;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
 }
 
 /* 분석 결과 */
 .analysis-result {
-    flex: 1;
-    overflow-y: auto;
+  flex: 1;
+  overflow-y: auto;
+  margin-top: 100px;
 }
 
 .analysis-result h3 {
-    margin-top: 0;
-    color: #034dd2;
-    font-size: 1.1rem;
+  margin-top: 0;
+  color: #034dd2;
+  font-size: 1.1rem;
 }
 
 .analysis-result p {
-    line-height: 1.5;
-    color: #333;
+  line-height: 1.5;
+  color: #333;
 }
 
 /* 결과 저장/공유 버튼 */
 .result-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 16px;
-    margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 20px;
 }
 
 .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 16px;
-    border: 1px solid #034dd2;
-    background: #fff;
-    color: #034dd2;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid #034dd2;
+  background: #fff;
+  color: #034dd2;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
 }
 
 .btn:hover {
-    background: #034dd2;
-    color: #fff;
+  background: #034dd2;
+  color: #fff;
 }
 
 /* 페이드 인 애니메이션 */
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateX(20px);
-    }
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
 
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
