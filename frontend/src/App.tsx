@@ -9,6 +9,7 @@ import VideoDetail from "./components/VideoDetail";
 import VideoAnalyze from "./components/VideoAnalyze";
 import VideoPurchase from "./components/VideoPurchase";
 import Diet from "./components/Diet";
+import MyPage from "./components/mypage";
 
 import "./App.css";
 
@@ -33,7 +34,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/diet" element={<Diet />} />
-            <Route path="/exercise" element={<Exercise />} />
+            <Route path="/mypage" element={<MyPage />} />
           </Routes>
         </div>
       </BrowserRouter>
