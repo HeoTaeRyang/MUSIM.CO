@@ -47,6 +47,8 @@ def video_favorite():
     data = request.get_json()
     user_id = data.get("id")
     videos = video.get_favorite_videos(user_id)
+    if not videos:
+        return jsonify({'error': '즐겨 찾기한한 영상이 없습니다.'}), 404
     return jsonify(videos), 200
 
 @app.route('/video/sort', methods=['POST'])
@@ -61,6 +63,8 @@ def video_search():
     data = request.get_json()
     keyword = data.get("keyword")
     videos = video.get_search_videos(keyword)
+    if not videos:
+        return jsonify({'error': '검색된 영상이 없습니다.'}), 404
     return jsonify(videos), 200
 
 # ㅡㅡㅡㅡㅡ운동 상세 페이지 + 자세 교정 api
