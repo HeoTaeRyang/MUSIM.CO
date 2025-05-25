@@ -8,7 +8,46 @@
     box-sizing: border-box;
     position: relative; /* 자식 요소 absolute positioning 기준 */
   }
-  
+
+.input-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.input-box input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.zipcode-input input {
+  width: 200px;
+}
+
+.address1-input input,
+.address2-input input {
+  width: 500px;
+  margin-top: 10px;
+}
+
+.address-search-button {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.address-search-button:hover {
+  background-color: #0056b3;
+}
 
 .align-left{
     text-align: left;
