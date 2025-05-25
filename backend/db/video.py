@@ -40,7 +40,7 @@ def get_sort_videos(keyword):
     query = keywords.get(keyword)
     
     with con.cursor() as cursor:
-        cursor.execute("SELECT * FROM Video ORDER BY %s", (query,))
+        cursor.execute(f"SELECT * FROM Video ORDER BY {query}")
         return cursor.fetchall()
     
 # 검색
