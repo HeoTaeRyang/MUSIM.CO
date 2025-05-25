@@ -48,7 +48,7 @@ def video_favorite():
     user_id = data.get("id")
     videos = video.get_favorite_videos(user_id)
     if not videos:
-        return jsonify({'error': '즐겨 찾기한한 영상이 없습니다.'}), 404
+        return jsonify({'error': '즐겨 찾기한 영상이 없습니다.'}), 404
     return jsonify(videos), 200
 
 @app.route('/video/sort', methods=['POST'])
