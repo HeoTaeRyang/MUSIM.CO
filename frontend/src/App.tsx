@@ -4,7 +4,7 @@ import Home from "./components/Home";
 import Footer from "./components/Footer";
 import Login from "./components/Login";
 import Signup from "./components/Signup";
-import Exercise from "./components/exercise";
+import Exercise from "./components/Exercise";
 import VideoDetail from "./components/VideoDetail";
 import VideoAnalyze from "./components/VideoAnalyze";
 import VideoPurchase from "./components/VideoPurchase";
