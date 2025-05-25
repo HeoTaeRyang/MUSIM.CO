@@ -1,5 +1,5 @@
-import React, { useRef, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import React, { useRef, useState, useEffect } from "react";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import "../styles/VideoDetail.css";
 
 interface Comment {
@@ -20,24 +20,16 @@ interface Props {
   hideComments?: boolean;
   videoSrc?: string;
   fullWidth?: boolean;
-  onAnalyzeClick?: () => void; // (선택) 분석 버튼 이벤트 필요시
-  onCartClick?: () => void; // (선택) 장바구니 버튼 이벤트 필요시
+  onAnalyzeClick?: () => void;
+  onCartClick?: () => void;
 }
-const dummyComments: Comment[] = [
-  {
-    id: 1,
-    user: "이름",
-    avatar: "/assets/sample_profile.png",
-    date: "2024.08.10",
-    text: "처음 해보는 동작인데 설명이 정말 친절하고 이해하기 쉬워서 동작 따라 하기 너무 좋았어요! 자세 교정 팁 덕분에 운동 효과도 확실히 느껴졌습니다. 좋은 강의 감사합니다!😄",
-    rating: 5,
-  },
-];
 
 const VideoDetail: React.FC<Props> = (props) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [comments, setComments] = useState<Comment[]>(dummyComments);
+  const { videoId } = useParams();
+
+  const [comments, setComments] = useState<Comment[]>([]);
   const [commentText, setCommentText] = useState("");
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -46,15 +38,36 @@ const VideoDetail: React.FC<Props> = (props) => {
   const [showVolume, setShowVolume] = useState(false);
   const [volume, setVolume] = useState(1);
 
-  // fallback video 데이터
   const video: Video = location.state?.video || {
     id: props.videoId ?? "sample",
     title: "샘플 영상",
     video: "/assets/sample_video.mp4",
   };
 
-  // ★ 우선순위: videoSrc → fallback video.video
   const srcToUse = props.videoSrc || video.video;
+
+  useEffect(() => {
+    if (!video.id) return;
+    fetch(`/video/${video.id}/comments?sort=latest`)
+      .then((res) => res.json())
+      .then((data) => setComments(data))
+      .catch((err) => console.error("댓글 불러오기 실패:", err));
+  }, [video.id]);
+
+  const handleCommentSubmit = () => {
+    if (!commentText.trim()) return;
+    fetch(`/video/${video.id}/comment`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: 1, content: commentText }),
+    })
+      .then((res) => res.json())
+      .then((createdComment) => {
+        setComments((prev) => [createdComment, ...prev]);
+        setCommentText("");
+      })
+      .catch((err) => console.error("댓글 작성 실패:", err));
+  };
 
   const handleLoadedMetadata = () => {
     if (videoRef.current) setDuration(videoRef.current.duration);
@@ -70,7 +83,6 @@ const VideoDetail: React.FC<Props> = (props) => {
   const handlePlay = () => videoRef.current?.play();
   const handlePause = () => videoRef.current?.pause();
 
-  // 볼륨
   const handleVolumeBtnClick = () => setShowVolume((v) => !v);
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = Number(e.target.value);
@@ -78,7 +90,6 @@ const VideoDetail: React.FC<Props> = (props) => {
     if (videoRef.current) videoRef.current.volume = v;
   };
 
-  // 전체화면
   const handleFullscreen = () => {
     if (videoRef.current) {
       if (videoRef.current.requestFullscreen)
@@ -90,45 +101,19 @@ const VideoDetail: React.FC<Props> = (props) => {
     }
   };
 
-  // 컨트롤바 버튼: props에서 오면 props 함수 호출, 아니면 기본 네비게이션
   const handleCartClick = () =>
     props.onCartClick
       ? props.onCartClick()
       : navigate(`/video/${video.id}/purchase`, {
-          state: {
-            video: {
-              id: video.id,
-              title: video.title,
-              video: srcToUse, // 실제로 재생중인 영상의 URL
-            },
-          },
+          state: { video },
         });
 
   const handleAnalyzeClick = () =>
     props.onAnalyzeClick
       ? props.onAnalyzeClick()
       : navigate(`/video/${video.id}/VideoAnalyze`, {
-          state: {
-            video: {
-              id: video.id,
-              title: video.title,
-              video: srcToUse, // 실제로 재생중인 영상의 URL
-            },
-          },
+          state: { video },
         });
-  const handleCommentSubmit = () => {
-    if (!commentText.trim()) return;
-    const newComment: Comment = {
-      id: Date.now(),
-      user: "익명",
-      avatar: "/assets/sample_profile.png",
-      date: new Date().toISOString().slice(0, 10),
-      text: commentText,
-      rating: 5,
-    };
-    setComments([newComment, ...comments]);
-    setCommentText("");
-  };
 
   const formatTime = (t: number) => {
     const m = Math.floor(t / 60);
@@ -167,7 +152,6 @@ const VideoDetail: React.FC<Props> = (props) => {
           >
             <img src="/src/assets/video/volume.png" alt="볼륨" />
           </button>
-          {/* 볼륨 바 (토글) */}
           {showVolume && (
             <input
               type="range"
@@ -239,10 +223,14 @@ const VideoDetail: React.FC<Props> = (props) => {
           <div className="comments-list">
             {comments.map((comment) => (
               <div key={comment.id} className="comment-card">
-                <img className="avatar" src={comment.avatar} alt="프로필" />
+                <img
+                  className="avatar"
+                  src={comment.avatar || "/assets/sample_profile.png"}
+                  alt="프로필"
+                />
                 <div className="comment-body">
                   <div className="comment-header">
-                    <span className="user">{comment.user}</span>
+                    <span className="user">{comment.user || "익명"}</span>
                     <span className="date">{comment.date}</span>
                     <span className="rating">{"★".repeat(comment.rating)}</span>
                   </div>
