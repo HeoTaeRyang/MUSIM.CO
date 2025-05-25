@@ -1,0 +1,162 @@
+.diet-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px;
+    font-family: 'Noto Sans KR', sans-serif;
+    background-color: #f8f9fb;
+    height: 900px;
+    margin-top: 150px;
+  }
+  
+  .diet-title {
+    color: #034DD2;
+    font-size: 36px;
+    margin-bottom: 50px;
+    text-align: center;
+  }
+  
+  .diet-triangle {
+    position: relative;
+    width: 400px;
+    height: 360px;
+  }
+  
+  .diet-triangle__top {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translate(-50%, -5%);
+  }
+  
+  .diet-triangle__bottom {
+    position: absolute;
+    bottom: 0;
+    left: 25%;
+    display: flex;
+    justify-content: space-between;
+    width: 260px;
+    transform: translateX(-50%) translateY(5%);
+  }
+  
+  /* 공통 삼각형 항목 스타일 */
+  .diet-triangle__item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0 10px;
+    text-align: center;
+  }
+  
+  /* 이미지 크기 및 효과 */
+  .diet-triangle__item img {
+    width: 80px;
+    height: 80px;
+  }
+  
+  /* 강조 항목 */
+  .diet-triangle__item--active {
+    transform: scale(1.4);
+    z-index: 100;
+  }
+  
+  /* 비활성화 효과 */
+  .diet-triangle__item--inactive {
+    filter: blur(1px) brightness(0.8);
+  }
+  
+  /* 툴팁 */
+  .diet-triangle__tooltip {
+    visibility: hidden;
+    background-color: #444;
+    color: #fff;
+    text-align: center;
+    padding: 6px 10px;
+    border-radius: 5px;
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    z-index: 200;
+  }
+  
+  .diet-triangle__tooltip::before {
+    content: "";
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 6px;
+    border-style: solid;
+    border-color: transparent transparent #444 transparent;
+  }
+  
+  .diet-triangle__item:hover .diet-triangle__tooltip {
+    visibility: visible;
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  
+  /* 가운데 퍼센트 표시 */
+  .diet-triangle__percent {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 20px;
+    font-weight: bold;
+    background-color: rgba(255, 255, 255, 0.7);
+    padding: 6px 10px;
+    border-radius: 8px;
+  }
+  
+  /* 점수 섹션 */
+  .dietsc {
+    font-size: 28px;
+    color: #222;
+    margin-top: 70px;
+    font-weight: 600;
+  }
+  
+  .dietsc__score {
+    color: #034DD2;
+    font-size: 96px;
+    font-weight: bold;
+    padding-right: 10px;
+  }
+  
+  .dietsc__unit {
+    color: #ffffff;
+    -webkit-text-stroke: 1px #000000;
+    font-size: 32px;
+    vertical-align: bottom;
+  }
+  
+  .dietsc__message {
+    font-size: 20px;
+    color: #333;
+    margin-top: 12px;
+  }
+  
+
+  .confirm-button {
+    background-color: #0056b3; /* 파란색 배경 */
+    color: white;              /* 흰색 텍스트 */
+    border: none;
+    border-radius: 10px;       /* 둥근 테두리 */
+    padding: 10px 20px;
+    margin-top:70px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-style: bold;
+    width:150px;
+  }
+  
+  .confirm-button:hover {
+    background-color: #003e81; /* 호버 시 좀 더 진한 파랑 */
+  }

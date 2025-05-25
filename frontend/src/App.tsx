@@ -4,6 +4,11 @@ import Home from "./components/Home";
 import Footer from "./components/Footer";
 import Login from "./components/Login";
 import Signup from "./components/Signup";
+import Exercise from "./components/exercise";
+import VideoDetail from "./components/VideoDetail";
+import VideoAnalyze from "./components/VideoAnalyze";
+import VideoPurchase from "./components/VideoPurchase";
+import Diet from "./components/Diet";
 
 import "./App.css";
 
@@ -15,8 +20,20 @@ function App() {
         <div>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/exercise" element={<Exercise />} />
+            <Route path="/video/:videoId" element={<VideoDetail />} />
+            <Route
+              path="/video/:videoId/VideoAnalyze"
+              element={<VideoAnalyze />}
+            />
+            <Route
+              path="/video/:videoId/purchase"
+              element={<VideoPurchase />}
+            />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/diet" element={<Diet />} />
+            <Route path="/exercise" element={<Exercise />} />
           </Routes>
         </div>
       </BrowserRouter>
