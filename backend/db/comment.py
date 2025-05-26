@@ -3,7 +3,7 @@ from .db import con
 
 # 댓글 등록
 def add_comment(video_id, user_id, content):
-    with con.cursor(dictionary=True) as cursor:
+    with con.cursor() as cursor:
         cursor.execute("""
             INSERT INTO Comment (video_id, user_id, content, created_at)
             VALUES (%s, %s, %s, NOW())
@@ -16,7 +16,7 @@ def add_comment(video_id, user_id, content):
 # 댓글 목록 조회 (최신순 또는 추천순)
 def get_comments_by_video(video_id, sort):
     order = "created_at DESC" if sort == "latest" else "recommend_count DESC"
-    with con.cursor(dictionary=True) as cursor:
+    with con.cursor() as cursor:
         cursor.execute(f"""
             SELECT * FROM Comment
             WHERE video_id = %s

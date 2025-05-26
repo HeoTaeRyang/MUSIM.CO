@@ -4,10 +4,14 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import os
 from db import user, video
+from db.db import con
 from db.video import get_video_by_id, toggle_favorite, add_recommendation
 from db.comment import get_comments_by_video, add_comment
 from db.posture import save_posture_result
 from utils import is_valid_id, is_valid_password, is_valid_email
+
+from ai.condition import evaluate
+import cv2
 
 app = Flask(__name__)
 CORS(app)
@@ -47,6 +51,8 @@ def video_favorite():
     data = request.get_json()
     user_id = data.get("id")
     videos = video.get_favorite_videos(user_id)
+    if not videos:
+        return jsonify({'error': '즐겨 찾기한 영상이 없습니다.'}), 404
     return jsonify(videos), 200
 
 @app.route('/video/sort', methods=['POST'])
@@ -61,6 +67,8 @@ def video_search():
     data = request.get_json()
     keyword = data.get("keyword")
     videos = video.get_search_videos(keyword)
+    if not videos:
+        return jsonify({'error': '검색된 영상이 없습니다.'}), 404
     return jsonify(videos), 200
 
 # ㅡㅡㅡㅡㅡ운동 상세 페이지 + 자세 교정 api
@@ -116,8 +124,37 @@ def analyze_posture(video_id):
     data = request.get_json()
     video_path = data.get("video_path")
     user_id = data.get("user_id")
-    result_text = "자세가 양호합니다. 팔 각도 90도 유지됨."
-    return jsonify({"result_text": result_text}), 200
+
+    # 1. 영상에서 프레임 추출
+    cap = cv2.VideoCapture(video_path)
+    frames = []
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+        frames.append(frame)
+    cap.release()
+
+    # 2. 모델 평가 (모델 경로는 예시)
+    model_path = "backend/ai/1/1.pth"
+    analysis_results = evaluate(frames, model_path=model_path, num_conditions=5)
+
+    # 3. 실패 시 처리
+    if isinstance(analysis_results, dict) and not analysis_results.get("valid", True):
+        return jsonify(analysis_results), 400
+
+    # 4. 결과 정리
+    result_texts = []
+    for res in analysis_results:
+        if res["value"]:
+            result_texts.append(f"Condition {res['condition']} 이상 감지 (score: {res['score']:.2f})")
+
+    result_text = "\n".join(result_texts) if result_texts else "문제 없음"
+    
+    return jsonify({
+        "result_text": result_text,
+        "raw_result": analysis_results
+    }), 200
 
 @app.route('/video/<int:video_id>/posture/save', methods=['POST'])
 def save_posture(video_id):
@@ -131,7 +168,8 @@ def save_posture(video_id):
 @app.route('/video/<int:video_id>/posture/result', methods=['GET'])
 def get_posture_result(video_id):
     user_id = request.args.get("user_id")
-    with con.cursor(dictionary=True) as cursor:
+    with con.cursor() as cursor:
+        cursor = con.cursor()
         cursor.execute("""
             SELECT * FROM PostureResult
             WHERE video_id = %s AND user_id = %s
@@ -170,6 +208,9 @@ def register():
     email = data.get('email')
     addr_detail = data.get('addr_detail', '')
     tel = data.get('tel', '')
+
+    if usertype not in ['개인회원', '강사']:
+        return jsonify({'error': '잘못된 회원 유형입니다.'}), 400
 
     required_fields = {
         "usertype": usertype,
