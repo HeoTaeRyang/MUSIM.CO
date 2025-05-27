@@ -2,6 +2,13 @@ import React, { useRef, useState, useEffect } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import "../styles/VideoDetail.css";
 
+declare global {
+  interface Window {
+    YT: any;
+    onYouTubeIframeAPIReady: () => void;
+  }
+}
+
 interface Comment {
   id: number;
   user: string;
@@ -10,11 +17,13 @@ interface Comment {
   text: string;
   rating: number;
 }
+
 interface Video {
   id: string;
   title: string;
-  video: string;
+  video: string; // YouTube URL (e.g. https://www.youtube.com/watch?v=xxxxx)
 }
+
 interface Props {
   videoId?: string;
   hideComments?: boolean;
@@ -24,6 +33,11 @@ interface Props {
   onCartClick?: () => void;
 }
 
+const extractYoutubeId = (url: string): string | null => {
+  const match = url.match(/(?:\?v=|\/embed\/|\.be\/)([a-zA-Z0-9_-]{11})/);
+  return match ? match[1] : null;
+};
+
 const VideoDetail: React.FC<Props> = (props) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -31,20 +45,78 @@ const VideoDetail: React.FC<Props> = (props) => {
 
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentText, setCommentText] = useState("");
-  const videoRef = useRef<HTMLVideoElement>(null);
 
-  const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const [volume, setVolume] = useState(100);
   const [showVolume, setShowVolume] = useState(false);
-  const [volume, setVolume] = useState(1);
+
+  const playerRef = useRef<any>(null);
+  const intervalRef = useRef<any>(null);
 
   const video: Video = location.state?.video || {
     id: props.videoId ?? "sample",
     title: "샘플 영상",
-    video: "/assets/sample_video.mp4",
+    video: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
   };
 
-  const srcToUse = props.videoSrc || video.video;
+  const youtubeId = extractYoutubeId(props.videoSrc || video.video);
+
+  useEffect(() => {
+    if (!youtubeId) return;
+
+    const loadPlayer = () => {
+      const player = new window.YT.Player("youtube-player", {
+        videoId: youtubeId,
+        playerVars: {
+          controls: 0,
+          modestbranding: 1,
+          rel: 0,
+          fs: 0,
+          disablekb: 1,
+          iv_load_policy: 3,
+          showinfo: 0,
+          autoplay: 0,
+        },
+        events: {
+          onReady: (event: any) => {
+            playerRef.current = event.target;
+
+            // getDuration이 0이 아닌 시점을 기다리기 위해 polling
+            const waitForDuration = setInterval(() => {
+              const dur = event.target.getDuration();
+              if (dur && dur > 0) {
+                setDuration(dur);
+                clearInterval(waitForDuration);
+              }
+            }, 300);
+
+            intervalRef.current = setInterval(() => {
+              setProgress(event.target.getCurrentTime());
+            }, 500);
+          },
+        },
+      });
+    };
+
+    if (window.YT && window.YT.Player) {
+      loadPlayer();
+    } else {
+      window.onYouTubeIframeAPIReady = loadPlayer;
+      const existingScript = document.querySelector(
+        "script[src='https://www.youtube.com/iframe_api']"
+      );
+      if (!existingScript) {
+        const tag = document.createElement("script");
+        tag.src = "https://www.youtube.com/iframe_api";
+        document.body.appendChild(tag);
+      }
+    }
+
+    return () => {
+      clearInterval(intervalRef.current);
+    };
+  }, [youtubeId]);
 
   useEffect(() => {
     if (!video.id) return;
@@ -54,51 +126,33 @@ const VideoDetail: React.FC<Props> = (props) => {
       .catch((err) => console.error("댓글 불러오기 실패:", err));
   }, [video.id]);
 
-  const handleCommentSubmit = () => {
-    if (!commentText.trim()) return;
-    fetch(`/video/${video.id}/comment`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: 1, content: commentText }),
-    })
-      .then((res) => res.json())
-      .then((createdComment) => {
-        setComments((prev) => [createdComment, ...prev]);
-        setCommentText("");
-      })
-      .catch((err) => console.error("댓글 작성 실패:", err));
-  };
-
-  const handleLoadedMetadata = () => {
-    if (videoRef.current) setDuration(videoRef.current.duration);
-  };
-  const handleTimeUpdate = () => {
-    if (videoRef.current) setProgress(videoRef.current.currentTime);
-  };
+  const handlePlay = () => playerRef.current?.playVideo();
+  const handlePause = () => playerRef.current?.pauseVideo();
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const seekTime = Number(e.target.value);
-    if (videoRef.current) videoRef.current.currentTime = seekTime;
-    setProgress(seekTime);
+    const time = Number(e.target.value);
+    setProgress(time);
+
+    // 강제로 약간의 지연 후 호출 (유튜브 player 준비 시간 보장)
+    setTimeout(() => {
+      try {
+        playerRef.current?.seekTo(time, true);
+      } catch (err) {
+        console.error("seekTo 실패", err);
+      }
+    }, 200); // 최소 100~200ms 정도 보장
   };
-  const handlePlay = () => videoRef.current?.play();
-  const handlePause = () => videoRef.current?.pause();
 
   const handleVolumeBtnClick = () => setShowVolume((v) => !v);
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = Number(e.target.value);
     setVolume(v);
-    if (videoRef.current) videoRef.current.volume = v;
+    playerRef.current?.setVolume(v);
   };
-
   const handleFullscreen = () => {
-    if (videoRef.current) {
-      if (videoRef.current.requestFullscreen)
-        videoRef.current.requestFullscreen();
-      else if ((videoRef.current as any).webkitRequestFullscreen)
-        (videoRef.current as any).webkitRequestFullscreen();
-      else if ((videoRef.current as any).msRequestFullscreen)
-        (videoRef.current as any).msRequestFullscreen();
-    }
+    const iframe = document.getElementById(
+      "youtube-player"
+    ) as HTMLIFrameElement;
+    if (iframe.requestFullscreen) iframe.requestFullscreen();
   };
 
   const handleCartClick = () =>
@@ -115,6 +169,21 @@ const VideoDetail: React.FC<Props> = (props) => {
           state: { video },
         });
 
+  const handleCommentSubmit = () => {
+    if (!commentText.trim()) return;
+    fetch(`/video/${video.id}/comment`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: 1, content: commentText }),
+    })
+      .then((res) => res.json())
+      .then((createdComment) => {
+        setComments((prev) => [createdComment, ...prev]);
+        setCommentText("");
+      })
+      .catch((err) => console.error("댓글 작성 실패:", err));
+  };
+
   const formatTime = (t: number) => {
     const m = Math.floor(t / 60);
     const s = Math.floor(t % 60);
@@ -124,16 +193,7 @@ const VideoDetail: React.FC<Props> = (props) => {
   return (
     <div className="video-detail-container">
       <div className="video-player-section">
-        <video
-          className="video-player"
-          src={srcToUse}
-          ref={videoRef}
-          autoPlay
-          muted={false}
-          loop
-          onLoadedMetadata={handleLoadedMetadata}
-          onTimeUpdate={handleTimeUpdate}
-        />
+        <div id="youtube-player" className="video-player" />
         <div className="video-controls-bar flex-controls-bar">
           <button className="control-btn" onClick={handlePlay} title="재생">
             <img src="/src/assets/video/play.png" alt="재생" />
@@ -156,8 +216,8 @@ const VideoDetail: React.FC<Props> = (props) => {
             <input
               type="range"
               min={0}
-              max={1}
-              step={0.01}
+              max={100}
+              step={1}
               value={volume}
               className="volume-bar"
               onChange={handleVolumeChange}
@@ -189,15 +249,6 @@ const VideoDetail: React.FC<Props> = (props) => {
           >
             <img src="/src/assets/video/cart.png" alt="장바구니" />
           </button>
-          <button className="control-btn" title="북마크">
-            <img src="/src/assets/video/Bookmark.png" alt="북마크" />
-          </button>
-          <button className="control-btn" title="정보">
-            <img src="/src/assets/video/Info.png" alt="정보" />
-          </button>
-          <button className="control-btn" title="즐겨찾기">
-            <img src="/src/assets/video/Star.png" alt="즐겨찾기" />
-          </button>
           <button
             className="control-btn"
             title="전체화면"
@@ -207,6 +258,7 @@ const VideoDetail: React.FC<Props> = (props) => {
           </button>
         </div>
       </div>
+
       {!props.hideComments && (
         <>
           <div className="comment-input-section">

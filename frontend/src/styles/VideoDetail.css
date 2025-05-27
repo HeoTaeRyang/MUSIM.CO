@@ -276,6 +276,10 @@
     margin-bottom: 20px;
     border-radius: 12px;
   }
+
+  iframe {
+    z-index: 1;
+  }
   .video-controls-bar.flex-controls-bar {
     border-radius: 0 0 12px 12px;
     padding: 0 8px 8px 8px;

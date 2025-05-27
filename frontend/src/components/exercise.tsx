@@ -1,237 +1,30 @@
-// src/pages/Exercise.tsx
-
 import "../styles/Exercise.css";
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
-import axios from "axios"; // axios 임포트
-import { useNavigate } from "react-router-dom"; // ★★★ useNavigate 임포트 추가 ★★★
-
-// ★★★ 이미지 임포트 추가 (src/assets 폴더에 이미지가 있다고 가정) ★★★
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import searchimg from "../assets/search.png";
-import exe_main from "../assets/exe_main.png";
-import exe_main2 from "../assets/exe_main2.png";
-import exe_main3 from "../assets/exe_main3.png";
 
-import thumbnail1 from "../assets/thumbnail1.png";
-import thumbnail2 from "../assets/thumbnail2.png";
-import thumbnail3 from "../assets/thumbnail3.png";
-import thumbnail4 from "../assets/thumbnail4.png";
-import thumbnail5 from "../assets/thumbnail5.png";
-import thumbnail6 from "../assets/thumbnail6.png";
-import thumbnail7 from "../assets/thumbnail7.png";
-import thumbnail8 from "../assets/thumbnail8.png";
-import thumbnail9 from "../assets/thumbnail9.png";
+const API_BASE_URL = "http://127.0.0.1:5000";
 
-// API 통신을 위한 기본 URL (백엔드 서버 주소로 변경해주세요!)
-// 현재 Flask 서버는 HTTP만 지원하므로, 반드시 http:// 로 유지해야 합니다.
-const API_BASE_URL = "http://127.0.0.1:5000"; // ★★★ 중요: http:// 로 유지! ★★★
-
-// 백엔드 API 응답 형식에 맞춰 재정의된 Video 인터페이스
 interface Video {
   id: number;
   views: number;
-  recommendations: number; // 'likes' 대신 'recommendations'
-  upload_date: string; // 'date' 대신 'upload_date'
+  recommendations: number;
+  upload_date: string;
   title: string;
-  video_url: string; // 'videoId' 대신 'video_url'
-  correctable: number; // 'isCorrection' 대신 'correctable' (1 또는 0)
-  isFavorite?: boolean; // 백엔드에서 오지 않을 수 있으므로 optional
-  thumbnail_url: string; // 'thumbnail' 대신 'thumbnail_url'
-
-  // 추가 필드 (API 응답에 포함됨)
+  video_url: string;
+  correctable: number;
+  isFavorite?: boolean;
+  thumbnail_url: string;
   description: string;
   product_link: string | null;
 }
 
-// 오늘의 추천 영상 데이터 타입 정의 (Video 인터페이스 확장)
 interface TodayVideo extends Video {
   topText?: string;
   middleText?: string;
   bottomText?: string;
 }
-
-// 💡 더미 데이터 정의 - 이미지 경로 반영 (실제 재생 가능한 샘플 비디오 URL 사용)
-const DUMMY_TODAY_VIDEOS: TodayVideo[] = [
-  {
-    id: 9991,
-    views: 12345,
-    recommendations: 500,
-    upload_date: "Mon, 24 May 2024 10:00:00 GMT",
-    title: "더미 오늘의 추천 운동 1",
-    video_url:
-      "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4", // 실제 더미 비디오 URL
-    correctable: 1,
-    isFavorite: false,
-    thumbnail_url: exe_main, // ★ exe_main 이미지 적용
-    description: "이것은 오늘의 추천 운동 더미 영상 1입니다.",
-    product_link: null,
-    topText: "🔥 오류 시 대체 운동 1",
-    middleText: "더미 오늘의 추천 운동 1",
-    bottomText: "조회수: 12,345회 | 추천수: 500회",
-  },
-  {
-    id: 9992,
-    views: 23456,
-    recommendations: 700,
-    upload_date: "Tue, 25 May 2024 11:00:00 GMT",
-    title: "더미 오늘의 추천 운동 2",
-    video_url:
-      "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4", // 실제 더미 비디오 URL
-    correctable: 0,
-    isFavorite: false,
-    thumbnail_url: exe_main2, // ★ exe_main2 이미지 적용
-    description: "이것은 오늘의 추천 운동 더미 영상 2입니다.",
-    product_link: null,
-    topText: "🌟 추가 추천 운동 2",
-    middleText: "더미 오늘의 추천 운동 2",
-    bottomText: "조회수: 23,456회 | 추천수: 700회",
-  },
-  {
-    id: 9993,
-    views: 34567,
-    recommendations: 900,
-    upload_date: "Wed, 26 May 2024 12:00:00 GMT",
-    title: "더미 오늘의 추천 운동 3",
-    video_url:
-      "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4", // 실제 더미 비디오 URL
-    correctable: 1,
-    isFavorite: true,
-    thumbnail_url: exe_main3, // ★ exe_main3 이미지 적용
-    description: "이것은 오늘의 추천 운동 더미 영상 3입니다.",
-    product_link: null,
-    topText: "💪 스페셜 추천 운동 3",
-    middleText: "더미 오늘의 추천 운동 3",
-    bottomText: "조회수: 34,567회 | 추천수: 900회",
-  },
-];
-
-const DUMMY_VIDEOS: Video[] = [
-  {
-    id: 101,
-    views: 1500,
-    recommendations: 120,
-    upload_date: "Wed, 22 May 2024 14:30:00 GMT",
-    title: "더미 영상 1: 강력한 코어 운동",
-    video_url:
-      "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
-    correctable: 1,
-    isFavorite: false,
-    thumbnail_url: thumbnail1, // ★ thumbnail1 적용
-    description: "코어 근육을 강화하는 효과적인 운동 루틴입니다.",
-    product_link: null,
-  },
-  {
-    id: 102,
-    views: 800,
-    recommendations: 70,
-    upload_date: "Tue, 21 May 2024 09:15:00 GMT",
-    title: "더미 영상 2: 유연성 스트레칭",
-    video_url:
-      "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4",
-    correctable: 0,
-    isFavorite: true,
-    thumbnail_url: thumbnail2, // ★ thumbnail2 적용
-    description: "하루를 상쾌하게 시작하는 모닝 스트레칭입니다.",
-    product_link: null,
-  },
-  {
-    id: 103,
-    views: 2200,
-    recommendations: 180,
-    upload_date: "Mon, 20 May 2024 18:45:00 GMT",
-    title: "더미 영상 3: 전신 고강도 인터벌",
-    video_url:
-      "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
-    correctable: 1,
-    isFavorite: false,
-    thumbnail_url: thumbnail3, // ★ thumbnail3 적용
-    description: "단시간에 효과를 볼 수 있는 HIIT 운동입니다.",
-    product_link: "https://example.com/product/1",
-  },
-  {
-    id: 104,
-    views: 500,
-    recommendations: 30,
-    upload_date: "Sun, 19 May 2024 10:00:00 GMT",
-    title: "더미 영상 4: 요가 초보자 가이드",
-    video_url:
-      "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4",
-    correctable: 0,
-    isFavorite: false,
-    thumbnail_url: thumbnail4, // ★ thumbnail4 적용
-    description: "요가를 처음 시작하는 분들을 위한 기본 가이드입니다.",
-    product_link: null,
-  },
-  {
-    id: 105,
-    views: 3000,
-    recommendations: 250,
-    upload_date: "Sat, 18 May 2024 16:00:00 GMT",
-    title: "더미 영상 5: 상체 근력 운동",
-    video_url:
-      "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
-    correctable: 1,
-    isFavorite: true,
-    thumbnail_url: thumbnail5, // ★ thumbnail5 적용
-    description: "집에서 할 수 있는 효과적인 상체 운동입니다.",
-    product_link: null,
-  },
-  {
-    id: 106,
-    views: 1200,
-    recommendations: 90,
-    upload_date: "Fri, 17 May 2024 07:00:00 GMT",
-    title: "더미 영상 6: 하체 집중 운동",
-    video_url:
-      "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4",
-    correctable: 1,
-    isFavorite: false,
-    thumbnail_url: thumbnail6, // ★ thumbnail6 적용
-    description: "탄탄한 하체를 위한 스쿼트 및 런지 루틴.",
-    product_link: null,
-  },
-  {
-    id: 107,
-    views: 900,
-    recommendations: 50,
-    upload_date: "Thu, 16 May 2024 11:30:00 GMT",
-    title: "더미 영상 7: 명상 및 이완",
-    video_url:
-      "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/VolkswagenGTIReview.mp4",
-    correctable: 0,
-    isFavorite: false,
-    thumbnail_url: thumbnail7, // ★ thumbnail7 적용
-    description: "스트레스 해소와 마음의 안정을 위한 명상.",
-    product_link: null,
-  },
-  {
-    id: 108,
-    views: 1800,
-    recommendations: 150,
-    upload_date: "Wed, 15 May 2024 13:00:00 GMT",
-    title: "더미 영상 8: 복근 강화 운동",
-    video_url:
-      "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-    correctable: 1,
-    isFavorite: false,
-    thumbnail_url: thumbnail8, // ★ thumbnail8 적용
-    description: "선명한 복근을 만드는 데 도움을 주는 운동.",
-    product_link: null,
-  },
-  {
-    id: 109,
-    views: 2500,
-    recommendations: 200,
-    upload_date: "Tue, 14 May 2024 08:00:00 GMT",
-    title: "더미 영상 9: 유산소 인터벌",
-    video_url:
-      "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-    correctable: 0,
-    isFavorite: true,
-    thumbnail_url: thumbnail9, // ★ thumbnail9 적용
-    description: "체지방 감소에 효과적인 유산소 인터벌 트레이닝.",
-    product_link: null,
-  },
-];
 
 const Exercise = () => {
   const [sortType, setSortType] = useState<"recent" | "like" | "watch">(
@@ -247,7 +40,7 @@ const Exercise = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [currentTranslateX, setCurrentTranslateX] = useState(0);
-  const [draggedDistance, setDraggedDistance] = useState(0); // ★★★ 드래그 거리 추적 상태 유지 ★★★
+  const [draggedDistance, setDraggedDistance] = useState(0);
 
   const [showFilterOptions, setShowFilterOptions] = useState(false);
   const [showOnlyCorrectionVideos, setShowOnlyCorrectionVideos] =
@@ -267,19 +60,12 @@ const Exercise = () => {
 
   const navigate = useNavigate();
 
-  // ----------------------------------------------------
-  // API 호출 로직 시작
-  // ----------------------------------------------------
-
-  // /video/today API 호출 (메인 배너 영상)
   const fetchTodayVideos = useCallback(async () => {
     setLoadingBanner(true);
     setErrorBanner(null);
     try {
       const response = await axios.get<Video>(`${API_BASE_URL}/video/today`);
       const data: Video = response.data;
-
-      console.log("✔️ /video/today API 응답 성공:", data);
 
       const todayVideoData: TodayVideo = {
         ...data,
@@ -295,13 +81,12 @@ const Exercise = () => {
           ? err.response?.data?.error || "오늘의 추천 영상 로드 실패"
           : "알 수 없는 오류 발생"
       );
-      setBannerVideos(DUMMY_TODAY_VIDEOS);
+      setBannerVideos([]); // ✅ 더미 제거 완료
     } finally {
       setLoadingBanner(false);
     }
   }, []);
 
-  // 하단 영상 목록 API 호출
   const fetchVideos = useCallback(
     async (
       filterCorrection: boolean,
@@ -321,7 +106,7 @@ const Exercise = () => {
         } else if (filterFavorite) {
           url = `${API_BASE_URL}/video/favorite`;
           method = "POST";
-          body = { id: 1 }; // TODO: 실제 user_id 사용
+          body = { id: 1 };
         } else if (currentSearchQuery.trim() !== "") {
           url = `${API_BASE_URL}/video/search`;
           method = "POST";
@@ -332,14 +117,8 @@ const Exercise = () => {
           body = { keyword: currentSortType };
         }
 
-        const response = await axios({
-          url: url,
-          method: method,
-          data: body,
-        });
+        const response = await axios({ url, method, data: body });
         const data: Video[] = response.data;
-
-        console.log(`✔️ ${url} API 응답 성공:`, data);
 
         let sortedData = [...data];
         if (currentSortType === "recent") {
@@ -362,7 +141,7 @@ const Exercise = () => {
             ? err.response?.data?.error || "영상 목록 로드 실패"
             : "알 수 없는 오류 발생"
         );
-        setVideosToDisplay(DUMMY_VIDEOS);
+        setVideosToDisplay([]); // ✅ 더미 제거 완료
       } finally {
         setLoadingVideos(false);
       }
@@ -388,10 +167,6 @@ const Exercise = () => {
     searchQuery,
     fetchVideos,
   ]);
-
-  // ----------------------------------------------------
-  // API 호출 로직 끝
-  // ----------------------------------------------------
 
   const autocompleteSuggestions = useMemo(() => {
     if (searchQuery.trim() === "") return [];
@@ -608,7 +383,9 @@ const Exercise = () => {
         video: {
           id: String(video.id),
           title: video.title,
-          video: video.video_url,
+          video: video.video_url.startsWith("http")
+            ? video.video_url
+            : `http://127.0.0.1:5000/${video.video_url}`, // 경로 보정
         },
       },
     });
