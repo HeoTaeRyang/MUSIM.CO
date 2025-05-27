@@ -1,38 +1,48 @@
 .video-analyze-container {
   display: flex;
+  flex-direction: column;
+  /* 세로로 쌓기 */
   width: 100%;
-  height: calc(100vh - 110px);
-  align-items: stretch; /* 세로로 위에 맞춤 */
+  min-height: calc(100vh - 110px);
+  /* 원하는 높이 조정 */
   box-sizing: border-box;
 }
 
+/* 두 패널(왼/오른쪽)을 수평으로 배치 */
+.panels {
+  display: flex;
+  flex: 1;
+  height: auto;
+  overflow: visible;
+}
+
+/* 왼쪽 비디오 영역 */
 .video-area {
   flex: 1;
-  min-width: 0;
   transition: flex 0.3s;
-  /* 배경/패딩 없음 */
 }
+
 .video-area.with-panel {
   flex: 1 1 50%;
   max-width: 50%;
 }
 
+/* 오른쪽 업로드 패널 */
 .analyze-panel {
   flex: 1;
   max-width: 50%;
-  min-width: 340px;
+  min-width: 300px;
   background: #fff;
   border-left: 1px solid #eee;
   display: flex;
   flex-direction: column;
-  align-items: stretch; /* 자식도 stretch */
-  justify-content: flex-start; /* 위로 붙임 */
-  box-sizing: border-box;
   padding: 20px;
-  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+
 }
 
-/* 닫기 버튼 */
+/* 업로드 헤더 */
 .analyze-header {
   display: flex;
   justify-content: space-between;
@@ -40,35 +50,29 @@
   margin-bottom: 20px;
 }
 
-.analyze-header h2 {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
 .close-btn {
   background: transparent;
   border: none;
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   cursor: pointer;
   color: #999;
-  transition: color 0.2s;
 }
 
 .close-btn:hover {
-  color: #666;
+  color: #333;
 }
 
 /* 업로드 영역 */
 .upload-area {
-  flex: 0 0 auto;
+  flex: 1 0 auto;
   display: flex;
   justify-content: center;
   align-items: center;
   border: 2px dashed #ddd;
   border-radius: 8px;
   height: 200px;
-  margin-top: 150px;
+  margin-top: 20px;
+  width: 100%;
 }
 
 .upload-label {
@@ -88,37 +92,34 @@
   margin-bottom: 8px;
 }
 
-/* 업로드된 영상 */
 .uploaded-video {
   width: 100%;
-  height: auto;
+  height: 100%;
   border-radius: 8px;
 }
 
-/* 분석 결과 */
-.analysis-result {
-  flex: 1;
-  overflow-y: auto;
-  margin-top: 100px;
+/* ── 두 패널 하단에 표시되는 분석 결과 ──────────────────────────── */
+.analysis-result-below {
+  text-align: center;
+  padding: 20px;
+  background: #fafafa;
 }
 
-.analysis-result h3 {
-  margin-top: 0;
+.analysis-result-below h3 {
+  margin: 0 0 8px;
   color: #034dd2;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
 }
 
-.analysis-result p {
+.analysis-result-below p {
+  margin: 0 0 16px;
   line-height: 1.5;
   color: #333;
 }
 
-/* 결과 저장/공유 버튼 */
 .result-buttons {
-  display: flex;
-  justify-content: center;
+  display: inline-flex;
   gap: 16px;
-  margin-top: 20px;
 }
 
 .btn {
@@ -131,23 +132,11 @@
   color: #034dd2;
   border-radius: 4px;
   cursor: pointer;
+  font-size: 0.9rem;
   transition: background 0.2s, color 0.2s;
 }
 
 .btn:hover {
   background: #034dd2;
   color: #fff;
-}
-
-/* 페이드 인 애니메이션 */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateX(20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
 }
