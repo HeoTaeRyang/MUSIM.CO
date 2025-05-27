@@ -1,64 +1,72 @@
 .video-purchase-container {
     display: flex;
     width: 100%;
-    height: 100vh;
+    align-items: flex-start;
     box-sizing: border-box;
+    overflow: visible;
 }
 
-/* ─── 왼쪽: 영상 + 컨트롤바 영역 ───────────────────────────────────── */
+/* ─── 왼쪽: 영상 + 컨트롤바 ───────────────────────────────────── */
 .video-area {
     flex: 2;
     position: relative;
 }
 
-/* VideoDetail.css 에 정의된 .workout-video, .video-controls 스타일이 적용됩니다 */
-
 /* ─── 오른쪽: 상품 구매 패널 ───────────────────────────────────── */
 .purchase-panel {
-    flex: 1;
-    background: #f9f9f9;
+    flex: 1 0 400px;
+    /* 고정 최소너비 */
+    max-width: 400px;
+    background: #ffffff;
+    border-radius: 0 16px 16px 0;
+    /* 좌측 모서리만 둥글게 */
+    box-shadow: -4px 0 12px rgba(0, 0, 0, 0.05);
     padding: 24px;
     box-sizing: border-box;
-    border-left: 1px solid #ddd;
-
-    /* 초기에는 완전히 오른쪽으로 숨김 */
+    position: relative;
     transform: translateX(100%);
     transition: transform 0.3s ease;
     overflow-y: auto;
+    margin-top: 150px;
+    text-align: left;
 }
 
 .purchase-panel.open {
-    /* open 클래스가 붙으면 슬라이드 인 */
     transform: translateX(0);
 }
 
 /* ─── 패널 헤더 ───────────────────────────────────────────── */
 .purchase-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
+    position: relative;
+    text-align: center;
+    margin-bottom: 24px;
 }
 
 .purchase-header h2 {
     margin: 0;
-    font-size: 20px;
+    font-size: 18px;
+    font-weight: 600;
 }
 
-.close-btn {
+.purchase-header .close-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
     background: transparent;
     border: none;
-    font-size: 24px;
+    font-size: 20px;
+    color: #999;
     cursor: pointer;
 }
 
 /* ─── 상품 카드 ────────────────────────────────────────────── */
 .product-card {
     display: flex;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
+    gap: 16px;
+    background: #f9f9f9;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     margin-bottom: 16px;
 }
 
@@ -66,40 +74,73 @@
     width: 100px;
     height: 100px;
     object-fit: cover;
+    border-radius: 8px;
 }
 
 .product-info {
-    padding: 12px;
+    flex: 1;
     display: flex;
     flex-direction: column;
+    gap: 4px;
 }
 
-.product-info h3 {
-    margin: 0 0 8px;
+.product-brand {
+    font-size: 12px;
+    color: #777;
+}
+
+.product-title {
+    margin: 0;
     font-size: 16px;
-    line-height: 1.2;
+    color: #333;
+    font-weight: 500;
+}
+
+.product-subtitle {
+    margin: 0;
+    font-size: 12px;
+    color: #555;
+}
+
+.product-rating {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+    color: #f5a623;
+}
+
+.product-rating .star {
+    display: inline-block;
+}
+
+.review-link {
+    margin-left: 8px;
+    font-size: 12px;
+    color: #034DD2;
+    text-decoration: none;
 }
 
 .price {
+    margin-top: 8px;
     font-size: 18px;
-    font-weight: bold;
-    margin-bottom: 12px;
+    color: #000;
+    font-weight: 600;
 }
 
-/* ─── 색상 옵션 ───────────────────────────────────────────── */
 .color-options {
     display: flex;
     gap: 8px;
+    margin-top: 12px;
 }
 
 .color-dot {
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
     border: 1px solid #ccc;
     border-radius: 50%;
 }
 
-/* 예시 색상 */
 .color-dot.grey {
     background: #999;
 }
@@ -110,18 +151,4 @@
 
 .color-dot.blue {
     background: #0d52de;
-}
-
-/* ─── 스크롤바 커스터마이징 (선택사항) ───────────────────────── */
-.purchase-panel::-webkit-scrollbar {
-    width: 8px;
-}
-
-.purchase-panel::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 4px;
-}
-
-.purchase-panel::-webkit-scrollbar-track {
-    background: transparent;
 }
