@@ -12,15 +12,13 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); // 폼 제출 시 새로고침 방지
 
-    // 로그인 요청 본문
+    // 로그인 요청 본문 - 백엔드가 요구하는 key에 맞춰 수정
     const loginData = {
-      userId,
-      password,
-      rememberMe,
+      id: userId,
+      password: password,
     };
 
     try {
-      // 서버에 로그인 요청 보내기
       const response = await fetch("http://127.0.0.1:5000/login", {
         method: "POST",
         headers: {
@@ -30,18 +28,18 @@ const Login = () => {
       });
 
       if (response.ok) {
-
         const data = await response.json();
         console.log("로그인 성공:", data);
-        // 로그인 성공 시 로컬 스토리지에 userId 저장 
         localStorage.setItem("user", userId);
-
-        // 로그인 성공 시, 리디렉션 처리나 추가적인 상태 변경 가능
+        // 로그인 성공 시 이동 처리
+        navigate("/");
       } else {
-        console.error("로그인 실패");
+        const errorData = await response.json();
+        alert(errorData.error || "로그인 실패");
       }
     } catch (error) {
       console.error("로그인 중 오류 발생:", error);
+      alert("서버와의 연결에 실패했습니다.");
     }
   };
 
@@ -49,7 +47,6 @@ const Login = () => {
     <div className="login-container">
       <h2>로그인</h2>
       <form onSubmit={handleLogin}>
-        {" "}
         <input
           type="text"
           placeholder="아이디"
@@ -78,15 +75,17 @@ const Login = () => {
           <span className="find-account">아이디/비밀번호 찾기</span>
         </div>
         <button className="login-btn" type="submit">
-          {" "}
           로그인 하기
         </button>
       </form>
-      <button className="signup-btn"
+      <button
+        className="signup-btn"
         onClick={() => {
           navigate("/signup");
-        }}>
-        회원가입하기</button>
+        }}
+      >
+        회원가입하기
+      </button>
     </div>
   );
 };
