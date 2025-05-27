@@ -21,7 +21,7 @@ interface Comment {
 interface Video {
   id: string;
   title: string;
-  video: string; // YouTube URL (e.g. https://www.youtube.com/watch?v=xxxxx)
+  video: string;
 }
 
 interface Props {
@@ -37,6 +37,8 @@ const extractYoutubeId = (url: string): string | null => {
   const match = url.match(/(?:\?v=|\/embed\/|\.be\/)([a-zA-Z0-9_-]{11})/);
   return match ? match[1] : null;
 };
+
+const API_BASE_URL = "http://127.0.0.1:5000";
 
 const VideoDetail: React.FC<Props> = (props) => {
   const navigate = useNavigate();
@@ -81,13 +83,11 @@ const VideoDetail: React.FC<Props> = (props) => {
         events: {
           onReady: (event: any) => {
             playerRef.current = event.target;
-
-            // getDuration이 0이 아닌 시점을 기다리기 위해 polling
-            const waitForDuration = setInterval(() => {
+            const checkDuration = setInterval(() => {
               const dur = event.target.getDuration();
               if (dur && dur > 0) {
                 setDuration(dur);
-                clearInterval(waitForDuration);
+                clearInterval(checkDuration);
               }
             }, 300);
 
@@ -113,16 +113,14 @@ const VideoDetail: React.FC<Props> = (props) => {
       }
     }
 
-    return () => {
-      clearInterval(intervalRef.current);
-    };
+    return () => clearInterval(intervalRef.current);
   }, [youtubeId]);
 
   useEffect(() => {
     if (!video.id) return;
-    fetch(`/video/${video.id}/comments?sort=latest`)
+    fetch(`${API_BASE_URL}/video/${video.id}/comments?sort=latest`)
       .then((res) => res.json())
-      .then((data) => setComments(data))
+      .then(setComments)
       .catch((err) => console.error("댓글 불러오기 실패:", err));
   }, [video.id]);
 
@@ -130,16 +128,8 @@ const VideoDetail: React.FC<Props> = (props) => {
   const handlePause = () => playerRef.current?.pauseVideo();
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
     const time = Number(e.target.value);
+    playerRef.current?.seekTo(time, true);
     setProgress(time);
-
-    // 강제로 약간의 지연 후 호출 (유튜브 player 준비 시간 보장)
-    setTimeout(() => {
-      try {
-        playerRef.current?.seekTo(time, true);
-      } catch (err) {
-        console.error("seekTo 실패", err);
-      }
-    }, 200); // 최소 100~200ms 정도 보장
   };
 
   const handleVolumeBtnClick = () => setShowVolume((v) => !v);
@@ -152,36 +142,56 @@ const VideoDetail: React.FC<Props> = (props) => {
     const iframe = document.getElementById(
       "youtube-player"
     ) as HTMLIFrameElement;
-    if (iframe.requestFullscreen) iframe.requestFullscreen();
+    iframe?.requestFullscreen();
   };
 
   const handleCartClick = () =>
     props.onCartClick
       ? props.onCartClick()
-      : navigate(`/video/${video.id}/purchase`, {
-          state: { video },
-        });
+      : navigate(`/video/${video.id}/purchase`, { state: { video } });
 
   const handleAnalyzeClick = () =>
     props.onAnalyzeClick
       ? props.onAnalyzeClick()
-      : navigate(`/video/${video.id}/VideoAnalyze`, {
-          state: { video },
-        });
+      : navigate(`/video/${video.id}/VideoAnalyze`, { state: { video } });
 
   const handleCommentSubmit = () => {
     if (!commentText.trim()) return;
-    fetch(`/video/${video.id}/comment`, {
+
+    const rawId = localStorage.getItem("user_id");
+    const user_id = localStorage.getItem("user_id");
+    if (!user_id) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+
+    fetch(`${API_BASE_URL}/video/${video.id}/comment`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: 1, content: commentText }),
+      body: JSON.stringify({ user_id, content: commentText }), // user_id는 string
     })
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("댓글 등록 실패");
+        return res.json();
+      })
       .then((createdComment) => {
-        setComments((prev) => [createdComment, ...prev]);
+        setComments((prev) => [
+          {
+            ...createdComment,
+            user: localStorage.getItem("user_id"), // 작성자 이름 직접 지정
+            avatar: "/assets/sample_profile.png", // 기본 이미지 지정
+            text: commentText, // 작성한 내용 직접 지정
+            rating: 5, // 예시로 넣음 (필요 시 수정)
+          },
+          ...prev,
+        ]);
         setCommentText("");
       })
-      .catch((err) => console.error("댓글 작성 실패:", err));
+
+      .catch((err) => {
+        console.error("댓글 작성 실패:", err);
+        alert("댓글 작성 중 오류가 발생했습니다.");
+      });
   };
 
   const formatTime = (t: number) => {
@@ -195,21 +205,13 @@ const VideoDetail: React.FC<Props> = (props) => {
       <div className="video-player-section">
         <div id="youtube-player" className="video-player" />
         <div className="video-controls-bar flex-controls-bar">
-          <button className="control-btn" onClick={handlePlay} title="재생">
+          <button className="control-btn" onClick={handlePlay}>
             <img src="/src/assets/video/play.png" alt="재생" />
           </button>
-          <button
-            className="control-btn"
-            onClick={handlePause}
-            title="일시정지"
-          >
+          <button className="control-btn" onClick={handlePause}>
             <img src="/src/assets/video/pause.png" alt="일시정지" />
           </button>
-          <button
-            className="control-btn"
-            title="볼륨"
-            onClick={handleVolumeBtnClick}
-          >
+          <button className="control-btn" onClick={handleVolumeBtnClick}>
             <img src="/src/assets/video/volume.png" alt="볼륨" />
           </button>
           {showVolume && (
@@ -217,43 +219,29 @@ const VideoDetail: React.FC<Props> = (props) => {
               type="range"
               min={0}
               max={100}
-              step={1}
               value={volume}
-              className="volume-bar"
               onChange={handleVolumeChange}
-              style={{ width: "80px", marginLeft: 4, verticalAlign: "middle" }}
+              className="volume-bar"
             />
           )}
           <span className="seek-time">{formatTime(progress)}</span>
           <input
-            className="seek-bar inline-seek"
             type="range"
             min={0}
             max={duration}
             value={progress}
             step="0.1"
             onChange={handleSeek}
+            className="seek-bar inline-seek"
           />
           <span className="seek-time">{formatTime(duration)}</span>
-          <button
-            className="control-btn"
-            title="카메라"
-            onClick={handleAnalyzeClick}
-          >
+          <button className="control-btn" onClick={handleAnalyzeClick}>
             <img src="/src/assets/video/camera.png" alt="카메라" />
           </button>
-          <button
-            className="control-btn"
-            title="장바구니"
-            onClick={handleCartClick}
-          >
+          <button className="control-btn" onClick={handleCartClick}>
             <img src="/src/assets/video/cart.png" alt="장바구니" />
           </button>
-          <button
-            className="control-btn"
-            title="전체화면"
-            onClick={handleFullscreen}
-          >
+          <button className="control-btn" onClick={handleFullscreen}>
             <img src="/src/assets/video/fullscreen.png" alt="전체화면" />
           </button>
         </div>

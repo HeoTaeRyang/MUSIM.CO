@@ -30,8 +30,8 @@ const Login = () => {
       if (response.ok) {
         const data = await response.json();
         console.log("로그인 성공:", data);
-        localStorage.setItem("user", userId);
-        // 로그인 성공 시 이동 처리
+        localStorage.setItem("user_id", data.user_id); // ← 핵심!
+        localStorage.setItem("user", userId); // 기존대로 문자열 ID도 저장
         navigate("/");
       } else {
         const errorData = await response.json();
