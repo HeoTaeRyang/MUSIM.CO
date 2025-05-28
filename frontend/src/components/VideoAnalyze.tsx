@@ -1,24 +1,40 @@
-import React, { useState, useRef } from "react";
-import { useLocation } from "react-router-dom";
+// src/components/VideoAnalyze.tsx
+import React, { useState, useRef, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import VideoDetail from "./VideoDetail";
 import "../styles/VideoAnalyze.css";
 import { FaTimes, FaDownload, FaShareAlt } from "react-icons/fa";
 import axios from "axios";
 import classNames from "classnames";
 
+axios.defaults.baseURL = "/"; // Vite proxy 설정이 되어 있다면
+
 const VideoAnalyze: React.FC = () => {
-  const location = useLocation();
-  const video = location.state?.video || {
-    id: "sample",
-    title: "샘플 영상",
-    video: "/assets/sample_video.mp4",
-  };
+  const { videoId } = useParams<{ videoId: string }>();
+  const id = Number(videoId);
 
   const [showPanel, setShowPanel] = useState(true);
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
   const [resultText, setResultText] = useState<string>("");
   const inputRef = useRef<HTMLInputElement>(null);
-  const userId = localStorage.getItem("user") || "";
+  const userId = localStorage.getItem("user_id") || "";
+
+  // 1) 이전에 저장된 결과 조회
+  useEffect(() => {
+    if (!userId || !id) return;
+    axios
+      .get(`/video/${id}/posture/result`, { params: { user_id: userId } })
+      .then((res) => {
+        if (res.data) {
+          setUploadedUrl(res.data.image_url);
+          setResultText(res.data.result_text);
+          setShowPanel(false);
+        }
+      })
+      .catch(() => {
+        /* 아직 결과 없음 */
+      });
+  }, [id, userId]);
 
   const handleClose = () => {
     setShowPanel(false);
@@ -29,73 +45,72 @@ const VideoAnalyze: React.FC = () => {
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !userId || !id) return;
+
+    // 미리보기
     const preview = URL.createObjectURL(file);
     setUploadedUrl(preview);
+    setResultText("분석 중입니다...");
 
+    // 2) 업로드
     const formData = new FormData();
     formData.append("video_file", file);
     formData.append("user_id", userId);
 
     try {
-      // 업로드
       const up = await axios.post(
-        `/video/${video.id}/posture/upload`,
+        `/video/${id}/posture/upload`,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
       const video_path = up.data.path;
 
-      // 분석
+      // 3) 분석
       const ai = await axios.post(
-        `/video/${video.id}/posture/analyze`,
+        `/video/${id}/posture/analyze`,
         { video_path, user_id: userId }
       );
-      setResultText(ai.data.result_text || "");
-    } catch {
-      setResultText("분석 실패!");
+      setResultText(ai.data.result_text || "문제 없음");
+    } catch (err: any) {
+      console.error(err);
+      setResultText(err.response?.data?.error || "분석 실패!");
     }
   };
 
-  // 저장하기 → 서버에 POST
   const handleSave = async () => {
-    if (!uploadedUrl || !resultText) {
+    if (!uploadedUrl || !resultText || !userId || !id) {
       alert("저장할 데이터가 없습니다.");
       return;
     }
     try {
-      await axios.post(
-        `/video/${video.id}/posture/save`,
-        {
-          user_id: userId,
-          result_text: resultText,
-          image_url: uploadedUrl
-        }
-      );
+      await axios.post(`/video/${id}/posture/save`, {
+        user_id: userId,
+        result_text: resultText,
+        image_url: uploadedUrl,
+      });
       alert("분석 결과가 저장되었습니다.");
+      setShowPanel(false);
     } catch (err) {
       console.error(err);
       alert("저장에 실패했습니다.");
     }
   };
 
-  // 공유하기 클릭 → 링크 복사
   const handleShare = () => {
-    const shareUrl = window.location.href;
-    navigator.clipboard.writeText(shareUrl)
+    navigator.clipboard
+      .writeText(window.location.href)
       .then(() => alert("링크가 복사되었습니다!"))
       .catch(() => alert("링크 복사에 실패했습니다."));
   };
 
   return (
     <div className="video-analyze-container">
-      {/* ── 두 패널 묶음 ────────────────────────────────────────────── */}
       <div className="panels">
         <div className={classNames("video-area", { "with-panel": showPanel })}>
           <VideoDetail
-            videoId={video.id}
-            hideComments={true}
-            videoSrc={video.video}
+            videoId={String(id)}
+            hideComments
+            videoSrc={uploadedUrl || ""}
             onAnalyzeClick={() => setShowPanel(true)}
           />
         </div>
@@ -132,11 +147,10 @@ const VideoAnalyze: React.FC = () => {
         )}
       </div>
 
-      {/* ── 분석 결과: 두 패널 하단에 중앙 정렬 ──────────────────────────── */}
       {resultText && (
         <div className="analysis-result-below">
           <h3>결과</h3>
-          <p>{resultText}</p>
+          <p style={{ whiteSpace: "pre-line" }}>{resultText}</p>
           <div className="result-buttons">
             <button className="btn save-btn" onClick={handleSave}>
               <FaDownload /> 저장하기
