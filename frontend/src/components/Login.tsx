@@ -32,6 +32,7 @@ const Login = () => {
         console.log("로그인 성공:", data);
         localStorage.setItem("user_id", data.user_id); // ← 핵심!
         localStorage.setItem("user", userId); // 기존대로 문자열 ID도 저장
+        localStorage.setItem("username", data.username); // 사용자 이름 저장
         navigate("/");
       } else {
         const errorData = await response.json();
