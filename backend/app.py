@@ -5,7 +5,7 @@ from werkzeug.utils import secure_filename
 import os
 import cv2
 
-from db import user, video
+from db import user, video, rank
 from db.db import get_connection
 from db.video import get_video_by_id, toggle_favorite, add_recommendation
 from db.comment import get_comments_by_video, add_comment
@@ -22,6 +22,23 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 @app.route('/')
 def index():
     return "백엔드 서버 실행 중입니다."
+
+@app.route('/rank/my', methods=['POST'])
+def rank_my():
+    data = request.get_json()
+    user_id = data.get("id")
+    
+    rank_data = rank.get_rank_my(user_id)
+    if not rank_data:
+        return jsonify({'error': '순위 정보를 불러올 수 없습니다.'}), 404
+    return jsonify(rank_data), 200
+
+@app.route('/rank/top5', methods=['GET'])
+def rank_top5():
+    rank_data = rank.get_rank_top5()
+    if not rank_data:
+        return jsonify({'error': '순위 정보를 불러올 수 없습니다.'}), 404
+    return jsonify(rank_data), 200
 
 @app.route('/video/today', methods=['GET'])
 def video_today():
