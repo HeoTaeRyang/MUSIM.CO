@@ -52,6 +52,7 @@
   box-sizing: border-box;
   text-align: left;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+
 }
 
 .top-rank-card .title {
@@ -62,7 +63,7 @@
 
 .rank-list {
   list-style: none;
-  margin: 0;
+  margin: 20px;
   padding: 0;
 }
 
@@ -87,6 +88,7 @@
   text-align: left;
   padding: 0 8px;
   color: #333;
+  font-weight: 500;
 }
 
 .rank-score {
