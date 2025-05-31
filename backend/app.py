@@ -181,7 +181,6 @@ def get_posture_result(video_id):
         """, (video_id, user_id))
         return jsonify(cursor.fetchone()), 200
 
-# app.py
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -195,6 +194,7 @@ def login():
 
     db_password = db_user[0]['password']     # 비밀번호 체크용
     db_user_pk = db_user[0]['id']            # 이게 진짜 user_id (int) → 프론트에 넘길 것
+    db_username = db_user[0].get('username', '') # 사용자 이름
 
     if not check_password_hash(db_password, password):
         return jsonify({'error': '잘못된 비밀번호 입니다.'}), 401
@@ -202,6 +202,7 @@ def login():
     return jsonify({
         'message': '로그인 되었습니다.',
         'user_id': db_user_pk,  # 반드시 정수형 id로
+        'username': db_username  # 사용자 이름도 반환
     }), 200
 
 
