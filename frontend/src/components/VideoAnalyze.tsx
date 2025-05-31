@@ -1,11 +1,15 @@
 // src/components/VideoAnalyze.tsx
 import React, { useState, useRef, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom"; // <-- useLocation 추가
 import VideoDetail from "./VideoDetail";
 import "../styles/VideoAnalyze.css";
 import { FaTimes, FaDownload, FaShareAlt } from "react-icons/fa";
 import axios from "axios";
 import classNames from "classnames";
+
+// DailyMission 컴포넌트의 스타일과 이미지를 재사용하기 위해 추가
+import flameIcon from '../assets/flame.png'; // <--- 불꽃 아이콘 이미지 경로 확인 및 추가
+import '../styles/DailyMission.css'; // <--- DailyMission의 CSS 파일 import (스타일 재사용)
 
 axios.defaults.baseURL = "/"; // Vite proxy 설정이 되어 있다면
 
@@ -13,14 +17,40 @@ const VideoAnalyze: React.FC = () => {
   const { videoId } = useParams<{ videoId: string }>();
   const id = Number(videoId);
 
+  const location = useLocation(); // <--- location 객체 가져오기 (state 포함)
+
   const [showPanel, setShowPanel] = useState(true);
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
   const [resultText, setResultText] = useState<string>("");
   const inputRef = useRef<HTMLInputElement>(null);
   const userId = localStorage.getItem("user_id") || "";
 
-  // 1) 이전에 저장된 결과 조회
+  // 데일리 미션 정보를 저장할 상태 추가
+  // 초기값을 null로 설정하여 미션 정보가 없을 때는 아무것도 표시하지 않도록 합니다.
+  const [dailyMissionDisplayData, setDailyMissionDisplayData] = useState<{
+    missionName: string;
+    currentCount: number;
+    targetCount: number;
+  } | null>(null);
+
+  // 1) 이전에 저장된 결과 조회 및 데일리 미션 정보 로드 (추가된 로직)
   useEffect(() => {
+    // URL state에서 미션 정보를 가져옴
+    // location.state에 missionName 속성이 있는지 확인하여 '시작하기' 버튼을 통해 진입했는지 판단합니다.
+    if (location.state && typeof location.state === 'object' && 'missionName' in location.state) {
+      const { missionName, currentCount, targetCount } = location.state as {
+        missionName: string;
+        currentCount: number;
+        targetCount: number;
+      };
+      setDailyMissionDisplayData({ missionName, currentCount, targetCount });
+    } else {
+      // '시작하기' 버튼을 통해 진입하지 않았거나, 새로고침 등으로 state가 사라진 경우
+      setDailyMissionDisplayData(null); // 미션 정보 상태를 null로 설정하여 박스가 렌더링되지 않도록 합니다.
+      console.warn("Daily mission data not found in location state. Hiding daily mission box.");
+    }
+
+    // 기존의 결과 조회 로직
     if (!userId || !id) return;
     axios
       .get(`/video/${id}/posture/result`, { params: { user_id: userId } })
@@ -34,7 +64,7 @@ const VideoAnalyze: React.FC = () => {
       .catch(() => {
         /* 아직 결과 없음 */
       });
-  }, [id, userId]);
+  }, [id, userId, location.state]); // location.state를 의존성 배열에 추가
 
   const handleClose = () => {
     setShowPanel(false);
@@ -105,12 +135,26 @@ const VideoAnalyze: React.FC = () => {
 
   return (
     <div className="video-analyze-container">
+      {/* 상단 데일리미션 박스 (dailyMissionDisplayData가 null이 아닐 때만 렌더링) */}
+      {dailyMissionDisplayData && ( // <--- 이 조건부 렌더링 추가
+        <div className="daily-mission-card top-card video-analyze-mission-display"> {/* video-analyze-mission-display 클래스 추가, 필요 시 VideoAnalyze.css에서 이 클래스로 추가 스타일링 */}
+          <img src={flameIcon} alt="Flame" className="flame-icon" />
+          <div className="daily-mission-right-content">
+            <div className="mission-title">데일리미션</div>
+            <div className="exercise-progress">
+              {dailyMissionDisplayData.missionName} {dailyMissionDisplayData.currentCount}/{dailyMissionDisplayData.targetCount}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="panels">
         <div className={classNames("video-area", { "with-panel": showPanel })}>
+          {/* VideoDetail 컴포넌트 사용. videoSrc prop이 있다면 이렇게 전달. */}
           <VideoDetail
             videoId={String(id)}
             hideComments
-            videoSrc={uploadedUrl || ""}
+            videoSrc={uploadedUrl || ""} // uploadedUrl을 VideoDetail로 전달
             onAnalyzeClick={() => setShowPanel(true)}
           />
         </div>
@@ -118,10 +162,7 @@ const VideoAnalyze: React.FC = () => {
         {showPanel && (
           <div className="analyze-panel">
             <div className="analyze-header">
-              <h2>영상 업로드</h2>
-              <button className="close-btn" onClick={handleClose}>
-                <FaTimes />
-              </button>
+              
             </div>
             <div className="upload-area">
               {!uploadedUrl ? (
