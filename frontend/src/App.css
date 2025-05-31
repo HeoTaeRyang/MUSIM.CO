@@ -20,3 +20,66 @@
   margin-top: auto;
   /* 푸터가 화면 하단에 고정되도록 */
 }
+
+
+/* 전역 메시지 스타일 */
+.global-message {
+  position: fixed; /* 화면 상단에 고정 */
+  top: 70px; /* 헤더 아래에 위치 (헤더 높이에 따라 조절 필요) */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000; /* 다른 요소 위에 표시 */
+  padding: 15px 25px;
+  border-radius: 8px;
+  font-weight: bold;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 300px;
+  justify-content: space-between;
+  transition: opacity 0.3s ease-in-out;
+  opacity: 1; /* 초기 상태는 보이도록 */
+}
+
+/* 메시지 타입별 색상 */
+.global-message.success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.global-message.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.global-message.warning {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+}
+
+.global-message.info {
+  background-color: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #bee5eb;
+}
+
+/* 닫기 버튼 스타일 */
+.close-message-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  color: inherit;
+  margin-left: 10px;
+  padding: 0;
+  opacity: 0.7;
+}
+
+.close-message-btn:hover {
+  opacity: 1;
+}
