@@ -7,7 +7,6 @@
   font-family: "Noto Sans KR", sans-serif;
   color: #333;
   /* border: 1px solid red; /* 디버깅용: dashboard 범위 확인 */
-  */
 }
 
 /* 인삿말 섹션 스타일 */
@@ -27,7 +26,6 @@
   display: block;
   /* <--- display: block으로 설정 (행 전체 차지) */
   /* border: 1px solid blue; /* 디버깅용: greeting 범위 확인 */
-  */
 }
 
 .username {

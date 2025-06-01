@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useParams, useLocation } from "react-router-dom"; // <-- useLocation 추가
 import VideoDetail from "./VideoDetail";
 import "../styles/VideoAnalyze.css";
-import { FaTimes, FaDownload, FaShareAlt } from "react-icons/fa";
+import { FaDownload, FaShareAlt } from "react-icons/fa";
 import axios from "axios";
 import classNames from "classnames";
 
@@ -65,13 +65,6 @@ const VideoAnalyze: React.FC = () => {
         /* 아직 결과 없음 */
       });
   }, [id, userId, location.state]); // location.state를 의존성 배열에 추가
-
-  const handleClose = () => {
-    setShowPanel(false);
-    setUploadedUrl(null);
-    setResultText("");
-    if (inputRef.current) inputRef.current.value = "";
-  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -162,7 +155,7 @@ const VideoAnalyze: React.FC = () => {
         {showPanel && (
           <div className="analyze-panel">
             <div className="analyze-header">
-              
+
             </div>
             <div className="upload-area">
               {!uploadedUrl ? (
