@@ -25,20 +25,3 @@ def add_user(usertype, userid, password, username, zipcode, addr, addr_detail, t
 
 def is_valid_email(email):
     return bool(re.match(r'^[\w\.-]+@[\w\.-]+\.\w+$', email))
-
-def check_attendance(user_id, today):
-    with get_connection().cursor() as cursor:
-        cursor.execute("SELECT * FROM Attendance WHERE id = %s AND date =  %s", (user_id, today))
-        return cursor.fetchone()
-
-def add_attendance(user_id, today):
-    with get_connection() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute("INSERT INTO Attendance (id, date) VALUES (%s, %s)", (user_id, today))
-            conn.commit()
-    
-def add_point(user_id):
-    with get_connection() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute("UPDATE User SET point = point + 50 WHERE id = %s", (user_id))
-            conn.commit()
