@@ -5,14 +5,13 @@ from werkzeug.utils import secure_filename
 import os
 import cv2
 
-from db import user, video, rank
+from db import user, video
 from db.db import get_connection
 from db.video import get_video_by_id, toggle_favorite, add_recommendation
 from db.comment import get_comments_by_video, add_comment
 from db.posture import save_posture_result
 from utils import is_valid_id, is_valid_password, is_valid_email
 from ai.condition import evaluate
-from datetime import date
 
 app = Flask(__name__)
 CORS(app)
@@ -23,38 +22,6 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 @app.route('/')
 def index():
     return "백엔드 서버 실행 중입니다."
-
-@app.route('/attendance', methods=['POST'])
-def attendance():
-    data = request.get_json()
-    user_id = data.get("id")
-    today = date.today().isoformat()
-    
-    today_attendance = user.check_attendance(user_id, today)
-    
-    if today_attendance:
-        return jsonify({'message': '이미 출석 했습니다.'}), 400
-    else:
-        user.add_attendance(user_id, today)
-        user.add_point(user_id)
-        return jsonify({'message': '출석 완료. 포인트 50점이 지급되었습니다.'}), 200
-
-@app.route('/rank/my', methods=['POST'])
-def rank_my():
-    data = request.get_json()
-    user_id = data.get("id")
-    
-    rank_data = rank.get_rank_my(user_id)
-    if not rank_data:
-        return jsonify({'error': '순위 정보를 불러올 수 없습니다.'}), 404
-    return jsonify(rank_data), 200
-
-@app.route('/rank/top5', methods=['GET'])
-def rank_top5():
-    rank_data = rank.get_rank_top5()
-    if not rank_data:
-        return jsonify({'error': '순위 정보를 불러올 수 없습니다.'}), 404
-    return jsonify(rank_data), 200
 
 @app.route('/video/today', methods=['GET'])
 def video_today():
@@ -163,18 +130,36 @@ def analyze_posture(video_id):
         frames.append(frame)
     cap.release()
 
-    model_path = "backend/ai/1/1.pth"
-    analysis_results = evaluate(frames, model_path=model_path, num_conditions=5)
+    with get_connection().cursor() as cursor:
+        cursor.execute("SELECT model_path, num_conditions FROM Posture WHERE video_id = %s LIMIT 1", (video_id,))
+        result = cursor.fetchone()
+        if not result:
+            return jsonify({"error": "Posture 설정을 찾을 수 없습니다."}), 400
 
-    if isinstance(analysis_results, dict) and not analysis_results.get("valid", True):
-        return jsonify(analysis_results), 400
+        model_path = result['model_path']
+        num_conditions = result['num_conditions']
 
-    result_texts = [f"Condition {r['condition']} 이상 감지 (score: {r['score']:.2f})" for r in analysis_results if r["value"]]
-    result_text = "\n".join(result_texts) if result_texts else "문제 없음"
+    result = evaluate(frames, model_path=model_path, num_conditions=num_conditions)
+
+    if isinstance(result, dict) and not result.get("valid", True):
+        return jsonify(result), 200
+
+    with get_connection().cursor() as cursor:
+        cursor.execute("SELECT condition_index, description FROM PostureCondition WHERE video_id = %s", (video_id,))
+        condition_map = {row['condition_index']: row['description'] for row in cursor.fetchall()}
+
+    violated = []
+    for r in result:
+        if not r['value']:  # value가 False → 조건 충족 못함 → 이상 감지
+            condition = condition_map.get(r['condition'], f"Condition {r['condition']}")
+            violated.append(f"{condition} 이상 감지 (score: {r['score']:.2f})")
+    result_text = "\n".join(violated) if violated else "문제 없음"
+
+    save_posture_result(user_id, video_id, result_text, image_url="")
 
     return jsonify({
         "result_text": result_text,
-        "raw_result": analysis_results
+        "raw_result": result
     }), 200
 
 @app.route('/video/<int:video_id>/posture/save', methods=['POST'])
@@ -183,19 +168,35 @@ def save_posture(video_id):
     user_id = data.get("user_id")
     result_text = data.get("result_text")
     image_url = data.get("image_url")
-    result = save_posture_result(user_id, video_id, result_text, image_url)
-    return jsonify(result), 201
+
+    with get_connection().cursor() as cursor:
+        cursor.execute("SELECT model_path, num_conditions FROM Posture WHERE video_id = %s LIMIT 1", (video_id,))
+        result = cursor.fetchone()
+        model_path = result['model_path'] if result else ''
+        num_conditions = result['num_conditions'] if result else 0
+
+    saved = save_posture_result(user_id, video_id, result_text, image_url)
+    return jsonify(saved), 201
 
 @app.route('/video/<int:video_id>/posture/result', methods=['GET'])
 def get_posture_result(video_id):
     user_id = request.args.get("user_id")
+    if not user_id:
+        return jsonify({"error": "user_id가 필요합니다."}), 400
+
     with get_connection().cursor() as cursor:
         cursor.execute("""
-            SELECT * FROM PostureResult
-            WHERE video_id = %s AND user_id = %s
+            SELECT id, user_id, video_id, result_text, image_url, saved_at, model_path, num_conditions
+            FROM Posture
+            WHERE user_id = %s AND video_id = %s 
             ORDER BY saved_at DESC LIMIT 1
-        """, (video_id, user_id))
-        return jsonify(cursor.fetchone()), 200
+        """, (user_id, video_id))
+        result = cursor.fetchone()
+
+        if not result:
+            return jsonify({"message": "분석 결과가 없습니다."}), 404
+
+        return jsonify(result), 200
 
 
 @app.route('/login', methods=['POST'])
@@ -210,7 +211,6 @@ def login():
 
     db_password = db_user[0]['password']     # 비밀번호 체크용
     db_user_pk = db_user[0]['id']            # 이게 진짜 user_id (int) → 프론트에 넘길 것
-    db_username = db_user[0].get('username', '') # 사용자 이름
 
     if not check_password_hash(db_password, password):
         return jsonify({'error': '잘못된 비밀번호 입니다.'}), 401
@@ -218,7 +218,6 @@ def login():
     return jsonify({
         'message': '로그인 되었습니다.',
         'user_id': db_user_pk,  # 반드시 정수형 id로
-        'username': db_username  # 사용자 이름도 반환
     }), 200
 
 
