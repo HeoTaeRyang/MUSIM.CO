@@ -54,7 +54,9 @@ const Home = () => {
       {/* 주요 패널들을 담는 컨테이너 (랭킹, 데일리 미션, 달력) */}
       <div className="main-panels">
         {/* 왼쪽: 포인트 랭킹 컴포넌트 */}
-        <Ranking />
+        <div className="left-panel">
+          <Ranking />
+        </div>
 
         {/* 중간: 데일리 미션 컴포넌트 */}
         <DailyMission
