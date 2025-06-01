@@ -5,13 +5,14 @@ from werkzeug.utils import secure_filename
 import os
 import cv2
 
-from db import user, video
+from db import user, video, rank
 from db.db import get_connection
 from db.video import get_video_by_id, toggle_favorite, add_recommendation
 from db.comment import get_comments_by_video, add_comment
 from db.posture import save_posture_result
 from utils import is_valid_id, is_valid_password, is_valid_email
 from ai.condition import evaluate
+from datetime import date
 
 app = Flask(__name__)
 CORS(app)
@@ -22,6 +23,38 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 @app.route('/')
 def index():
     return "백엔드 서버 실행 중입니다."
+
+@app.route('/attendance', methods=['POST'])
+def attendance():
+    data = request.get_json()
+    user_id = data.get("id")
+    today = date.today().isoformat()
+    
+    today_attendance = user.check_attendance(user_id, today)
+    
+    if today_attendance:
+        return jsonify({'message': '이미 출석 했습니다.'}), 400
+    else:
+        user.add_attendance(user_id, today)
+        user.add_point(user_id)
+        return jsonify({'message': '출석 완료. 포인트 50점이 지급되었습니다.'}), 200
+
+@app.route('/rank/my', methods=['POST'])
+def rank_my():
+    data = request.get_json()
+    user_id = data.get("id")
+    
+    rank_data = rank.get_rank_my(user_id)
+    if not rank_data:
+        return jsonify({'error': '순위 정보를 불러올 수 없습니다.'}), 404
+    return jsonify(rank_data), 200
+
+@app.route('/rank/top5', methods=['GET'])
+def rank_top5():
+    rank_data = rank.get_rank_top5()
+    if not rank_data:
+        return jsonify({'error': '순위 정보를 불러올 수 없습니다.'}), 404
+    return jsonify(rank_data), 200
 
 @app.route('/video/today', methods=['GET'])
 def video_today():
@@ -211,13 +244,15 @@ def login():
 
     db_password = db_user[0]['password']     # 비밀번호 체크용
     db_user_pk = db_user[0]['id']            # 이게 진짜 user_id (int) → 프론트에 넘길 것
-
+    db_username = db_user[0].get('username', '') # 사용자 이름
+    
     if not check_password_hash(db_password, password):
         return jsonify({'error': '잘못된 비밀번호 입니다.'}), 401
 
     return jsonify({
         'message': '로그인 되었습니다.',
         'user_id': db_user_pk,  # 반드시 정수형 id로
+        'username': db_username  # 사용자 이름도 반환
     }), 200
 
 
