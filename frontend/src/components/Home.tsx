@@ -1,6 +1,4 @@
-// src/pages/Home.tsx
-
-import React, { useState, useEffect } from "react"; // useEffect 추가 (username 가져오기 로직 때문)
+import { useState, useEffect } from "react"; // useEffect 추가 (username 가져오기 로직 때문)
 import "../styles/Home.css"; // 홈 페이지의 CSS 파일 import
 import MainCalendar from "./HomePart/MainCalendar"; // MainCalendar 컴포넌트 import
 import Ranking from "./HomePart/Ranking"; // Ranking 컴포넌트 import
@@ -11,19 +9,11 @@ const Home = () => {
   const [username, setUsername] = useState("사용자");
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user"); // localStorage에서 "user" 키로 저장된 값 가져오기
-    if (storedUser) {
-      try {
-        const userObj = JSON.parse(storedUser);
-        // user 객체 내에 nickname 또는 username 필드가 있다고 가정합니다.
-        setUsername(userObj.nickname || userObj.username || "사용자");
-      } catch (e) {
-        console.error("Failed to parse user from localStorage", e);
-        setUsername("사용자"); // 파싱 실패 시 기본값 설정
-      }
+    const username = localStorage.getItem("username"); // localStorage에서 "user" 키로 저장된 값 가져오기
+    if (username) {
+      setUsername(username); // 가져온 값을 상태에 저장
     } else {
-        // localStorage에 user 정보가 없을 경우
-        setUsername("사용자");
+      setUsername("사용자"); // 값이 없으면 기본값으로 "사용자" 설정
     }
   }, []); // 컴포넌트 마운트 시 한 번만 실행
 
@@ -37,7 +27,7 @@ const Home = () => {
   // <--- 중요: 이 부분은 백엔드에서 받아와야 할 실제 비디오 ID입니다.
   // 현재는 예시로 고정된 값을 사용합니다.
   const dailyMissionVideoId = "your_mission_exercise_video_id_here"; // <-- !!!! 이 값을 실제 비디오 ID로 변경해야 합니다. !!!!
-                                                                   // 예: "pushup-video-id", "squat-video-id" 등
+  // 예: "pushup-video-id", "squat-video-id" 등
   // 이 부분은 특정 미션에 대한 비디오 ID를 동적으로 가져오는 로직으로 대체되어야 합니다.
   // (예: 백엔드 API 호출로 '윗몸일으키기' 미션의 비디오 ID를 가져옴)
 
@@ -72,7 +62,7 @@ const Home = () => {
           currentCount={currentDailyMissionCount}
           targetCount={targetDailyMissionCount}
           videoId={dailyMissionVideoId} // <--- 추가: videoId props 전달
-          // onStartMission={handleDailyMissionStart} // <--- 제거: 더 이상 이 props는 필요 없습니다.
+        // onStartMission={handleDailyMissionStart} // <--- 제거: 더 이상 이 props는 필요 없습니다.
         />
 
         {/* 오른쪽: 출석 달력 컴포넌트 */}
