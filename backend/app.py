@@ -172,7 +172,13 @@ def analyze_posture(video_id):
         model_path = result['model_path']
         num_conditions = result['num_conditions']
 
-    result = evaluate(frames, model_path=model_path, num_conditions=num_conditions)
+    print(f"[분석 시작] user_id: {user_id}, video_id: {video_id}")
+    print(f"[프레임 수] {len(frames)}, [모델 경로] {model_path}, [조건 수] {num_conditions}")
+    try:
+        result = evaluate(frames, model_path=model_path, num_conditions=num_conditions)
+    except Exception as e:
+        print(f"[ERROR] evaluate() 실패: {str(e)}")
+        return jsonify({"valid": False, "message": f"AI 분석 중 오류 발생: {str(e)}"}), 200
 
     if isinstance(result, dict) and not result.get("valid", True):
         return jsonify(result), 200
@@ -183,7 +189,7 @@ def analyze_posture(video_id):
 
     violated = []
     for r in result:
-        if not r['value']:  # value가 False → 조건 충족 못함 → 이상 감지
+        if not r['value']:
             condition = condition_map.get(r['condition'], f"Condition {r['condition']}")
             violated.append(f"{condition} 이상 감지 (score: {r['score']:.2f})")
     result_text = "\n".join(violated) if violated else "문제 없음"
