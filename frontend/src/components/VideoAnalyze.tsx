@@ -66,6 +66,17 @@ const VideoAnalyze: React.FC = () => {
       });
   }, [id, userId, location.state]); // location.state를 의존성 배열에 추가
 
+  // “다시 업로드하기” 버튼을 눌렀을 때 동작: 업로드한 비디오와 결과를 모두 초기화
+  const handleReset = () => {
+    // 비디오 preview, 분석 결과 둘 다 삭제
+    setUploadedUrl(null);
+    setResultText("");
+    if (inputRef.current) {
+      inputRef.current.value = "";
+    }
+  };
+
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !userId || !id) return;
@@ -142,23 +153,23 @@ const VideoAnalyze: React.FC = () => {
       )}
 
       <div className="panels">
+        {/* ─────────────── 두 패널 묶음 ────────────────── */}
         <div className={classNames("video-area", { "with-panel": showPanel })}>
-          {/* VideoDetail 컴포넌트 사용. videoSrc prop이 있다면 이렇게 전달. */}
           <VideoDetail
-            videoId={String(id)}
-            hideComments
-            videoSrc={uploadedUrl || ""} // uploadedUrl을 VideoDetail로 전달
+            videoId={videoId}
+            hideComments={true}
             onAnalyzeClick={() => setShowPanel(true)}
           />
         </div>
 
         {showPanel && (
           <div className="analyze-panel">
-            <div className="analyze-header">
 
-            </div>
+
+            {/* ─── 업로드 영역 ─────────────────────────────── */}
             <div className="upload-area">
               {!uploadedUrl ? (
+                // 아직 비디오를 선택하지 않은 상태: 파일 선택 UI
                 <label className="upload-label">
                   <input
                     type="file"
@@ -170,21 +181,23 @@ const VideoAnalyze: React.FC = () => {
                   <p>분석할 영상을 업로드하세요</p>
                 </label>
               ) : (
-                <video
-                  className="uploaded-video"
-                  src={uploadedUrl}
-                  controls
-                />
+                // 비디오 업로드가 끝난 상태: 미리보기 비디오 + “다시 업로드하기” 버튼
+                <div className="preview-wrapper">
+                  <video className="uploaded-video" src={uploadedUrl} controls />
+                  <button className="reset-btn" onClick={handleReset}>
+                    다시 업로드하기
+                  </button>
+                </div>
               )}
             </div>
           </div>
         )}
       </div>
-
+      {/* ──────────── 분석 결과: 두 패널 하단에 중앙 정렬 ──────────── */}
       {resultText && (
         <div className="analysis-result-below">
           <h3>결과</h3>
-          <p style={{ whiteSpace: "pre-line" }}>{resultText}</p>
+          <p>{resultText}</p>
           <div className="result-buttons">
             <button className="btn save-btn" onClick={handleSave}>
               <FaDownload /> 저장하기

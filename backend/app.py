@@ -5,7 +5,7 @@ from werkzeug.utils import secure_filename
 import os
 import cv2
 
-from db import user, video, rank
+from db import user, video, rank #랭킹 추가
 from db.db import get_connection
 from db.video import get_video_by_id, toggle_favorite, add_recommendation
 from db.comment import get_comments_by_video, add_comment
@@ -244,7 +244,7 @@ def login():
 
     db_password = db_user[0]['password']     # 비밀번호 체크용
     db_user_pk = db_user[0]['id']            # 이게 진짜 user_id (int) → 프론트에 넘길 것
-    db_username = db_user[0].get('username', '') # 사용자 이름
+    db_username = db_user[0].get('username', '') # 사용자 이름 추가
     
     if not check_password_hash(db_password, password):
         return jsonify({'error': '잘못된 비밀번호 입니다.'}), 401
@@ -252,7 +252,7 @@ def login():
     return jsonify({
         'message': '로그인 되었습니다.',
         'user_id': db_user_pk,  # 반드시 정수형 id로
-        'username': db_username  # 사용자 이름도 반환
+        'username': db_username  # 사용자 이름도 반환!!
     }), 200
 
 
