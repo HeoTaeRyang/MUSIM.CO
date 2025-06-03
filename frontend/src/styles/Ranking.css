@@ -87,3 +87,24 @@
   text-align: right;
   color: #555;
 }
+
+/* ──메뉴에서 랭킹 페이지 접속했을 때 스타일 ─────────────────────────────────────── */
+.ranking-theme {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: white;
+  margin-top: 90px;
+}
+
+
+.ranking-theme .ranking-page {
+  text-align: center;
+  max-width: 600px;
+  width: 100%;
+  padding: 2rem;
+  background: white;
+  border-radius: 12px;
+
+  margin-top: 10px;
+}

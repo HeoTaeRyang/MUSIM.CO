@@ -1,56 +1,31 @@
 // src/components/VideoAnalyze.tsx
-import React, { useState, useRef, useEffect } from "react";
-import { useParams, useLocation } from "react-router-dom"; // <-- useLocation 추가
+import { useState, useRef, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import VideoDetail from "./VideoDetail";
 import "../styles/VideoAnalyze.css";
-import { FaDownload, FaShareAlt } from "react-icons/fa";
+import { FaSpinner, FaDownload, FaShareAlt } from "react-icons/fa";
+import { MdOutlineFileUpload, MdPhotoCamera } from "react-icons/md";
 import axios from "axios";
 import classNames from "classnames";
 
-// DailyMission 컴포넌트의 스타일과 이미지를 재사용하기 위해 추가
-import flameIcon from '../assets/flame.png'; // <--- 불꽃 아이콘 이미지 경로 확인 및 추가
-import '../styles/DailyMission.css'; // <--- DailyMission의 CSS 파일 import (스타일 재사용)
-
-axios.defaults.baseURL = "/"; // Vite proxy 설정이 되어 있다면
+axios.defaults.baseURL = "/";
 
 const VideoAnalyze: React.FC = () => {
   const { videoId } = useParams<{ videoId: string }>();
   const id = Number(videoId);
-
-  const location = useLocation(); // <--- location 객체 가져오기 (state 포함)
+  const userId = localStorage.getItem("user_id") || "";
 
   const [showPanel, setShowPanel] = useState(true);
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
   const [resultText, setResultText] = useState<string>("");
   const inputRef = useRef<HTMLInputElement>(null);
-  const userId = localStorage.getItem("user_id") || "";
 
-  // 데일리 미션 정보를 저장할 상태 추가
-  // 초기값을 null로 설정하여 미션 정보가 없을 때는 아무것도 표시하지 않도록 합니다.
-  const [dailyMissionDisplayData, setDailyMissionDisplayData] = useState<{
-    missionName: string;
-    currentCount: number;
-    targetCount: number;
-  } | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
+  const webcamPreviewRef = useRef<HTMLVideoElement>(null);
 
-  // 1) 이전에 저장된 결과 조회 및 데일리 미션 정보 로드 (추가된 로직)
   useEffect(() => {
-    // URL state에서 미션 정보를 가져옴
-    // location.state에 missionName 속성이 있는지 확인하여 '시작하기' 버튼을 통해 진입했는지 판단합니다.
-    if (location.state && typeof location.state === 'object' && 'missionName' in location.state) {
-      const { missionName, currentCount, targetCount } = location.state as {
-        missionName: string;
-        currentCount: number;
-        targetCount: number;
-      };
-      setDailyMissionDisplayData({ missionName, currentCount, targetCount });
-    } else {
-      // '시작하기' 버튼을 통해 진입하지 않았거나, 새로고침 등으로 state가 사라진 경우
-      setDailyMissionDisplayData(null); // 미션 정보 상태를 null로 설정하여 박스가 렌더링되지 않도록 합니다.
-      console.warn("Daily mission data not found in location state. Hiding daily mission box.");
-    }
-
-    // 기존의 결과 조회 로직
     if (!userId || !id) return;
     axios
       .get(`/video/${id}/posture/result`, { params: { user_id: userId } })
@@ -61,49 +36,107 @@ const VideoAnalyze: React.FC = () => {
           setShowPanel(false);
         }
       })
-      .catch(() => {
-        /* 아직 결과 없음 */
-      });
-  }, [id, userId, location.state]); // location.state를 의존성 배열에 추가
+      .catch(() => { });
+  }, [id, userId]);
 
-  // “다시 업로드하기” 버튼을 눌렀을 때 동작: 업로드한 비디오와 결과를 모두 초기화
   const handleReset = () => {
-    // 비디오 preview, 분석 결과 둘 다 삭제
     setUploadedUrl(null);
     setResultText("");
-    if (inputRef.current) {
-      inputRef.current.value = "";
-    }
+    setRecordedBlob(null);
+    if (inputRef.current) inputRef.current.value = "";
   };
-
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !userId || !id) return;
 
-    // 미리보기
     const preview = URL.createObjectURL(file);
     setUploadedUrl(preview);
     setResultText("분석 중입니다...");
 
-    // 2) 업로드
     const formData = new FormData();
     formData.append("video_file", file);
     formData.append("user_id", userId);
 
     try {
-      const up = await axios.post(
-        `/video/${id}/posture/upload`,
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
+      const up = await axios.post(`/video/${id}/posture/upload`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
       const video_path = up.data.path;
 
-      // 3) 분석
-      const ai = await axios.post(
-        `/video/${id}/posture/analyze`,
-        { video_path, user_id: userId }
-      );
+      const ai = await axios.post(`/video/${id}/posture/analyze`, {
+        video_path,
+        user_id: userId,
+      });
+      setResultText(ai.data.result_text || "문제 없음");
+    } catch (err: any) {
+      console.error(err);
+      setResultText(err.response?.data?.error || "분석 실패!");
+    }
+  };
+
+  const handleStartRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      const recorder = new MediaRecorder(stream);
+      const chunks: Blob[] = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunks.push(e.data);
+      };
+
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: "video/webm" });
+        setRecordedBlob(blob);
+        setUploadedUrl(URL.createObjectURL(blob));
+        setIsRecording(false);
+        stream.getTracks().forEach((track) => track.stop());
+      };
+
+      setMediaRecorder(recorder);
+      setIsRecording(true);
+
+      // 💡 DOM에 렌더된 후 실행되도록 약간 지연
+      setTimeout(() => {
+        if (webcamPreviewRef.current) {
+          webcamPreviewRef.current.srcObject = stream;
+          webcamPreviewRef.current.play().catch((err) => {
+            console.error("비디오 재생 실패:", err);
+          });
+        }
+      }, 100);
+
+      recorder.start();
+    } catch (error) {
+      console.error("카메라 접근 실패:", error);
+      alert("카메라 접근을 허용해주세요.");
+    }
+  };
+
+
+  const handleStopRecording = () => {
+    mediaRecorder?.stop();
+  };
+
+  const handleUploadRecorded = async () => {
+    if (!recordedBlob || !userId || !id) return;
+
+    setResultText("분석 중입니다...");
+
+    const formData = new FormData();
+    formData.append("video_file", recordedBlob, "recorded_video.webm");
+    formData.append("user_id", userId);
+
+    try {
+      const up = await axios.post(`/video/${id}/posture/upload`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const video_path = up.data.path;
+
+      const ai = await axios.post(`/video/${id}/posture/analyze`, {
+        video_path,
+        user_id: userId,
+      });
       setResultText(ai.data.result_text || "문제 없음");
     } catch (err: any) {
       console.error(err);
@@ -139,21 +172,7 @@ const VideoAnalyze: React.FC = () => {
 
   return (
     <div className="video-analyze-container">
-      {/* 상단 데일리미션 박스 (dailyMissionDisplayData가 null이 아닐 때만 렌더링) */}
-      {dailyMissionDisplayData && ( // <--- 이 조건부 렌더링 추가
-        <div className="daily-mission-card top-card video-analyze-mission-display"> {/* video-analyze-mission-display 클래스 추가, 필요 시 VideoAnalyze.css에서 이 클래스로 추가 스타일링 */}
-          <img src={flameIcon} alt="Flame" className="flame-icon" />
-          <div className="daily-mission-right-content">
-            <div className="mission-title">데일리미션</div>
-            <div className="exercise-progress">
-              {dailyMissionDisplayData.missionName} {dailyMissionDisplayData.currentCount}/{dailyMissionDisplayData.targetCount}
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className="panels">
-        {/* ─────────────── 두 패널 묶음 ────────────────── */}
         <div className={classNames("video-area", { "with-panel": showPanel })}>
           <VideoDetail
             videoId={videoId}
@@ -164,24 +183,38 @@ const VideoAnalyze: React.FC = () => {
 
         {showPanel && (
           <div className="analyze-panel">
-
-
-            {/* ─── 업로드 영역 ─────────────────────────────── */}
             <div className="upload-area">
               {!uploadedUrl ? (
-                // 아직 비디오를 선택하지 않은 상태: 파일 선택 UI
-                <label className="upload-label">
-                  <input
-                    type="file"
-                    accept="video/*"
-                    onChange={handleFileChange}
-                    ref={inputRef}
-                  />
-                  <div className="upload-icon">📁</div>
-                  <p>분석할 영상을 업로드하세요</p>
-                </label>
+                <div className="upload-buttons-container">
+                  <div className="upload-button" onClick={() => inputRef.current?.click()}>
+                    <MdOutlineFileUpload className="upload-icon-react" />
+                    <p>영상 업로드</p>
+                    <input
+                      type="file"
+                      accept="video/*"
+                      onChange={handleFileChange}
+                      ref={inputRef}
+                      style={{ display: "none" }}
+                    />
+                  </div>
+                  <div className="upload-button" onClick={handleStartRecording}>
+                    <MdPhotoCamera className="upload-icon-react" />
+                    <p>영상 촬영</p>
+                  </div>
+                </div>
+              ) : recordedBlob ? (
+                <div className="preview-wrapper">
+                  <video className="uploaded-video" src={uploadedUrl} controls />
+                  <div className="result-buttons">
+                    <button className="btn save-btn" onClick={handleUploadRecorded}>
+                      영상 업로드하기
+                    </button>
+                    <button className="btn reset-btn" onClick={handleReset}>
+                      다시 촬영하기
+                    </button>
+                  </div>
+                </div>
               ) : (
-                // 비디오 업로드가 끝난 상태: 미리보기 비디오 + “다시 업로드하기” 버튼
                 <div className="preview-wrapper">
                   <video className="uploaded-video" src={uploadedUrl} controls />
                   <button className="reset-btn" onClick={handleReset}>
@@ -190,24 +223,47 @@ const VideoAnalyze: React.FC = () => {
                 </div>
               )}
             </div>
+
+            {isRecording && (
+              <div className="recording-preview">
+                <p>녹화 중...</p>
+                <video
+                  ref={webcamPreviewRef}
+                  autoPlay
+                  muted
+                  playsInline
+                  className="webcam-live-preview"
+                />
+                <button className="btn stop-btn" onClick={handleStopRecording}>
+                  녹화 중지
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
-      {/* ──────────── 분석 결과: 두 패널 하단에 중앙 정렬 ──────────── */}
       {resultText && (
-        <div className="analysis-result-below">
-          <h3>결과</h3>
-          <p>{resultText}</p>
-          <div className="result-buttons">
-            <button className="btn save-btn" onClick={handleSave}>
-              <FaDownload /> 저장하기
-            </button>
-            <button className="btn share-btn" onClick={handleShare}>
-              <FaShareAlt /> 공유하기
-            </button>
+        resultText === "분석 중입니다..." ? (
+          <div className="loading-container">
+            <FaSpinner className="spinner-icon" />
+            <p>분석 중입니다...</p>
           </div>
-        </div>
+        ) : (
+          <div className="analysis-result-below">
+            <h3>결과</h3>
+            <p>{resultText}</p>
+            <div className="result-buttons">
+              <button className="btn save-btn" onClick={handleSave}>
+                <FaDownload /> 저장하기
+              </button>
+              <button className="btn share-btn" onClick={handleShare}>
+                <FaShareAlt /> 공유하기
+              </button>
+            </div>
+          </div>
+        )
       )}
+
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter, Routes, Route, useNavigate, Outlet } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate, Outlet, useLocation } from "react-router-dom";
 import Header from "./components/Header";
 import Home from "./components/Home";
 import Footer from "./components/Footer";
@@ -9,8 +9,8 @@ import Exercise from "./components/exercise";
 import VideoDetail from "./components/VideoDetail";
 import VideoAnalyze from "./components/VideoAnalyze";
 import VideoPurchase from "./components/VideoPurchase";
-import Diet from "./components/Diet";
 import MyPage from "./components/mypage";
+import Ranking from "./components/HomePart/Ranking";
 
 import "./App.css";
 
@@ -55,6 +55,7 @@ function App() {
       messageTimer = null;
     }
     messageDisplayedRef.current = false;
+
   };
 
 
@@ -92,31 +93,27 @@ function App() {
     );
   };
 
+  const isRankingPage = location.pathname === "/ranking";
 
   return (
-    <div className="App">
+    <div className={`App ${isRankingPage ? "ranking-theme" : ""}`}>
       <BrowserRouter>
+        const location = useLocation();
+
         <Header />
         <GlobalMessageDisplay />
         <div>
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
-
             <Route element={<ProtectedRoute showMessage={showGlobalMessage} />}>
               <Route path="/" element={<Home />} />
               <Route path="/exercise" element={<Exercise />} />
               <Route path="/video/:videoId" element={<VideoDetail />} />
-              <Route
-                path="/video/:videoId/VideoAnalyze"
-                element={<VideoAnalyze />}
-              />
-              <Route
-                path="/video/:videoId/purchase"
-                element={<VideoPurchase />}
-              />
-              <Route path="/diet" element={<Diet />} />
+              <Route path="/video/:videoId/VideoAnalyze" element={<VideoAnalyze />} />
+              <Route path="/video/:videoId/purchase" element={<VideoPurchase />} />
               <Route path="/mypage" element={<MyPage />} />
+              <Route path="/ranking" element={<Ranking />} />
             </Route>
           </Routes>
         </div>
