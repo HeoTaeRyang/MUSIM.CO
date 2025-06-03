@@ -205,3 +205,90 @@
   background: #034dd2;
   color: #fff;
 }
+
+.upload-buttons-container {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  margin-top: 2rem;
+}
+
+.upload-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.upload-button:hover {
+  transform: scale(1.05);
+}
+
+.upload-icon-react {
+  font-size: 64px;
+  color: #034DD2;
+  margin: 20px;
+}
+
+.recording-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 2rem;
+}
+
+.webcam-live-preview {
+  width: 100%;
+  max-width: 480px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  margin-bottom: 1rem;
+}
+
+.stop-btn {
+  background-color: crimson;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.loading-container {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.spinner-icon {
+  font-size: 48px;
+  color: #8c89f1;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

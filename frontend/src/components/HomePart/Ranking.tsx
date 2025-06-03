@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import "../../styles/Ranking.css";
+import { useLocation } from "react-router-dom";
+
 
 import trophyImg from "../../assets/trophy.png";
 
@@ -12,6 +14,8 @@ interface RankItem {
 
 const Ranking: React.FC = () => {
   const userId = localStorage.getItem("user_id") || "";
+  const location = useLocation();
+  const isRankingPage = location.pathname === "/ranking";
 
   // "내 순위": { rank, point } 혹은 null
   const [myRank, setMyRank] = useState<{ rank: number; point: number } | null>(null);
@@ -79,36 +83,37 @@ const Ranking: React.FC = () => {
   }, [userId]);
 
   return (
-    <div className="left-panel">
-      {/* ── 나의 포인트 순위 카드 ──────────────────────────────────── */}
-      <div className="my-rank-card">
-        <img src={trophyImg} alt="트로피" className="trophy" />
-        <div className="my-rank-text">
-          <div className="title">나의 포인트 순위</div>
-          <div className="rank">{myRank ? `${myRank.rank}위` : "-위"}</div>
-          <div className="point">{myRank ? `${myRank.point}점` : "0점"}</div>
+    <div className={isRankingPage ? "ranking-theme" : "left-panel"}>
+      <div className={isRankingPage ? "ranking-page" : ""}>
+        {/* ── 나의 포인트 순위 카드 ─ */}
+        <div className="my-rank-card">
+          <img src={trophyImg} alt="트로피" className="trophy" />
+          <div className="my-rank-text">
+            <div className="title">나의 포인트 순위</div>
+            <div className="rank">{myRank ? `${myRank.rank}위` : "-위"}</div>
+            <div className="point">{myRank ? `${myRank.point}점` : "0점"}</div>
+          </div>
         </div>
-      </div>
 
-      {/* ── 사이트 전체 포인트 순위 Top5 ────────────────────────────── */}
-      <div className="top-rank-card">
-        <div className="title">포인트 순위</div>
-        <ul className="rank-list">
-          {top5.length > 0 ? (
-            top5.map((item) => (
-              <li key={item.rank}>
-                <span className="rank-number">{item.rank}위</span>
-                <span className="rank-name">{item.username}</span>
-                <span className="rank-point">{item.point}점</span>
-              </li>
-            ))
-          ) : (
-            <li>순위 정보를 불러올 수 없습니다.</li>
-          )}
-        </ul>
+        {/* ── 사이트 전체 포인트 순위 Top5 ─ */}
+        <div className="top-rank-card">
+          <div className="title">포인트 순위</div>
+          <ul className="rank-list">
+            {top5.length > 0 ? (
+              top5.map((item) => (
+                <li key={item.rank}>
+                  <span className="rank-number">{item.rank}위</span>
+                  <span className="rank-name">{item.username}</span>
+                  <span className="rank-point">{item.point}점</span>
+                </li>
+              ))
+            ) : (
+              <li>순위 정보를 불러올 수 없습니다.</li>
+            )}
+          </ul>
+        </div>
       </div>
     </div>
   );
 };
-
 export default Ranking;
