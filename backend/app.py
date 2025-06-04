@@ -113,8 +113,8 @@ def get_video(video_id):
 def favorite_video(video_id):
     data = request.get_json()
     user_id = data.get('user_id')
-    toggle_favorite(user_id, video_id)
-    return jsonify({'message': 'Favorite toggled'}), 200
+    is_favorited = toggle_favorite(user_id, video_id)
+    return jsonify({'message': 'Favorite toggled', 'is_favorited': is_favorited}), 200
 
 @app.route('/video/<int:video_id>/recommend', methods=['POST'])
 def recommend_video(video_id):
