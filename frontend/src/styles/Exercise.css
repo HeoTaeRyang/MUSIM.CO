@@ -1,5 +1,16 @@
 /* src/styles/Exercise.css */
-
+/* 기존 .correction-tag 아래 또는 유사한 위치에 추가 */
+.favorite-tag {
+  display: inline-block;
+  background-color: #FFD700; /* 황금색 (노란색 계열) */
+  color: #333; /* 글씨 색상 */
+  font-size: 0.7em;
+  padding: 3px 6px;
+  border-radius: 4px;
+  margin-left: 8px; /* 다른 태그와의 간격 */
+  font-weight: bold;
+  vertical-align: middle; /* 텍스트 정렬 */
+}
 .ex-container {
   padding: 20px;
   max-width: 1200px;

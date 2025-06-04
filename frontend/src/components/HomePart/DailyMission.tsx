@@ -21,16 +21,14 @@ const DailyMission: React.FC<DailyMissionProps> = ({
   const navigate = useNavigate();
 
   const handleStartMission = () => {
-    console.log(`Navigating to /video/${videoId}/VideoAnalyze with mission data`);
+    console.log(`Navigating to /DailyMissionVideo/${videoId} with mission data`);
     navigate(
-      `/video/${videoId}/VideoAnalyze`,
+      `/DailyMissionVideo/${videoId}`, // <--- URL 경로를 /DailyMissionVideo/{videoId}로 변경
       {
-        state: { // <--- 이 부분이 중요: 미션 정보를 state 객체로 전달
+        state: { // 미션 정보를 state 객체로 전달 (이전과 동일)
           missionName: missionName,
           currentCount: currentCount,
           targetCount: targetCount,
-          // videoId는 이미 URL 파라미터로 전달되지만, state에도 포함하여 일관성 유지 가능
-          // videoId: videoId
         }
       }
     );

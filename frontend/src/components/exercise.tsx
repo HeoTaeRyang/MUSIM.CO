@@ -1,32 +1,31 @@
-import "../styles/Exercise.css";
-import { useState, useMemo, useRef, useEffect, useCallback } from "react";
-import axios from "axios";
+import React, { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import "../styles/Exercise.css"; // Make sure your CSS path is correct
 import searchimg from "../assets/search.png";
 
-// ★ 즐겨찾기 아이콘 (별 모양 SVG)
+// ★ Favorite Star Icon Component (이 부분은 동일)
 const StarIcon = ({ filled, onClick }: { filled: boolean; onClick: () => void }) => (
   <svg
     className={`favorite-star-icon ${filled ? "filled" : ""}`}
     onClick={(e) => {
-      e.stopPropagation(); // 비디오 카드 클릭 이벤트 전파 방지
+      e.stopPropagation(); // Prevent video card click event from firing
       onClick();
     }}
     viewBox="0 0 24 24"
-    fill={filled ? "#FFD700" : "currentColor"} // 채워진 별은 노란색, 아니면 기본 색
-    stroke={filled ? "#FFD700" : "currentColor"} // 테두리도 일치
+    fill={filled ? "#FFD700" : "currentColor"} // Yellow if filled, default color otherwise
+    stroke={filled ? "#FFD700" : "currentColor"} // Border color matches fill
     strokeWidth="1"
     width="24"
     height="24"
-    style={{ cursor: "pointer", position: "absolute", top: '8px', right: '8px', zIndex: 10, color: '#e0e0e0' }} // 스타일 추가
+    style={{ cursor: "pointer", position: "absolute", top: '8px', right: '8px', zIndex: 10, color: '#e0e0e0' }}
   >
     <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63L2 9.24l5.46 4.73L5.82 21z" />
   </svg>
 );
 
-
 const API_BASE_URL = "http://127.0.0.1:5000";
 
+// --- Interfaces (이 부분은 동일) ---
 interface Video {
   id: number;
   views: number;
@@ -35,7 +34,7 @@ interface Video {
   title: string;
   video_url: string;
   correctable: number;
-  isFavorite?: boolean; // 이 비디오가 현재 사용자의 즐겨찾기인지 여부
+  isFavorite?: boolean; // Indicates if this video is a favorite for the current user
   thumbnail_url: string;
   description: string;
   product_link: string | null;
@@ -47,26 +46,14 @@ interface TodayVideo extends Video {
   bottomText?: string;
 }
 
+// --- Exercise Component ---
 const Exercise = () => {
-  const [sortType, setSortType] = useState<"recent" | "like" | "watch">(
-    "recent"
-  );
+  const [sortType, setSortType] = useState<"recent" | "like" | "watch">("recent");
   const [searchQuery, setSearchQuery] = useState("");
-  // Removed: lastActiveBannerIndex, only rely on hoveredBannerIndex for visual feedback
-  const [hoveredBannerIndex, setHoveredBannerIndex] = useState<number | null>(
-    0 // Default to first banner active
-  );
+  const [hoveredBannerIndex, setHoveredBannerIndex] = useState<number | null>(0);
   const [showAutocomplete, setShowAutocomplete] = useState(false);
-
-  // Removed all dragging related states:
-  // const [isDragging, setIsDragging] = useState(false);
-  // const [startX, setStartX] = useState(0);
-  // const [currentTranslateX, setCurrentTranslateX] = useState(0);
-  // const [draggedDistance, setDraggedDistance] = useState(0);
-
   const [showFilterOptions, setShowFilterOptions] = useState(false);
-  const [showOnlyCorrectionVideos, setShowOnlyCorrectionVideos] =
-    useState(false);
+  const [showOnlyCorrectionVideos, setShowOnlyCorrectionVideos] = useState(false);
   const [showOnlyFavoriteVideos, setShowOnlyFavoriteVideos] = useState(false);
 
   const [bannerVideos, setBannerVideos] = useState<TodayVideo[]>([]);
@@ -76,18 +63,21 @@ const Exercise = () => {
   const [loadingVideos, setLoadingVideos] = useState(true);
   const [errorVideos, setErrorVideos] = useState<string | null>(null);
 
-  const overlappingBannersWrapperRef = useRef<HTMLDivElement>(null);
   const filterButtonRef = useRef<HTMLDivElement>(null);
   const sortDropdownRef = useRef<HTMLDivElement>(null);
 
   const navigate = useNavigate();
 
+  // --- Data Fetching Functions (이 부분은 동일) ---
   const fetchTodayVideos = useCallback(async () => {
     setLoadingBanner(true);
     setErrorBanner(null);
     try {
-      const response = await axios.get<Video>(`${API_BASE_URL}/video/today`);
-      const data: Video = response.data;
+      const response = await fetch(`${API_BASE_URL}/video/today`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data: Video = await response.json();
 
       const todayVideoData: TodayVideo = {
         ...data,
@@ -96,12 +86,10 @@ const Exercise = () => {
         bottomText: `조회수: ${data.views}회 | 추천수: ${data.recommendations}회`,
       };
       setBannerVideos([todayVideoData]);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to fetch today's videos:", err);
       setErrorBanner(
-        axios.isAxiosError(err)
-          ? err.response?.data?.error || "오늘의 추천 영상 로드 실패"
-          : "알 수 없는 오류 발생"
+        err.message || "오늘의 추천 영상 로드 실패"
       );
       setBannerVideos([]);
     } finally {
@@ -123,23 +111,21 @@ const Exercise = () => {
         let method: "GET" | "POST" = "GET";
         let body: any = null;
 
-        const userId = localStorage.getItem("user_id"); 
-        console.log("현재 localStorage의 userId (fetchVideos):", userId);
+        const userId = localStorage.getItem("user_id");
 
         if (!userId && filterFavorite) {
           setErrorVideos("즐겨찾기 영상을 불러오려면 로그인이 필요합니다.");
           setVideosToDisplay([]);
           setLoadingVideos(false);
-          return; 
+          return;
         }
 
         if (filterCorrection) {
           url = `${API_BASE_URL}/video/correctable`;
         } else if (filterFavorite) {
-          // ★ 백엔드 /video/favorite 엔드포인트에 맞춰 URL 및 바디 수정
-          url = `${API_BASE_URL}/video/favorite`; 
+          url = `${API_BASE_URL}/video/favorite`;
           method = "POST";
-          body = { id: userId }; // 백엔드 video_favorite 함수가 'id' 키로 user_id를 기대함
+          body = { id: userId };
         } else if (currentSearchQuery.trim() !== "") {
           url = `${API_BASE_URL}/video/search`;
           method = "POST";
@@ -150,29 +136,39 @@ const Exercise = () => {
           body = { keyword: currentSortType };
         }
 
-        const response = await axios({ url, method, data: body });
-        let fetchedData: Video[] = response.data; 
+        const response = await fetch(url, {
+          method: method,
+          headers: { "Content-Type": "application/json" },
+          body: body ? JSON.stringify(body) : undefined,
+        });
 
-        // 각 영상에 isFavorite 상태 주입
-        // (현재 백엔드 get_favorite_videos는 즐겨찾기된 영상만 주므로,
-        // filterFavorite가 true일 때는 모든 영상이 isFavorite: true 임)
-        if (filterFavorite) {
-            fetchedData = fetchedData.map(video => ({
-                ...video,
-                isFavorite: true // 즐겨찾기 필터 시 모든 영상은 즐겨찾기 상태
-            }));
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        let fetchedData: Video[] = await response.json();
+
+        // 사용자 로그인 상태 및 즐겨찾기 여부에 따라 isFavorite 플래그 설정
+        if (userId) {
+            const favoriteResponse = await fetch(`${API_BASE_URL}/user/${userId}/favorites`);
+            if (favoriteResponse.ok) {
+                const favoriteVideoIds = await favoriteResponse.json();
+                fetchedData = fetchedData.map(video => ({
+                    ...video,
+                    isFavorite: favoriteVideoIds.includes(video.id)
+                }));
+            } else {
+                console.error("Failed to fetch user favorites for display.");
+                fetchedData = fetchedData.map(video => ({ ...video, isFavorite: false }));
+            }
         } else {
-            // 그 외의 경우 (일반 목록, 검색, 정렬)는 isFavorite를 false로 초기화합니다.
-            // 이상적으로는 백엔드가 이 정보를 함께 제공해야 합니다.
-            // 여기서는 사용자가 직접 토글할 때만 isFavorite 상태가 업데이트됩니다.
-            fetchedData = fetchedData.map(video => ({
-                ...video,
-                isFavorite: false 
-            }));
+            fetchedData = fetchedData.map(video => ({ ...video, isFavorite: false }));
+        }
+        
+        if (filterFavorite) {
+            fetchedData = fetchedData.filter(video => video.isFavorite);
         }
 
-
-        let sortedData = [...fetchedData]; // isFavorite 상태가 주입된 데이터로 정렬
+        let sortedData = [...fetchedData];
         if (currentSortType === "recent") {
           sortedData.sort(
             (a, b) =>
@@ -186,65 +182,61 @@ const Exercise = () => {
         }
 
         setVideosToDisplay(sortedData);
-      } catch (err) {
+      } catch (err: any) {
         console.error("Failed to fetch videos:", err);
         setErrorVideos(
-          axios.isAxiosError(err)
-            ? err.response?.data?.error || "영상 목록 로드 실패"
-            : "알 수 없는 오류 발생"
+          err.message || "영상 목록 로드 실패"
         );
         setVideosToDisplay([]);
       } finally {
         setLoadingVideos(false);
       }
     },
-    [] 
+    []
   );
 
-  // ★ 즐겨찾기 토글 함수
-  const handleFavoriteToggle = useCallback(async (videoId: number, isCurrentlyFavorite: boolean) => {
+  const toggleFavorite = useCallback(async (videoId: number) => {
     const userId = localStorage.getItem("user_id");
     if (!userId) {
-      alert("즐겨찾기 기능을 사용하려면 로그인해주세요.");
+      alert("로그인이 필요합니다.");
       return;
     }
 
     try {
-      // ★ 백엔드에 추가할 /video/toggle_favorite 엔드포인트에 맞춰 요청
-      const response = await axios.post(`${API_BASE_URL}/video/toggle_favorite`, {
-        user_id: parseInt(userId), // 백엔드 함수가 'user_id'로 받음
-        video_id: videoId,         // 백엔드 함수가 'video_id'로 받음
+      const response = await fetch(`${API_BASE_URL}/video/${videoId}/favorite`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userId }),
       });
 
-      console.log("Favorite toggle response:", response.data);
+      if (!response.ok) {
+        throw new Error("즐겨찾기 상태 변경 실패");
+      }
+      const data = await response.json();
+      const isFavorited = data.is_favorited;
 
-      // UI 업데이트: 비디오 리스트에서 해당 비디오의 isFavorite 상태를 변경
       setVideosToDisplay(prevVideos => {
-        const updatedVideos = prevVideos.map(video => 
-          video.id === videoId ? { ...video, isFavorite: !isCurrentlyFavorite } : video
+        const updatedVideos = prevVideos.map(video =>
+          video.id === videoId ? { ...video, isFavorite: isFavorited } : video
         );
         
-        // '즐겨 찾기한 영상만 보기' 필터가 켜져있고, 즐겨찾기를 해제했다면 목록에서 제거
-        if (showOnlyFavoriteVideos && isCurrentlyFavorite) { 
-          return updatedVideos.filter(video => video.id !== videoId);
+        if (showOnlyFavoriteVideos && !isFavorited) {
+            return updatedVideos.filter(video => video.id !== videoId);
         }
-        // If "Show only favorite videos" filter is on and a video is favorited,
-        // we might need to re-fetch the list to show the newly added favorite.
-        // For simplicity, we'll just update the current UI state.
-        // A full re-fetch here could lead to too many API calls if toggled frequently.
-        // The most robust solution would be for the backend to return the full updated favorite list,
-        // or for the UI to manage favorites more robustly in local state.
         return updatedVideos;
       });
 
+      alert(
+        isFavorited ? "즐겨찾기 등록했습니다!" : "즐겨찾기를 해제했습니다!"
+      );
+
     } catch (err) {
-      console.error("Failed to toggle favorite:", err);
-      alert("즐겨찾기 상태 변경에 실패했습니다. 백엔드 서버를 확인해주세요.");
-      // 에러 처리: 백엔드 메시지 등을 사용자에게 보여줄 수 있음
+      console.error("즐겨찾기 토글 실패:", err);
+      alert("즐겨찾기 상태 변경 중 오류가 발생했습니다.");
     }
-  }, [showOnlyFavoriteVideos]); 
+  }, [showOnlyFavoriteVideos]);
 
-
+  // --- Effects (이 부분은 동일) ---
   useEffect(() => {
     fetchTodayVideos();
   }, [fetchTodayVideos]);
@@ -263,24 +255,6 @@ const Exercise = () => {
     searchQuery,
     fetchVideos,
   ]);
-
-  const autocompleteSuggestions = useMemo(() => {
-    if (searchQuery.trim() === "") return [];
-    const lowerCaseQuery = searchQuery.toLowerCase();
-    const suggestions = new Set<string>();
-    videosToDisplay.forEach((video) => {
-      if (video.title.toLowerCase().includes(lowerCaseQuery)) {
-        suggestions.add(video.title);
-      }
-    });
-    return Array.from(suggestions).slice(0, 5);
-  }, [videosToDisplay, searchQuery]);
-
-  // Removed: mouseDownClientX useRef
-
-  // Removed: onMouseDown, onMouseMove, onMouseUp callbacks
-
-  // Removed: useEffect for mousemove and mouseup listeners
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -304,6 +278,20 @@ const Exercise = () => {
     };
   }, [showFilterOptions]);
 
+  // --- Memoized Values (이 부분은 동일) ---
+  const autocompleteSuggestions = useMemo(() => {
+    if (searchQuery.trim() === "") return [];
+    const lowerCaseQuery = searchQuery.toLowerCase();
+    const suggestions = new Set<string>();
+    videosToDisplay.forEach((video) => {
+      if (video.title.toLowerCase().includes(lowerCaseQuery)) {
+        suggestions.add(video.title);
+      }
+    });
+    return Array.from(suggestions).slice(0, 5);
+  }, [videosToDisplay, searchQuery]);
+
+  // --- Child Components / Handlers (이 부분은 동일) ---
   const UnifiedBanner = ({
     imageSrc,
     videoData,
@@ -313,7 +301,6 @@ const Exercise = () => {
     index,
     onMouseEnter,
     onMouseLeave,
-    // Removed: currentDraggedDistance
   }: {
     imageSrc: string;
     videoData: Video;
@@ -323,12 +310,10 @@ const Exercise = () => {
     index: number;
     onMouseEnter: () => void;
     onMouseLeave: () => void;
-    // Removed: currentDraggedDistance: number;
   }) => {
-    const isActive = hoveredBannerIndex === index; // Only rely on hover for active state
+    const isActive = hoveredBannerIndex === index;
 
     const handleBannerClick = () => {
-      // Removed: drag distance check
       console.log(`영상을 재생합니다: ${videoData.video_url}`);
       navigate(`/video/${videoData.id}`, {
         state: {
@@ -370,24 +355,18 @@ const Exercise = () => {
           title: video.title,
           video: video.video_url.startsWith("http")
             ? video.video_url
-            : `${API_BASE_URL}/${video.video_url}`, // 경로 보정
+            : `${API_BASE_URL}/${video.video_url}`, // Path correction
         },
       },
     });
   };
 
+  // --- Render ---
   return (
     <div className="ex-container">
-      {/* 배너 섹션 - 드래그 기능 제거 */}
-      <div
-        className="overlapping-banners-wrapper"
-        ref={overlappingBannersWrapperRef}
-        // Removed: onMouseDown, onMouseLeave props
-      >
-        <div
-          className="banners-inner-container"
-          // Removed: style={{ transform: `translateX(${currentTranslateX}px)` }}
-        >
+      {/* Banner Section */}
+      <div className="overlapping-banners-wrapper">
+        <div className="banners-inner-container">
           {loadingBanner && (
             <div className="loading-message">
               오늘의 추천 영상을 불러오는 중...
@@ -409,18 +388,16 @@ const Exercise = () => {
                 bottomText={banner.bottomText}
                 onMouseEnter={() => {
                   setHoveredBannerIndex(index);
-                  // Removed: setLastActiveBannerIndex(index);
                 }}
                 onMouseLeave={() => {
                   setHoveredBannerIndex(null);
                 }}
-                // Removed: currentDraggedDistance={draggedDistance}
               />
             ))}
         </div>
       </div>
 
-      {/* 검색창 */}
+      {/* Search Section */}
       <div className="search-section">
         <div className="search-input-wrapper">
           <input
@@ -468,7 +445,7 @@ const Exercise = () => {
         )}
       </div>
 
-      {/* 필터 및 정렬 섹션 */}
+      {/* Filter and Sort Section */}
       <div className="filter-sort-section">
         <div className="filter-button-wrapper" ref={filterButtonRef}>
           <button
@@ -528,7 +505,7 @@ const Exercise = () => {
         </div>
       </div>
 
-      {/* 영상 목록 (썸네일 및 정보 포함) */}
+      {/* Video List (Thumbnails and Info) */}
       <div className="video-list">
         {loadingVideos && (
           <div className="loading-message">
@@ -544,44 +521,53 @@ const Exercise = () => {
           </div>
         )}
 
-        {!loadingVideos && videosToDisplay.length > 0
-          ? videosToDisplay.map((video) => (
-              <div
-                key={video.id}
-                className="video-card"
-                onClick={() => handleVideoCardClick(video)}
-              >
-                <img
-                  src={video.thumbnail_url}
-                  alt={video.title}
-                  className="video-thumbnail"
-                />
-                {/* ★ 즐겨찾기 별 버튼 추가 */}
-                <StarIcon 
-                    filled={video.isFavorite || false} 
-                    onClick={() => handleFavoriteToggle(video.id, video.isFavorite || false)}
-                />
-                <div className="video-details">
-                  <div className="video-title">{video.title}</div>
-                  <div className="video-meta">
-                    <span>조회수: {video.views}</span>
-                    <span>추천: {video.recommendations}</span>
-                    <span>
-                      날짜: {new Date(video.upload_date).toLocaleDateString()}
-                    </span>
-                    {video.correctable === 1 && (
-                      <span className="correction-tag">자세 교정</span>
-                    )}
-                  </div>
+        {!loadingVideos && videosToDisplay.length > 0 ? (
+          videosToDisplay.map((video) => (
+            <div
+              key={video.id}
+              className="video-card"
+              onClick={() => handleVideoCardClick(video)}
+            >
+              <img
+                src={video.thumbnail_url}
+                alt={video.title}
+                className="video-thumbnail"
+              />
+              {/* ★ 즐겨찾기 별 버튼 추가 */}
+              <StarIcon
+                filled={video.isFavorite || false}
+                onClick={(e) => {
+                  e.stopPropagation(); // Stop propagation to prevent video card click
+                  toggleFavorite(video.id);
+                }}
+              />
+              <div className="video-details">
+                <div className="video-title">{video.title}</div>
+                <div className="video-meta">
+                  <span>조회수: {video.views}</span>
+                  <span>추천: {video.recommendations}</span>
+                  <span>
+                    날짜: {new Date(video.upload_date).toLocaleDateString()}
+                  </span>
+                  {video.correctable === 1 && (
+                    <span className="correction-tag">자세 교정</span>
+                  )}
+                  {/* ★ 즐겨찾기 태그 추가 */}
+                  {video.isFavorite && (
+                    <span className="favorite-tag">즐겨찾기</span>
+                  )}
                 </div>
               </div>
-            ))
-          : !loadingVideos &&
-            !errorVideos && (
-              <div className="no-videos-message">
-                검색 결과가 없거나 영상을 불러올 수 없습니다.
-              </div>
-            )}
+            </div>
+          ))
+        ) : (
+          !loadingVideos &&
+          !errorVideos && (
+            <div className="no-videos-message">
+              검색 결과가 없거나 영상을 불러올 수 없습니다.
+            </div>
+          )
+        )}
       </div>
     </div>
   );

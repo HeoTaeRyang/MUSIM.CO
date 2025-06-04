@@ -1,0 +1,135 @@
+/* src/styles/VideoAnalyze.css */
+
+/* 1. 새로운 최상위 중앙 정렬 컨테이너 */
+.page-center-container {
+    display: flex;
+    justify-content: center; /* 내부 콘텐츠(video-analyze-container)를 수평 중앙에 정렬 */
+    width: 100%; /* 화면 전체 너비를 차지 */
+    min-height: 100vh; /* 최소 화면 높이 */
+    box-sizing: border-box;
+    padding: 20px; /* 전체 페이지에 대한 외부 여백 */
+    margin-top: 100px; /* 이전에 추가된 margin-top 유지 */
+    /* 디버깅용 보더 */
+    /* border: 1px dashed green; */
+}
+
+/* 2. video-analyze-container: 콘텐츠 영역의 최대 너비와 내부 정렬 담당 */
+.video-analyze-container {
+    display: flex;
+    flex-direction: column; /* 자식 요소들을 세로로 쌓음 */
+    align-items: center; /* 자식 요소들을 수평 중앙에 정렬 */
+    width: 100%; /* page-center-container 내부에서 사용 가능한 너비 모두 사용 */
+    max-width: 1200px; /* 콘텐츠 영역의 최대 너비 유지 */
+    box-sizing: border-box;
+    gap: 20px; /* 자식 요소들(데일리 미션 카드, 패널) 사이의 간격 */
+    padding-top: 20px; /* 상단 여백 */
+    padding-bottom: 20px; /* 하단 여백 */
+    /* 디버깅용 보더 */
+    /* border: 1px dashed blue; */
+}
+
+/* 데일리 미션 카드: 상단에 위치, 컨테이너 너비에 맞춤 */
+.daily-mission-card.video-analyze-mission-display {
+    width: 100%; /* 부모 video-analyze-container의 너비를 따름 */
+    max-width: 700px; /* 데일리 미션 카드의 최대 너비 유지 */
+    margin-top: 0;
+    margin-bottom: 0;
+    align-self: center;
+    box-sizing: border-box;
+    background-color: white;
+    border: none;
+    box-shadow: none;
+    /* DailyMission.css에 정의된 .daily-mission-card.top-card 스타일을 활용 */
+    /* 디버깅용 보더 */
+    /* border: 1px dashed purple; */
+}
+
+
+/* 패널 영역: 카메라 컨트롤 영역을 중앙에 배치 */
+.panels {
+    display: flex;
+    justify-content: center; /* 내부 콘텐츠(camera-control-area)를 수평 중앙에 정렬 */
+    width: 150%; /* 부모 video-analyze-container의 너비를 따름 */
+    flex: 1; /* 남은 공간을 채우도록 설정 */
+    height: auto;
+    overflow: hidden; /* 내용이 넘치면 숨김 */
+    /* 디버깅용 보더 */
+    /* border: 1px dashed orange; */
+}
+
+/* 카메라 컨트롤 영역: 버튼과 카메라 피드를 중앙에 배치 */
+.camera-control-area {
+    display: flex;
+    justify-content: center; /* 수평 중앙 정렬 */
+    align-items: center; /* 수직 중앙 정렬 */
+    flex-direction: column; /* 버튼과 카메라를 세로로 배치 */
+    width: 100%; /* 부모 panels의 전체 너비를 차지 */
+    padding: 20px; /* 내부 여백 추가 */
+    box-sizing: border-box;
+    /* 디버깅용 보더 */
+    /* border: 1px dashed lightblue; */
+}
+
+/* "실시간 촬영 시작하기" 버튼 스타일 */
+.start-camera-button {
+    display: block;
+    margin: 50px auto;
+    padding: 15px 40px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: fit-content;
+    min-width: 250px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.start-camera-button:hover {
+    background-color: #0056b3;
+}
+
+/* 분석 패널: 카메라가 활성화될 때 보여지는 전체 패널 */
+.analyze-panel.full-width {
+    width: 100%; /* 부모 camera-control-area의 너비를 따름 */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* 내부 요소 (비디오, 텍스트) 가운데 정렬 */
+    box-sizing: border-box;
+    /* 디버깅용 보더 */
+    /* border: 1px dashed gray; */
+}
+
+/* 카메라 피드 영역: 카메라 비디오와 메시지를 포함 */
+.camera-feed-area {
+    width: 100%; /* 부모 analyze-panel.full-width의 100%를 사용 */
+    max-width: 1200px; /* <-- 800px * 1.5 = 1200px (가로 1.5배) */
+    margin: 20px auto; /* 위아래 여백, 좌우 중앙 정렬 */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* 내부 요소 (비디오, 텍스트) 가운데 정렬 */
+    background-color: #f0f0f0; /* 카메라 영역 배경색 (디버깅용) */
+    border-radius: 12px; /* 비디오 영역 모서리 둥글게 */
+    padding: 10px; /* 내부 패딩 유지 */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 그림자 유지 */
+    /* 디버깅용 보더 */
+    /* border: 1px dashed red; */
+}
+
+.camera-feed-area video {
+    width: 100%; /* 부모 .camera-feed-area에 맞춰 너비 조정 */
+    height: auto; /* 비율 유지 */
+    max-height: 675px; /* <-- (800px * 9/16) * 1.5 = 450px * 1.5 = 675px (세로 1.5배) */
+    border-radius: 8px; /* 비디오 자체의 모서리 둥글게 */
+    background-color: #000; /* 비디오 로딩 중 배경색 */
+}
+
+/* 카메라 메시지 스타일 */
+.camera-message {
+    margin-top: 15px; /* 메시지 위쪽 여백 */
+    font-size: 16px;
+    color: #333;
+    text-align: center; /* 메시지 중앙 정렬 */
+}

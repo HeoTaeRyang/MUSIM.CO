@@ -11,6 +11,7 @@ import VideoAnalyze from "./components/VideoAnalyze";
 import VideoPurchase from "./components/VideoPurchase";
 import MyPage from "./components/mypage";
 import Ranking from "./components/HomePart/Ranking";
+import DailyMissionVideo from "./components/DailyMissionVideo";
 
 import "./App.css";
 
@@ -114,6 +115,7 @@ function App() {
               <Route path="/video/:videoId/purchase" element={<VideoPurchase />} />
               <Route path="/mypage" element={<MyPage />} />
               <Route path="/ranking" element={<Ranking />} />
+              <Route path="/dailymissionvideo/:videoId" element={<DailyMissionVideo />} />
             </Route>
           </Routes>
         </div>
