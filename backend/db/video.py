@@ -53,9 +53,12 @@ def toggle_favorite(user_id, video_id):
             existing = cursor.fetchone()
             if existing:
                 cursor.execute("DELETE FROM Favorite WHERE user_id = %s AND video_id = %s", (user_id, video_id))
+                conn.commit()
+                return False
             else:
                 cursor.execute("INSERT INTO Favorite (user_id, video_id, favorite_date) VALUES (%s, %s, NOW())", (user_id, video_id))
-            conn.commit()
+                conn.commit()
+                return True
 
 def add_recommendation(user_id, video_id):
     with get_connection() as conn:
