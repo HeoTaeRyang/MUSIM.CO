@@ -64,3 +64,9 @@
   cursor: pointer;
   width: 100%;
 }
+
+.status-message {
+  margin-top: 10px;
+  font-size: 0.95rem;
+  color: #555;
+}

@@ -1,25 +1,30 @@
 // src/components/VideoAnalyze.tsx
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import VideoDetail from "./VideoDetail";
 import "../styles/VideoAnalyze.css";
-import { FaTimes, FaDownload, FaShareAlt } from "react-icons/fa";
+import { FaSpinner, FaDownload, FaShareAlt } from "react-icons/fa";
+import { MdOutlineFileUpload, MdPhotoCamera } from "react-icons/md";
 import axios from "axios";
 import classNames from "classnames";
 
-axios.defaults.baseURL = "/"; // Vite proxy 설정이 되어 있다면
+axios.defaults.baseURL = "/";
 
 const VideoAnalyze: React.FC = () => {
   const { videoId } = useParams<{ videoId: string }>();
   const id = Number(videoId);
+  const userId = localStorage.getItem("user_id") || "";
 
   const [showPanel, setShowPanel] = useState(true);
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
   const [resultText, setResultText] = useState<string>("");
   const inputRef = useRef<HTMLInputElement>(null);
-  const userId = localStorage.getItem("user_id") || "";
 
-  // 1) 이전에 저장된 결과 조회
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
+  const webcamPreviewRef = useRef<HTMLVideoElement>(null);
+
   useEffect(() => {
     if (!userId || !id) return;
     axios
@@ -31,15 +36,13 @@ const VideoAnalyze: React.FC = () => {
           setShowPanel(false);
         }
       })
-      .catch(() => {
-        /* 아직 결과 없음 */
-      });
+      .catch(() => { });
   }, [id, userId]);
 
-  const handleClose = () => {
-    setShowPanel(false);
+  const handleReset = () => {
     setUploadedUrl(null);
     setResultText("");
+    setRecordedBlob(null);
     if (inputRef.current) inputRef.current.value = "";
   };
 
@@ -47,29 +50,93 @@ const VideoAnalyze: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file || !userId || !id) return;
 
-    // 미리보기
     const preview = URL.createObjectURL(file);
     setUploadedUrl(preview);
     setResultText("분석 중입니다...");
 
-    // 2) 업로드
     const formData = new FormData();
     formData.append("video_file", file);
     formData.append("user_id", userId);
 
     try {
-      const up = await axios.post(
-        `/video/${id}/posture/upload`,
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
+      const up = await axios.post(`/video/${id}/posture/upload`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
       const video_path = up.data.path;
 
-      // 3) 분석
-      const ai = await axios.post(
-        `/video/${id}/posture/analyze`,
-        { video_path, user_id: userId }
-      );
+      const ai = await axios.post(`/video/${id}/posture/analyze`, {
+        video_path,
+        user_id: userId,
+      });
+      setResultText(ai.data.result_text || "문제 없음");
+    } catch (err: any) {
+      console.error(err);
+      setResultText(err.response?.data?.error || "분석 실패!");
+    }
+  };
+
+  const handleStartRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      const recorder = new MediaRecorder(stream);
+      const chunks: Blob[] = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunks.push(e.data);
+      };
+
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: "video/webm" });
+        setRecordedBlob(blob);
+        setUploadedUrl(URL.createObjectURL(blob));
+        setIsRecording(false);
+        stream.getTracks().forEach((track) => track.stop());
+      };
+
+      setMediaRecorder(recorder);
+      setIsRecording(true);
+
+      // 💡 DOM에 렌더된 후 실행되도록 약간 지연
+      setTimeout(() => {
+        if (webcamPreviewRef.current) {
+          webcamPreviewRef.current.srcObject = stream;
+          webcamPreviewRef.current.play().catch((err) => {
+            console.error("비디오 재생 실패:", err);
+          });
+        }
+      }, 100);
+
+      recorder.start();
+    } catch (error) {
+      console.error("카메라 접근 실패:", error);
+      alert("카메라 접근을 허용해주세요.");
+    }
+  };
+
+
+  const handleStopRecording = () => {
+    mediaRecorder?.stop();
+  };
+
+  const handleUploadRecorded = async () => {
+    if (!recordedBlob || !userId || !id) return;
+
+    setResultText("분석 중입니다...");
+
+    const formData = new FormData();
+    formData.append("video_file", recordedBlob, "recorded_video.webm");
+    formData.append("user_id", userId);
+
+    try {
+      const up = await axios.post(`/video/${id}/posture/upload`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const video_path = up.data.path;
+
+      const ai = await axios.post(`/video/${id}/posture/analyze`, {
+        video_path,
+        user_id: userId,
+      });
       setResultText(ai.data.result_text || "문제 없음");
     } catch (err: any) {
       console.error(err);
@@ -108,59 +175,95 @@ const VideoAnalyze: React.FC = () => {
       <div className="panels">
         <div className={classNames("video-area", { "with-panel": showPanel })}>
           <VideoDetail
-            videoId={String(id)}
-            hideComments
-            videoSrc={uploadedUrl || ""}
+            videoId={videoId}
+            hideComments={true}
             onAnalyzeClick={() => setShowPanel(true)}
           />
         </div>
 
         {showPanel && (
           <div className="analyze-panel">
-            <div className="analyze-header">
-              <h2>영상 업로드</h2>
-              <button className="close-btn" onClick={handleClose}>
-                <FaTimes />
-              </button>
-            </div>
             <div className="upload-area">
               {!uploadedUrl ? (
-                <label className="upload-label">
-                  <input
-                    type="file"
-                    accept="video/*"
-                    onChange={handleFileChange}
-                    ref={inputRef}
-                  />
-                  <div className="upload-icon">📁</div>
-                  <p>분석할 영상을 업로드하세요</p>
-                </label>
+                <div className="upload-buttons-container">
+                  <div className="upload-button" onClick={() => inputRef.current?.click()}>
+                    <MdOutlineFileUpload className="upload-icon-react" />
+                    <p>영상 업로드</p>
+                    <input
+                      type="file"
+                      accept="video/*"
+                      onChange={handleFileChange}
+                      ref={inputRef}
+                      style={{ display: "none" }}
+                    />
+                  </div>
+                  <div className="upload-button" onClick={handleStartRecording}>
+                    <MdPhotoCamera className="upload-icon-react" />
+                    <p>영상 촬영</p>
+                  </div>
+                </div>
+              ) : recordedBlob ? (
+                <div className="preview-wrapper">
+                  <video className="uploaded-video" src={uploadedUrl} controls />
+                  <div className="result-buttons">
+                    <button className="btn save-btn" onClick={handleUploadRecorded}>
+                      영상 업로드하기
+                    </button>
+                    <button className="btn reset-btn" onClick={handleReset}>
+                      다시 촬영하기
+                    </button>
+                  </div>
+                </div>
               ) : (
-                <video
-                  className="uploaded-video"
-                  src={uploadedUrl}
-                  controls
-                />
+                <div className="preview-wrapper">
+                  <video className="uploaded-video" src={uploadedUrl} controls />
+                  <button className="reset-btn" onClick={handleReset}>
+                    다시 업로드하기
+                  </button>
+                </div>
               )}
             </div>
+
+            {isRecording && (
+              <div className="recording-preview">
+                <p>녹화 중...</p>
+                <video
+                  ref={webcamPreviewRef}
+                  autoPlay
+                  muted
+                  playsInline
+                  className="webcam-live-preview"
+                />
+                <button className="btn stop-btn" onClick={handleStopRecording}>
+                  녹화 중지
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
-
       {resultText && (
-        <div className="analysis-result-below">
-          <h3>결과</h3>
-          <p style={{ whiteSpace: "pre-line" }}>{resultText}</p>
-          <div className="result-buttons">
-            <button className="btn save-btn" onClick={handleSave}>
-              <FaDownload /> 저장하기
-            </button>
-            <button className="btn share-btn" onClick={handleShare}>
-              <FaShareAlt /> 공유하기
-            </button>
+        resultText === "분석 중입니다..." ? (
+          <div className="loading-container">
+            <FaSpinner className="spinner-icon" />
+            <p>분석 중입니다...</p>
           </div>
-        </div>
+        ) : (
+          <div className="analysis-result-below">
+            <h3>결과</h3>
+            <p>{resultText}</p>
+            <div className="result-buttons">
+              <button className="btn save-btn" onClick={handleSave}>
+                <FaDownload /> 저장하기
+              </button>
+              <button className="btn share-btn" onClick={handleShare}>
+                <FaShareAlt /> 공유하기
+              </button>
+            </div>
+          </div>
+        )
       )}
+
     </div>
   );
 };

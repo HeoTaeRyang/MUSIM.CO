@@ -561,10 +561,7 @@ const Exercise = () => {
             style={{ color: "red", textAlign: "center", padding: "20px" }}
           >
             데이터 로드 중 오류가 발생했습니다: {errorVideos}
-            <p>더미 데이터로 표시됩니다.</p>
-            <p>
-              백엔드 서버가 실행 중인지, `API_BASE_URL`이 올바른지 확인해주세요.
-            </p>
+            
           </div>
         )}
 

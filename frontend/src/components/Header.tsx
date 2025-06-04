@@ -36,7 +36,8 @@ const Header = () => {
             </div>
 
             <nav className="menu">
-                <Link to="/diet">식단</Link>
+                <Link to="/">홈</Link>
+                <Link to="/ranking">랭킹</Link>
                 <Link to="/exercise">운동</Link>
                 <Link to="/shop">제품구매</Link>
             </nav>

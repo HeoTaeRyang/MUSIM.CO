@@ -1,30 +1,77 @@
+/* 대시보드 전체 컨테이너 스타일 */
 .dashboard {
-  width: 100%;
-  padding: 40px;
-  box-sizing: border-box;
-  text-align: center;
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  margin-top: 150px;
+  font-family: "Noto Sans KR", sans-serif;
+  color: #333;
+  /* border: 1px solid red; /* 디버깅용: dashboard 범위 확인 */
 }
 
+/* 인삿말 섹션 스타일 */
 .greeting {
-  font-size: 1.5rem;
-  font-weight: 500;
-  margin-bottom: 40px;
-  margin-top: 120px;
+  margin-bottom: 30px;
+  font-size: 1.5em;
   line-height: 1.4;
+  text-align: center;
+  color: #333;
+  /* <--- 텍스트 색상 명확히 지정 */
+  background-color: transparent;
+  /* <--- 배경색 투명하게 (혹시 모를 가림 방지) */
+  opacity: 1;
+  /* <--- 투명도 1로 설정 (완전히 보임) */
+  visibility: visible;
+  /* <--- 가시성 visible로 설정 */
+  display: block;
+  /* <--- display: block으로 설정 (행 전체 차지) */
+  /* border: 1px solid blue; /* 디버깅용: greeting 범위 확인 */
 }
 
+.username {
+  font-weight: bold;
+  color: #1f63ab;
+}
+
+/* 주요 패널들을 담는 컨테이너 (랭킹, 데일리 미션, 달력) */
 .main-panels {
   display: flex;
+  gap: 30px;
+  /* 패널들 사이의 간격 */
   justify-content: center;
-  gap: 450px;
-  flex-wrap: wrap;
-  margin-bottom: 100px;
 }
 
+/* 각 패널 (랭킹, 데일리미션 컨테이너, 달력)의 공통 스타일 */
+.left-panel,
+.daily-mission-container,
 .right-panel {
   flex: 1;
-  max-width: 432px;
-  height: 453px;
-  display: flex;
-  justify-content: center;
+  min-width: 280px;
+  max-width: 410px;
+  /* 각 패널의 최대 너비 */
+  box-sizing: border-box;
+  margin-bottom: 20px;
+}
+
+/* ---------------------------------------------------------------------- */
+/* 미디어 쿼리: 화면 너비가 1100px 이하일 때 */
+@media (max-width: 1100px) {
+  .main-panels {
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .left-panel,
+  .daily-mission-container,
+  .right-panel {
+    width: 90%;
+    max-width: 450px;
+    min-width: 300px;
+  }
+
+  /* 모바일에서 인삿말 폰트 크기 조정 (선택 사항) */
+  .greeting {
+    font-size: 1.3em;
+  }
 }

@@ -1,0 +1,145 @@
+/* src/styles/DailyMission.css */
+
+/* DailyMission 컴포넌트 전체를 담는 컨테이너 */
+.daily-mission-container {
+  display: flex;
+  flex-direction: column; /* 카드들을 세로로 정렬 */
+  gap: 15px; /* 두 미션 카드 사이의 간격 */
+}
+
+/* 개별 데일리 미션 카드들의 공통 스타일 */
+.daily-mission-card {
+  background-color: #f0f8ff; /* 연한 파란색 배경 */
+  border-radius: 20px; /* 둥근 모서리 */
+  padding: 15px 20px; /* 카드 내부 기본 패딩 */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05); /* 은은한 그림자 */
+  display: flex;
+  /* (top-card에서 flex-direction 오버라이드) */
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  box-sizing: border-box; /* 패딩과 보더를 너비/높이에 포함 */
+  width: 100%; /* 부모 컨테이너(daily-mission-container)에 맞춰 너비 100% 사용 */
+  min-height: 150px; /* 최소 높이 유지 */
+  max-height: 200px; /* 최대 높이 유지 */
+}
+
+/* 상단 데일리 미션 카드에 대한 특정 스타일 */
+.daily-mission-card.top-card {
+  flex-direction: row;
+  justify-content: center; /* 요소들을 가로축에서 중앙으로 정렬 */
+  align-items: center; /* 세로 중앙 정렬 */
+  gap: 15px; /* 플레임과 오른쪽 컨텐츠 사이의 간격 */
+  padding: 15px 20px;
+  min-height: 150px;
+  max-height: 200px;
+}
+
+/* 불꽃 아이콘 스타일 */
+.flame-icon {
+  width: 70px;
+  height: 80px;
+  object-fit: contain;
+  flex-shrink: 0;
+  margin-right: 0;
+}
+
+/* 오른쪽 컨텐츠를 담는 새로운 컨테이너 (데일리미션 텍스트와 시작하기 버튼) */
+.daily-mission-right-content {
+  display: flex;
+  flex-direction: column; /* "데일리미션"과 "시작하기"를 세로로 정렬 */
+  align-items: flex-start; /* "데일리미션"과 "시작하기"의 X축을 동일하게 (왼쪽 정렬 유지) */
+  justify-content: center; /* 세로 중앙 정렬 */
+  gap: 8px; /* "데일리미션" 텍스트와 "시작하기" 버튼 사이의 간격 */
+  /* flex-grow: 1; <--- 이 속성을 제거합니다. */
+}
+
+/* 미션 제목 텍스트 스타일 ("데일리미션" 텍스트) */
+.mission-title {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #333;
+  height: auto;
+  width: auto;
+  max-width: 100%;
+  padding: 0;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+}
+
+/* "시작하기" 버튼 스타일 */
+.start-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  width: 130px;
+  height: 40px;
+  font-size: 0.95em;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  flex-shrink: 0;
+  margin-left: 0;
+  text-align: center;
+}
+
+/* "시작하기" 버튼 호버 시 스타일 */
+.start-button:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+/* "시작하기" 버튼 비활성화 시 스타일 */
+.start-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+/* 하단 운동 미션 카드에 대한 특정 스타일 */
+.daily-mission-card.bottom-card {
+  justify-content: center;
+  gap: 10px;
+  padding: 15px 20px;
+  flex-direction: row;
+  min-height: 150px;
+  max-height: 200px;
+}
+
+/* 운동 이름 텍스트 스타일 ("윗몸일으키기" 텍스트) */
+.exercise-name {
+  font-size: 1.5em;
+  font-weight: bold;
+  color: #555;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: auto;
+  max-width: none;
+  padding: 0 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 1;
+  flex-grow: 1;
+}
+
+/* 운동 진행 상황 (달성 횟수 / 목표 횟수) 텍스트 스타일 ("0/50" 텍스트) */
+.exercise-progress {
+  font-size: 1.5em;
+  font-weight: bold;
+  color: #007bff;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: auto;
+  max-width: none;
+  padding: 0 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
