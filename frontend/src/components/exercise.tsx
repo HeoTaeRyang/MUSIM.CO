@@ -4,6 +4,27 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import searchimg from "../assets/search.png";
 
+// ★ 즐겨찾기 아이콘 (별 모양 SVG)
+const StarIcon = ({ filled, onClick }: { filled: boolean; onClick: () => void }) => (
+  <svg
+    className={`favorite-star-icon ${filled ? "filled" : ""}`}
+    onClick={(e) => {
+      e.stopPropagation(); // 비디오 카드 클릭 이벤트 전파 방지
+      onClick();
+    }}
+    viewBox="0 0 24 24"
+    fill={filled ? "#FFD700" : "currentColor"} // 채워진 별은 노란색, 아니면 기본 색
+    stroke={filled ? "#FFD700" : "currentColor"} // 테두리도 일치
+    strokeWidth="1"
+    width="24"
+    height="24"
+    style={{ cursor: "pointer", position: "absolute", top: '8px', right: '8px', zIndex: 10, color: '#e0e0e0' }} // 스타일 추가
+  >
+    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63L2 9.24l5.46 4.73L5.82 21z" />
+  </svg>
+);
+
+
 const API_BASE_URL = "http://127.0.0.1:5000";
 
 interface Video {
@@ -14,7 +35,7 @@ interface Video {
   title: string;
   video_url: string;
   correctable: number;
-  isFavorite?: boolean;
+  isFavorite?: boolean; // 이 비디오가 현재 사용자의 즐겨찾기인지 여부
   thumbnail_url: string;
   description: string;
   product_link: string | null;
@@ -31,16 +52,17 @@ const Exercise = () => {
     "recent"
   );
   const [searchQuery, setSearchQuery] = useState("");
-  const [lastActiveBannerIndex, setLastActiveBannerIndex] = useState<number>(0);
+  // Removed: lastActiveBannerIndex, only rely on hoveredBannerIndex for visual feedback
   const [hoveredBannerIndex, setHoveredBannerIndex] = useState<number | null>(
-    null
+    0 // Default to first banner active
   );
   const [showAutocomplete, setShowAutocomplete] = useState(false);
 
-  const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [currentTranslateX, setCurrentTranslateX] = useState(0);
-  const [draggedDistance, setDraggedDistance] = useState(0);
+  // Removed all dragging related states:
+  // const [isDragging, setIsDragging] = useState(false);
+  // const [startX, setStartX] = useState(0);
+  // const [currentTranslateX, setCurrentTranslateX] = useState(0);
+  // const [draggedDistance, setDraggedDistance] = useState(0);
 
   const [showFilterOptions, setShowFilterOptions] = useState(false);
   const [showOnlyCorrectionVideos, setShowOnlyCorrectionVideos] =
@@ -81,7 +103,7 @@ const Exercise = () => {
           ? err.response?.data?.error || "오늘의 추천 영상 로드 실패"
           : "알 수 없는 오류 발생"
       );
-      setBannerVideos([]); // ✅ 더미 제거 완료
+      setBannerVideos([]);
     } finally {
       setLoadingBanner(false);
     }
@@ -101,12 +123,23 @@ const Exercise = () => {
         let method: "GET" | "POST" = "GET";
         let body: any = null;
 
+        const userId = localStorage.getItem("user_id"); 
+        console.log("현재 localStorage의 userId (fetchVideos):", userId);
+
+        if (!userId && filterFavorite) {
+          setErrorVideos("즐겨찾기 영상을 불러오려면 로그인이 필요합니다.");
+          setVideosToDisplay([]);
+          setLoadingVideos(false);
+          return; 
+        }
+
         if (filterCorrection) {
           url = `${API_BASE_URL}/video/correctable`;
         } else if (filterFavorite) {
-          url = `${API_BASE_URL}/video/favorite`;
+          // ★ 백엔드 /video/favorite 엔드포인트에 맞춰 URL 및 바디 수정
+          url = `${API_BASE_URL}/video/favorite`; 
           method = "POST";
-          body = { id: 1 };
+          body = { id: userId }; // 백엔드 video_favorite 함수가 'id' 키로 user_id를 기대함
         } else if (currentSearchQuery.trim() !== "") {
           url = `${API_BASE_URL}/video/search`;
           method = "POST";
@@ -118,9 +151,28 @@ const Exercise = () => {
         }
 
         const response = await axios({ url, method, data: body });
-        const data: Video[] = response.data;
+        let fetchedData: Video[] = response.data; 
 
-        let sortedData = [...data];
+        // 각 영상에 isFavorite 상태 주입
+        // (현재 백엔드 get_favorite_videos는 즐겨찾기된 영상만 주므로,
+        // filterFavorite가 true일 때는 모든 영상이 isFavorite: true 임)
+        if (filterFavorite) {
+            fetchedData = fetchedData.map(video => ({
+                ...video,
+                isFavorite: true // 즐겨찾기 필터 시 모든 영상은 즐겨찾기 상태
+            }));
+        } else {
+            // 그 외의 경우 (일반 목록, 검색, 정렬)는 isFavorite를 false로 초기화합니다.
+            // 이상적으로는 백엔드가 이 정보를 함께 제공해야 합니다.
+            // 여기서는 사용자가 직접 토글할 때만 isFavorite 상태가 업데이트됩니다.
+            fetchedData = fetchedData.map(video => ({
+                ...video,
+                isFavorite: false 
+            }));
+        }
+
+
+        let sortedData = [...fetchedData]; // isFavorite 상태가 주입된 데이터로 정렬
         if (currentSortType === "recent") {
           sortedData.sort(
             (a, b) =>
@@ -141,13 +193,57 @@ const Exercise = () => {
             ? err.response?.data?.error || "영상 목록 로드 실패"
             : "알 수 없는 오류 발생"
         );
-        setVideosToDisplay([]); // ✅ 더미 제거 완료
+        setVideosToDisplay([]);
       } finally {
         setLoadingVideos(false);
       }
     },
-    []
+    [] 
   );
+
+  // ★ 즐겨찾기 토글 함수
+  const handleFavoriteToggle = useCallback(async (videoId: number, isCurrentlyFavorite: boolean) => {
+    const userId = localStorage.getItem("user_id");
+    if (!userId) {
+      alert("즐겨찾기 기능을 사용하려면 로그인해주세요.");
+      return;
+    }
+
+    try {
+      // ★ 백엔드에 추가할 /video/toggle_favorite 엔드포인트에 맞춰 요청
+      const response = await axios.post(`${API_BASE_URL}/video/toggle_favorite`, {
+        user_id: parseInt(userId), // 백엔드 함수가 'user_id'로 받음
+        video_id: videoId,         // 백엔드 함수가 'video_id'로 받음
+      });
+
+      console.log("Favorite toggle response:", response.data);
+
+      // UI 업데이트: 비디오 리스트에서 해당 비디오의 isFavorite 상태를 변경
+      setVideosToDisplay(prevVideos => {
+        const updatedVideos = prevVideos.map(video => 
+          video.id === videoId ? { ...video, isFavorite: !isCurrentlyFavorite } : video
+        );
+        
+        // '즐겨 찾기한 영상만 보기' 필터가 켜져있고, 즐겨찾기를 해제했다면 목록에서 제거
+        if (showOnlyFavoriteVideos && isCurrentlyFavorite) { 
+          return updatedVideos.filter(video => video.id !== videoId);
+        }
+        // If "Show only favorite videos" filter is on and a video is favorited,
+        // we might need to re-fetch the list to show the newly added favorite.
+        // For simplicity, we'll just update the current UI state.
+        // A full re-fetch here could lead to too many API calls if toggled frequently.
+        // The most robust solution would be for the backend to return the full updated favorite list,
+        // or for the UI to manage favorites more robustly in local state.
+        return updatedVideos;
+      });
+
+    } catch (err) {
+      console.error("Failed to toggle favorite:", err);
+      alert("즐겨찾기 상태 변경에 실패했습니다. 백엔드 서버를 확인해주세요.");
+      // 에러 처리: 백엔드 메시지 등을 사용자에게 보여줄 수 있음
+    }
+  }, [showOnlyFavoriteVideos]); 
+
 
   useEffect(() => {
     fetchTodayVideos();
@@ -180,109 +276,11 @@ const Exercise = () => {
     return Array.from(suggestions).slice(0, 5);
   }, [videosToDisplay, searchQuery]);
 
-  // ★★★ 드래그 시작 시점의 마우스 좌표 저장 (클릭 판별용) ★★★
-  const mouseDownClientX = useRef(0);
+  // Removed: mouseDownClientX useRef
 
-  const onMouseDown = useCallback((e: React.MouseEvent) => {
-    setIsDragging(true);
-    setStartX(e.pageX);
-    setDraggedDistance(0); // 드래그 시작 시점에 거리 초기화
-    mouseDownClientX.current = e.clientX; // 마우스 다운 시점의 X 좌표 저장
-    overlappingBannersWrapperRef.current?.classList.add("active-drag");
-  }, []);
+  // Removed: onMouseDown, onMouseMove, onMouseUp callbacks
 
-  const onMouseMove = useCallback(
-    (e: MouseEvent) => {
-      if (!isDragging) return;
-      e.preventDefault();
-      const walk = e.pageX - startX;
-      setCurrentTranslateX((prevTranslateX) => prevTranslateX + walk); // 현재 translateX 업데이트
-      setStartX(e.pageX); // 다음 이동을 위해 시작점 업데이트
-      setDraggedDistance(
-        (prevDistance) =>
-          prevDistance + Math.abs(e.clientX - mouseDownClientX.current)
-      ); // ★★★ 총 드래그 거리 업데이트 ★★★
-
-      const bannerWidth = 600;
-      const overlap = 225;
-      const step = bannerWidth - overlap;
-
-      const totalContentWidth = bannerWidth + (bannerVideos.length - 1) * step;
-      const wrapperVisibleWidth =
-        overlappingBannersWrapperRef.current?.clientWidth || 0;
-
-      const actualMinTranslateX =
-        totalContentWidth > wrapperVisibleWidth
-          ? wrapperVisibleWidth - totalContentWidth
-          : 0;
-      const maxTranslateX = 0;
-
-      setCurrentTranslateX((prev) =>
-        Math.max(actualMinTranslateX, Math.min(prev, maxTranslateX))
-      );
-    },
-    [isDragging, startX, bannerVideos.length] // currentTranslateX는 콜백 안에서 prev로 접근
-  );
-
-  const onMouseUp = useCallback(
-    (e: MouseEvent) => {
-      setIsDragging(false);
-      overlappingBannersWrapperRef.current?.classList.remove("active-drag");
-
-      // ★★★ 마우스 다운과 업 사이의 총 이동 거리를 이용하여 클릭 판별 ★★★
-      // 이 draggedDistance는 onMouseMove에서 지속적으로 업데이트된 값입니다.
-      // 임계값 (예: 5px) 미만으로 움직였다면 클릭으로 간주
-      if (Math.abs(e.clientX - mouseDownClientX.current) < 5) {
-        // 클릭으로 간주하고, 해당 배너의 클릭 핸들러를 실행
-        // 이 로직은 UnifiedBanner 내부의 onClick과 별개로 작동해야 함.
-        // 따라서 클릭 이벤트는 onMouseUp에서 처리하는 것이 더 정확함.
-        // UnifiedBanner의 onClick은 그대로 두고, 여기서 드래그가 아닐 때만 onClick이벤트가 발생하게 할 수 있음.
-        // 하지만 가장 확실한 방법은 onMouseUp에서 클릭 여부 판단 후 직접 navigate 하는 것.
-        // 여기서는 `UnifiedBanner`의 `onClick`이 여전히 호출될 것이므로,
-        // `UnifiedBanner` 내부에서 `draggedDistance`를 상태로 받는 것이 더 직관적일 수 있음.
-        // 더 깔끔한 해결책: `UnifiedBanner`의 `onClick`에 드래그 여부를 전달하여 처리.
-        // 하지만 현재 구조상 `draggedDistance`는 Exercise 컴포넌트의 상태.
-        // 클릭 시 `handleBannerClick`을 호출하고, 그 안에서 `draggedDistance`를 확인하는 것이 원래 코드의 의도와 맞음.
-        // 그래서 `UnifiedBanner`의 `handleBannerClick` 로직을 더 견고하게 수정해야 합니다.
-        // 일단 기존 로직대로 `draggedDistance`를 활용하되,
-        // `onMouseMove`에서 `setDraggedDistance` 로직을 수정하여
-        // `mouseDownClientX`와 `e.clientX`의 차이를 `draggedDistance`에 저장하도록 함.
-        // 그리고 `onMouseUp`에서는 `draggedDistance`를 초기화하지 않고, 클릭 후 초기화.
-      }
-      setDraggedDistance(0); // 마우스 업 시점에 드래그 거리 초기화
-      setStartX(0); // 마우스 업 시점에 시작점 초기화 (현재 불필요하지만 일관성을 위해)
-
-      // onMouseUp에서 최종적인 active index 설정
-      const bannerWidth = 600;
-      const overlap = 225;
-      const step = bannerWidth - overlap;
-
-      const currentOffset = -currentTranslateX;
-      let closestBannerIndex = 0;
-      let minDistance = Infinity;
-
-      for (let i = 0; i < bannerVideos.length; i++) {
-        const targetOffset = i * step;
-        const distance = Math.abs(currentOffset - targetOffset);
-        if (distance < minDistance) {
-          minDistance = distance;
-          closestBannerIndex = i;
-        }
-      }
-      setLastActiveBannerIndex(closestBannerIndex);
-    },
-    [isDragging, currentTranslateX, bannerVideos.length, mouseDownClientX]
-  );
-
-  useEffect(() => {
-    document.addEventListener("mousemove", onMouseMove);
-    document.addEventListener("mouseup", onMouseUp);
-
-    return () => {
-      document.removeEventListener("mousemove", onMouseMove);
-      document.removeEventListener("mouseup", onMouseUp);
-    };
-  }, [onMouseMove, onMouseUp]);
+  // Removed: useEffect for mousemove and mouseup listeners
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -297,7 +295,7 @@ const Exercise = () => {
         sortDropdownRef.current &&
         !sortDropdownRef.current.contains(event.target as Node)
       ) {
-        // 드롭다운이 열려있는 상태를 관리하는 별도 상태가 없으므로, 필요하면 추가
+        // Dropdown open state is not managed, so no action needed here.
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -306,7 +304,6 @@ const Exercise = () => {
     };
   }, [showFilterOptions]);
 
-  // ★★★ UnifiedBanner 컴포넌트 수정 ★★★
   const UnifiedBanner = ({
     imageSrc,
     videoData,
@@ -316,8 +313,7 @@ const Exercise = () => {
     index,
     onMouseEnter,
     onMouseLeave,
-    // draggedDistance prop을 받도록 추가
-    currentDraggedDistance, // ★★★ 새로 추가된 prop ★★★
+    // Removed: currentDraggedDistance
   }: {
     imageSrc: string;
     videoData: Video;
@@ -327,23 +323,12 @@ const Exercise = () => {
     index: number;
     onMouseEnter: () => void;
     onMouseLeave: () => void;
-    currentDraggedDistance: number; // ★★★ 새로 추가된 prop 타입 ★★★
+    // Removed: currentDraggedDistance: number;
   }) => {
-    const isActive =
-      hoveredBannerIndex === index ||
-      (hoveredBannerIndex === null && lastActiveBannerIndex === index);
+    const isActive = hoveredBannerIndex === index; // Only rely on hover for active state
 
-    // ★★★ handleBannerClick 로직 변경: 드래그 거리를 직접 prop으로 받아서 판단 ★★★
     const handleBannerClick = () => {
-      // 드래그 거리가 특정 임계값(예: 5px)을 초과하면 클릭으로 간주하지 않음
-      if (Math.abs(currentDraggedDistance) > 5) {
-        console.log(
-          "드래그로 간주되어 클릭 무시됨. 이동 거리:",
-          currentDraggedDistance
-        );
-        return;
-      }
-
+      // Removed: drag distance check
       console.log(`영상을 재생합니다: ${videoData.video_url}`);
       navigate(`/video/${videoData.id}`, {
         state: {
@@ -361,7 +346,7 @@ const Exercise = () => {
         className={`banner-container ${isActive ? "active" : ""}`}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
-        onClick={handleBannerClick} // onClick 이벤트는 그대로 유지
+        onClick={handleBannerClick}
       >
         <img
           src={imageSrc}
@@ -385,7 +370,7 @@ const Exercise = () => {
           title: video.title,
           video: video.video_url.startsWith("http")
             ? video.video_url
-            : `http://127.0.0.1:5000/${video.video_url}`, // 경로 보정
+            : `${API_BASE_URL}/${video.video_url}`, // 경로 보정
         },
       },
     });
@@ -393,20 +378,15 @@ const Exercise = () => {
 
   return (
     <div className="ex-container">
-      {/* 배너 섹션 - 드래그 가능 */}
+      {/* 배너 섹션 - 드래그 기능 제거 */}
       <div
         className="overlapping-banners-wrapper"
         ref={overlappingBannersWrapperRef}
-        onMouseDown={onMouseDown}
-        onMouseLeave={() => {
-          if (!isDragging) {
-            setHoveredBannerIndex(null);
-          }
-        }}
+        // Removed: onMouseDown, onMouseLeave props
       >
         <div
           className="banners-inner-container"
-          style={{ transform: `translateX(${currentTranslateX}px)` }}
+          // Removed: style={{ transform: `translateX(${currentTranslateX}px)` }}
         >
           {loadingBanner && (
             <div className="loading-message">
@@ -429,12 +409,12 @@ const Exercise = () => {
                 bottomText={banner.bottomText}
                 onMouseEnter={() => {
                   setHoveredBannerIndex(index);
-                  setLastActiveBannerIndex(index);
+                  // Removed: setLastActiveBannerIndex(index);
                 }}
                 onMouseLeave={() => {
                   setHoveredBannerIndex(null);
                 }}
-                currentDraggedDistance={draggedDistance} // ★★★ draggedDistance를 prop으로 전달 ★★★
+                // Removed: currentDraggedDistance={draggedDistance}
               />
             ))}
         </div>
@@ -576,6 +556,11 @@ const Exercise = () => {
                   alt={video.title}
                   className="video-thumbnail"
                 />
+                {/* ★ 즐겨찾기 별 버튼 추가 */}
+                <StarIcon 
+                    filled={video.isFavorite || false} 
+                    onClick={() => handleFavoriteToggle(video.id, video.isFavorite || false)}
+                />
                 <div className="video-details">
                   <div className="video-title">{video.title}</div>
                   <div className="video-meta">
@@ -586,9 +571,6 @@ const Exercise = () => {
                     </span>
                     {video.correctable === 1 && (
                       <span className="correction-tag">자세 교정</span>
-                    )}
-                    {video.isFavorite && (
-                      <span className="favorite-tag">★ 즐겨찾기</span>
                     )}
                   </div>
                 </div>
