@@ -1,13 +1,33 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import "../../styles/MainCalendar.css";
 
-const API_BASE_URL = "http://127.0.0.1:5000";
 const days = ["일", "월", "화", "수", "목", "금", "토"];
 
 interface Props {
   userId: string;
 }
+
+interface CalendarCellProps {
+  date: number | null;
+  isToday: boolean;
+  isAttended: boolean;
+}
+
+const CalendarCell = React.memo(
+  ({ date, isToday, isAttended }: CalendarCellProps) => {
+    const className =
+      date == null
+        ? "inactive"
+        : isAttended
+        ? "attended"
+        : isToday
+        ? "today"
+        : "active";
+
+    return <div className={`calendar-cell ${className}`}>{date}</div>;
+  }
+);
 
 const MainCalendar: React.FC<Props> = ({ userId }) => {
   const today = new Date();
@@ -16,6 +36,7 @@ const MainCalendar: React.FC<Props> = ({ userId }) => {
   const todayDate = today.getDate();
 
   const [hasAttended, setHasAttended] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
 
   const firstDay = new Date(currentYear, currentMonth, 1).getDay();
@@ -26,26 +47,26 @@ const MainCalendar: React.FC<Props> = ({ userId }) => {
   );
 
   const handleAttend = async () => {
+    setLoading(true);
     try {
-      const res = await axios.post(`${API_BASE_URL}/attendance`, {
-        id: userId, // ✅ 백엔드 형식에 맞춤
+      const res = await axios.post("/attendance", {
+        id: userId, // ✅ 다시 'id'로 복원
       });
+      console.log("✅ 응답 성공:", res.data);
       setStatusMessage(res.data.message);
       setHasAttended(true);
     } catch (err: any) {
+      console.error("❌ 에러 발생:", err);
       if (err.response && err.response.status === 400) {
         setStatusMessage(err.response.data.message);
         setHasAttended(true);
       } else {
         setStatusMessage("출석 처리에 실패했습니다.");
       }
+    } finally {
+      setLoading(false);
     }
   };
-
-  // 컴포넌트 로드시 바로 출석 시도 → 상태 판단용
-  useEffect(() => {
-    handleAttend();
-  }, []);
 
   return (
     <div className="calendar-container">
@@ -65,20 +86,12 @@ const MainCalendar: React.FC<Props> = ({ userId }) => {
           const isAttended = isToday && hasAttended;
 
           return (
-            <div
+            <CalendarCell
               key={index}
-              className={`calendar-cell ${
-                date == null
-                  ? "inactive"
-                  : isAttended
-                  ? "attended"
-                  : isToday
-                  ? "today"
-                  : "active"
-              }`}
-            >
-              {date}
-            </div>
+              date={date}
+              isToday={isToday}
+              isAttended={isAttended}
+            />
           );
         })}
       </div>
@@ -86,9 +99,9 @@ const MainCalendar: React.FC<Props> = ({ userId }) => {
       <button
         className="attendance-button"
         onClick={handleAttend}
-        disabled={hasAttended}
+        disabled={hasAttended || loading}
       >
-        {hasAttended ? "출석 완료" : "출석하기"}
+        {loading ? "처리 중..." : hasAttended ? "출석 완료" : "출석하기"}
       </button>
 
       {statusMessage && <div className="status-message">{statusMessage}</div>}
