@@ -102,6 +102,15 @@ def video_search():
         return jsonify({'error': '검색된 영상이 없습니다.'}), 404
     return jsonify(videos), 200
 
+@app.route('/video/<int:video_id>/view', methods=['POST'])
+def increase_view(video_id):
+    video_data = get_video_by_id(video_id)
+    if not video_data:
+        return jsonify({'error': 'Video not found'}), 404
+    
+    video.increase_view_count(video_id)
+    return jsonify({'message': 'View count increased'}), 200
+
 @app.route('/video/<int:video_id>', methods=['GET'])
 def get_video(video_id):
     video_data = get_video_by_id(video_id)
