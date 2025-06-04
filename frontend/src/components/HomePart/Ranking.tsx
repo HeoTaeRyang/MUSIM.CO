@@ -3,7 +3,6 @@ import axios from "axios";
 import "../../styles/Ranking.css";
 import { useLocation } from "react-router-dom";
 
-
 import trophyImg from "../../assets/trophy.png";
 
 interface RankItem {
@@ -18,7 +17,9 @@ const Ranking: React.FC = () => {
   const isRankingPage = location.pathname === "/ranking";
 
   // "내 순위": { rank, point } 혹은 null
-  const [myRank, setMyRank] = useState<{ rank: number; point: number } | null>(null);
+  const [myRank, setMyRank] = useState<{ rank: number; point: number } | null>(
+    null
+  );
 
   // "상위 5명": RankItem[]
   const [top5, setTop5] = useState<RankItem[]>([]);
@@ -38,14 +39,18 @@ const Ranking: React.FC = () => {
         const data = res.data;
         console.log("/rank/my 응답:", data);
 
-        // 객체 형태로 { id, username, point, rank } 
-        if (data && typeof data === "object" && "rank" in data && "point" in data) {
+        // 객체 형태로 { id, username, point, rank }
+        if (
+          data &&
+          typeof data === "object" &&
+          "rank" in data &&
+          "point" in data
+        ) {
           setMyRank({
             rank: Number((data as any).rank) || 0,
             point: Number((data as any).point) || 0,
           });
-        }
-        else {
+        } else {
           setMyRank({ rank: 0, point: 0 });
         }
       })
@@ -62,7 +67,11 @@ const Ranking: React.FC = () => {
         console.log("/rank/top5 응답:", data);
 
         // 객체 배열 형태로 전달받음음
-        if (Array.isArray(data) && data.length > 0 && typeof data[0] === "object") {
+        if (
+          Array.isArray(data) &&
+          data.length > 0 &&
+          typeof data[0] === "object"
+        ) {
           const parsed: RankItem[] = data.map((row: any) => ({
             rank: Number(row.rank) || 0,
             username: String(row.username ?? ""),
@@ -101,7 +110,7 @@ const Ranking: React.FC = () => {
           <ul className="rank-list">
             {top5.length > 0 ? (
               top5.map((item) => (
-                <li key={item.rank}>
+                <li key={`${item.rank}-${item.username}`}>
                   <span className="rank-number">{item.rank}위</span>
                   <span className="rank-name">{item.username}</span>
                   <span className="rank-point">{item.point}점</span>
