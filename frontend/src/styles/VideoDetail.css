@@ -1,139 +1,70 @@
 .video-detail-container {
   width: 100%;
-  max-width: 900px;
+  max-width: 1200px;
   margin: 0 auto;
   background: #fff;
   padding: 120px 0 60px 0;
   box-sizing: border-box;
 }
 
-.video-player-section {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16/9;
-  margin-bottom: 32px;
-  border-radius: 24px;
-  overflow: hidden;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-  background: #000;
-}
-
-.video-player {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-/* ---- 컨트롤바 한 줄 ---- */
-.video-controls-bar.flex-controls-bar {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  height: 50px;
-  background: rgba(255, 255, 255, 0.5);
-  z-index: 10;
+.horizontal-layout {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 24px 12px 24px;
-  box-sizing: border-box;
-  border-bottom-left-radius: 24px;
-  border-bottom-right-radius: 24px;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 32px;
 }
 
-/* 컨트롤 버튼들 */
-.control-btn {
+.video-player-section {
+  flex: 1;
+  aspect-ratio: 16/9;
+  max-width: 800px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.video-side-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-top: 110px;
+}
+
+.side-btn {
   border: none;
   background: none;
   cursor: pointer;
-  font-size: 24px;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.13s;
-  border-radius: 50%;
-  margin-bottom: -10px;
-}
-.control-btn img {
-  width: 22px;
-  height: 22px;
-}
-.control-btn:hover {
-  background: #f1f3f8;
-  box-shadow: 0 2px 10px rgba(150, 170, 255, 0.09);
-}
-/* 볼륨 슬라이더 추가 */
-.volume-control-wrap {
-  display: flex;
-  align-items: center;
-  position: relative;
-}
-.volume-slider {
-  accent-color: #5376ff;
-  margin-left: 8px;
-  width: 80px;
-  height: 4px;
-  vertical-align: middle;
+  padding: 8px;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: #f1f1f1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s;
 }
 
-/* 기존 .video-controls-bar, .control-btn 등은 네가 쓰던 것 계속 사용 */
-
-/* ---- SeekBar ---- */
-.seek-bar.inline-seek {
-  flex: 1 1 200px;
-  min-width: 90px;
-  max-width: 320px;
-  margin: 0 10px;
-  margin-bottom: -10px;
-  appearance: none;
-  height: 7px;
-  border-radius: 5px;
-  background: linear-gradient(90deg, #6377ff 0%, #8ed6fb 100%);
-  outline: none;
-  transition: background 0.2s;
-  cursor: pointer;
-}
-.seek-bar.inline-seek::-webkit-slider-thumb {
-  appearance: none;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #fff;
-  border: 2px solid #5376ff;
-  box-shadow: 0 0 2px #2222;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.seek-bar.inline-seek::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #fff;
-  border: 2px solid #5376ff;
-  cursor: pointer;
-}
-.seek-bar.inline-seek::-ms-thumb {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #fff;
-  border: 2px solid #5376ff;
-  cursor: pointer;
+.side-btn:hover {
+  background: #e0e0e0;
 }
 
-.seek-time {
-  width: 38px;
-  margin-bottom: -10px;
-  color: #49546c;
-  font-size: 15px;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
+.side-btn img {
+  width: 24px;
+  height: 24px;
 }
 
-/* 댓글 입력창 */
+@media (max-width: 768px) {
+  .horizontal-layout {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .video-side-buttons {
+    flex-direction: row;
+    gap: 12px;
+    padding-top: 12px;
+  }
+}
 .comment-input-section {
   display: flex;
   align-items: center;
@@ -151,8 +82,6 @@
   background: #fafbfd;
   outline: none;
   transition: border-color 0.15s;
-  box-sizing: border-box;
-  /* 왼쪽 정렬 */
   text-align: left;
 }
 
@@ -176,11 +105,10 @@
   background: #273fb6;
 }
 
-/* 댓글 리스트 */
 .comments-list {
   display: flex;
   flex-direction: column;
-  align-items: stretch; /* stretch or flex-start */
+  align-items: stretch;
   gap: 18px;
   margin: 0 8px;
 }
@@ -240,7 +168,7 @@
   font-size: 16px;
   color: #272f3e;
   margin-top: 3px;
-  word-break: break-all;
+  word-break: break-word;
   line-height: 1.65;
   text-align: left;
 }
@@ -263,38 +191,5 @@
     font-size: 14px;
     padding: 6px 12px;
     border-radius: 9px;
-  }
-}
-
-/* ---- 반응형 ---- */
-@media (max-width: 720px) {
-  .video-detail-container {
-    padding: 0 0 30px 0;
-  }
-  .video-player-section {
-    aspect-ratio: 1/1;
-    margin-bottom: 20px;
-    border-radius: 12px;
-  }
-
-  iframe {
-    z-index: 1;
-  }
-  .video-controls-bar.flex-controls-bar {
-    border-radius: 0 0 12px 12px;
-    padding: 0 8px 8px 8px;
-    min-height: 44px;
-  }
-  .seek-bar.inline-seek {
-    min-width: 60px;
-    max-width: 110px;
-  }
-  .comment-card {
-    padding: 14px 10px 12px 10px;
-    border-radius: 12px;
-  }
-  .comment-card .avatar {
-    width: 32px;
-    height: 32px;
   }
 }
