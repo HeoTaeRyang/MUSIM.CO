@@ -68,3 +68,9 @@ def add_recommendation(user_id, video_id):
                 cursor.execute("INSERT INTO Recommendation (user_id, video_id) VALUES (%s, %s)", (user_id, video_id))
                 cursor.execute("UPDATE Video SET recommendations = recommendations + 1 WHERE id = %s", (video_id,))
                 conn.commit()
+
+def increase_view_count(video_id):
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("UPDATE Video SET views = views + 1 WHERE id = %s", (video_id,))
+            conn.commit()

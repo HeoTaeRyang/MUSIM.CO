@@ -26,7 +26,7 @@ def get_comments_by_video(video_id, sort):
             """, (video_id,))
             return cursor.fetchall()
 
-# 댓글 추천
+# 댓글 추천 - 댓글 추천 취소 기능이 없어 아래의 토글 함수 사용
 def recommend_comment(user_id, comment_id):
     with get_connection() as conn:
         with conn.cursor() as cursor:
@@ -45,3 +45,30 @@ def recommend_comment(user_id, comment_id):
             """, (comment_id,))
             conn.commit()
             return True
+
+# 댓글 추천
+def toggle_recommend_comment(user_id, comment_id):
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT * FROM CommentRecommendation WHERE user_id = %s AND comment_id = %s", (user_id, comment_id))
+            existing = cursor.fetchone()
+            
+            if existing:
+                cursor.execute("DELETE FROM CommentRecommendation WHERE user_id = %s AND comment_id = %s", (user_id, comment_id))
+                cursor.execute("UPDATE Comment SET recommend_count = GREATEST(recommend_count - 1, 0) WHERE id = %s", (comment_id,))
+                conn.commit()
+                return False
+            else:
+                cursor.execute("INSERT INTO CommentRecommendation (user_id, comment_id) VALUES (%s, %s)", (user_id, comment_id))
+                cursor.execute("UPDATE Comment SET recommend_count = recommend_count + 1 WHERE id = %s", (comment_id,))
+                conn.commit()
+                return True
+            
+# 댓글 추천수 조회
+def get_comment_recommend_count(comment_id):
+    with get_connection().cursor() as cursor:
+        cursor.execute("SELECT recommend_count FROM Comment WHERE id = %s", (comment_id,))
+        result = cursor.fetchone()
+        if result:
+            return result['recommend_count']
+        return 0

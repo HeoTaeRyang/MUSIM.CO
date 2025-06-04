@@ -5,7 +5,7 @@ from werkzeug.utils import secure_filename
 import os
 import cv2
 
-from db import user, video, rank #랭킹 추가
+from db import user, video, rank, comment #랭킹 추가
 from db.db import get_connection
 from db.video import get_video_by_id, toggle_favorite, add_recommendation
 from db.comment import get_comments_by_video, add_comment
@@ -23,6 +23,21 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 @app.route('/')
 def index():
     return "백엔드 서버 실행 중입니다."
+
+# 댓글 추천
+@app.route('/comment/<int:comment_id>/recommend', methods=['POST'])
+def recommend_comment(comment_id):
+    data = request.get_json()
+    user_id = data.get('id')
+    
+    is_recommended = comment.toggle_recommend_comment(user_id, comment_id)
+    return jsonify({'message': 'Recommend toggled', 'is_recommended': is_recommended}), 200
+
+# 댓글 추천수 조회
+@app.route('/comment/<int:comment_id>/recommend/count', methods=['GET'])
+def comment_recommend_count(comment_id):
+    count = comment.get_comment_recommend_count(comment_id)
+    return jsonify({'comment_id': comment_id, 'recommend_count': count}), 200
 
 @app.route('/attendance', methods=['POST'])
 def attendance():
@@ -101,6 +116,15 @@ def video_search():
     if not videos:
         return jsonify({'error': '검색된 영상이 없습니다.'}), 404
     return jsonify(videos), 200
+
+@app.route('/video/<int:video_id>/view', methods=['POST'])
+def increase_view(video_id):
+    video_data = get_video_by_id(video_id)
+    if not video_data:
+        return jsonify({'error': 'Video not found'}), 404
+    
+    video.increase_view_count(video_id)
+    return jsonify({'message': 'View count increased'}), 200
 
 @app.route('/video/<int:video_id>', methods=['GET'])
 def get_video(video_id):
