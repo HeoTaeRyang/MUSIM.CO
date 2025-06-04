@@ -91,20 +91,29 @@ def evaluate(frames, model_path, input_dim=48, seq_len=8, num_conditions=5, thre
     model.eval()
 
     coord_list = []
+    annotated_frames = []
 
     for idx, frame in enumerate(frames):
         results = pose.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        annotated_frame = frame.copy()
+
         if results.pose_landmarks:
             coords = []
             for lm in results.pose_landmarks.landmark[:24]:
                 coords.extend([lm.x, lm.y])
+                h, w = frame.shape[:2]
+                cx, cy = int(lm.x * w), int(lm.y * h)
+                cv2.circle(annotated_frame, (cx, cy), 4, (0, 255, 0), -1)
             coord_list.append(coords)
+        
+        annotated_frames.append(annotated_frame)
 
     if len(coord_list) < seq_len:
         return {
             "valid": False,
             "message": "시퀀스 길이 부족 평가 불가",
-            "results": []
+            "results": [],
+            "annotated_frames": annotated_frames
         }
 
     preds = []
@@ -126,4 +135,7 @@ def evaluate(frames, model_path, input_dim=48, seq_len=8, num_conditions=5, thre
             "score": float(score)
         })
 
-    return results
+    return {
+        "results": results,
+        "annotated_frames": annotated_frames  # 추가된 프레임 리스트
+    }
