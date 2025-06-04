@@ -114,7 +114,7 @@ const VideoDetail: React.FC<Props> = (props) => {
       });
   };
 
-  const handleFavoriteClick = () => {
+  const toggleFavorite = () => {
     const user_id = localStorage.getItem("user_id");
     if (!user_id) {
       alert("로그인이 필요합니다.");
@@ -130,14 +130,12 @@ const VideoDetail: React.FC<Props> = (props) => {
         if (!res.ok) throw new Error("즐겨찾기 실패");
         return res.json();
       })
-      .then(() => {
-        setIsFavorite((prev) => {
-          const newState = !prev;
-          alert(
-            newState ? "즐겨찾기 등록했습니다!" : "즐겨찾기를 해제했습니다!"
-          );
-          return newState;
-        });
+      .then((data) => {
+        const isFavorited = data.is_favorited;
+        setIsFavorite(isFavorited); // 상태 갱신
+        alert(
+          isFavorited ? "즐겨찾기 등록했습니다!" : "즐겨찾기를 해제했습니다!"
+        );
       })
       .catch((err) => {
         console.error("즐겨찾기 실패:", err);
@@ -167,7 +165,7 @@ const VideoDetail: React.FC<Props> = (props) => {
           <button className="side-btn" onClick={handleCartClick}>
             <img src="/src/assets/video/cart.png" alt="장바구니" />
           </button>
-          <button className="side-btn" onClick={handleFavoriteClick}>
+          <button className="side-btn" onClick={toggleFavorite}>
             <img src="/src/assets/video/star.png" alt="즐겨찾기" />
           </button>
         </div>

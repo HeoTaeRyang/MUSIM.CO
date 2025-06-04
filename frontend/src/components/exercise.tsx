@@ -561,7 +561,6 @@ const Exercise = () => {
             style={{ color: "red", textAlign: "center", padding: "20px" }}
           >
             데이터 로드 중 오류가 발생했습니다: {errorVideos}
-            
           </div>
         )}
 
