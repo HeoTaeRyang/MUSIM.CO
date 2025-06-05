@@ -15,17 +15,34 @@ def read_video_to_frames(path):
     cap.release()
     return frames
 
+def save_frames_to_video(frames, output_path, fps=1):
+    if not frames:
+        print("저장할 프레임이 없습니다.")
+        return
+
+    height, width = frames[0].shape[:2]
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # MP4 코덱
+    out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+
+    for frame in frames:
+        out.write(frame)
+
+    out.release()
+    print(f"비디오가 저장되었습니다: {output_path}")
+
 # 프레임 추출
 video_frames = read_video_to_frames("test.mp4")
 
 # 자세 평가 운동마다 num_conditions 수정 필요
 result = evaluate(
     frames=video_frames,
-    num_conditions=5,
-    model_path="backend/ai/1/1.pth"
+    num_conditions=3,
+    model_path="29/29.pth"
 )
 
-print(result)
+save_frames_to_video(result["annotated_frames"], "test_output.mp4", fps=30)
+
+print(result["results"])
 
 
 #데일리 미션 크런치

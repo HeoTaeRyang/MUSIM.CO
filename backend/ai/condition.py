@@ -71,6 +71,7 @@ class PoseCorrectionTSMClassifier(nn.Module):
         return self.classifier(x)
 
 # === 관절 추출 ===
+mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 pose = mp_pose.Pose(static_image_mode=True)
 
@@ -91,20 +92,34 @@ def evaluate(frames, model_path, input_dim=48, seq_len=8, num_conditions=5, thre
     model.eval()
 
     coord_list = []
+    annotated_frames = []
 
     for idx, frame in enumerate(frames):
         results = pose.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        annotated_frame = frame.copy()
+        
         if results.pose_landmarks:
+            mp_drawing.draw_landmarks(
+                image=annotated_frame,
+                landmark_list=results.pose_landmarks,
+                connections=mp_pose.POSE_CONNECTIONS,
+                landmark_drawing_spec=mp_drawing.DrawingSpec(color=(0, 255, 0), thickness=2, circle_radius=2),
+                connection_drawing_spec=mp_drawing.DrawingSpec(color=(255, 0, 0), thickness=2)
+            )
+            
             coords = []
             for lm in results.pose_landmarks.landmark[:24]:
                 coords.extend([lm.x, lm.y])
+                
             coord_list.append(coords)
+            annotated_frames.append(annotated_frame)
 
     if len(coord_list) < seq_len:
         return {
             "valid": False,
             "message": "시퀀스 길이 부족 평가 불가",
-            "results": []
+            "results": [],
+            "annotated_frames": annotated_frames
         }
 
     preds = []
@@ -126,4 +141,7 @@ def evaluate(frames, model_path, input_dim=48, seq_len=8, num_conditions=5, thre
             "score": float(score)
         })
 
-    return results
+    return {
+        "results": results,
+        "annotated_frames": annotated_frames  # 추가된 프레임 리스트
+    }
