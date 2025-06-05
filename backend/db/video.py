@@ -60,6 +60,7 @@ def toggle_favorite(user_id, video_id):
                 conn.commit()
                 return True
 
+# 영상 추천 (사용 안함)
 def add_recommendation(user_id, video_id):
     with get_connection() as conn:
         with conn.cursor() as cursor:
@@ -68,6 +69,33 @@ def add_recommendation(user_id, video_id):
                 cursor.execute("INSERT INTO Recommendation (user_id, video_id) VALUES (%s, %s)", (user_id, video_id))
                 cursor.execute("UPDATE Video SET recommendations = recommendations + 1 WHERE id = %s", (video_id,))
                 conn.commit()
+
+# 영상 추천
+def toggle_recommend_video(user_id, video_id):
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT * FROM Recommendation WHERE user_id = %s AND video_id = %s", (user_id, video_id))
+            existing = cursor.fetchone()
+            
+            if existing:
+                cursor.execute("DELETE FROM Recommendation WHERE user_id = %s AND video_id = %s", (user_id, video_id))
+                cursor.execute("UPDATE Video SET recommendations = GREATEST(recommendations - 1, 0) WHERE id = %s", (video_id,))
+                conn.commit()
+                return False
+            else:
+                cursor.execute("INSERT INTO Recommendation (user_id, video_id) VALUES (%s, %s)", (user_id, video_id))
+                cursor.execute("UPDATE Video SET recommendations = recommendations + 1 WHERE id = %s", (video_id,))
+                conn.commit()
+                return True
+            
+# 영상 추천수 조회
+def get_video_recommend_count(video_id):
+    with get_connection().cursor() as cursor:
+        cursor.execute("SELECT recommendations FROM Video WHERE id = %s", (video_id,))
+        result = cursor.fetchone()
+        if result:
+            return result['recommendations']
+        return 0
 
 def increase_view_count(video_id):
     with get_connection() as conn:
