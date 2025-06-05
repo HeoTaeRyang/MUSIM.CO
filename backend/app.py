@@ -24,6 +24,25 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 def index():
     return "백엔드 서버 실행 중입니다."
 
+@app.route('/attendance/month', methods=['POST'])
+def attendance_month():
+    data = request.get_json()
+    user_id = data.get('id')
+    
+    if not user_id:
+        return jsonify({'error': 'user_id가 누락되었습니다.'}), 400
+    
+    today = date.today()
+    year = today.year
+    month = today.month
+
+    records = user.get_attendance_month(user_id, year, month)
+    if not records:
+        return jsonify({'message': '이번달의 출석 기록이 없습니다.'}), 200
+    
+    formatted_records = [str(d) for d in records]
+    return jsonify({'user_id': user_id, 'records': formatted_records}), 200
+
 # 댓글 추천
 @app.route('/comment/<int:comment_id>/recommend', methods=['POST'])
 def recommend_comment(comment_id):

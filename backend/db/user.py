@@ -42,3 +42,9 @@ def add_point(user_id):
         with conn.cursor() as cursor:
             cursor.execute("UPDATE User SET point = point + 50 WHERE id = %s", (user_id))
             conn.commit()
+            
+def get_attendance_month(user_id, year, month):
+    with get_connection().cursor() as cursor:
+        cursor.execute("SELECT date FROM Attendance WHERE id = %s AND YEAR(date) = %s AND MONTH(date) = %s", (user_id, year, month))
+        rows = cursor.fetchall()
+        return [row['date'] for row in rows]
