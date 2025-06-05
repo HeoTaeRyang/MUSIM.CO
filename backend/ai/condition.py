@@ -71,6 +71,7 @@ class PoseCorrectionTSMClassifier(nn.Module):
         return self.classifier(x)
 
 # === 관절 추출 ===
+mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 pose = mp_pose.Pose(static_image_mode=True)
 
@@ -96,17 +97,22 @@ def evaluate(frames, model_path, input_dim=48, seq_len=8, num_conditions=5, thre
     for idx, frame in enumerate(frames):
         results = pose.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
         annotated_frame = frame.copy()
-
+        
         if results.pose_landmarks:
+            mp_drawing.draw_landmarks(
+                image=annotated_frame,
+                landmark_list=results.pose_landmarks,
+                connections=mp_pose.POSE_CONNECTIONS,
+                landmark_drawing_spec=mp_drawing.DrawingSpec(color=(0, 255, 0), thickness=2, circle_radius=2),
+                connection_drawing_spec=mp_drawing.DrawingSpec(color=(255, 0, 0), thickness=2)
+            )
+            
             coords = []
             for lm in results.pose_landmarks.landmark[:24]:
                 coords.extend([lm.x, lm.y])
-                h, w = frame.shape[:2]
-                cx, cy = int(lm.x * w), int(lm.y * h)
-                cv2.circle(annotated_frame, (cx, cy), 4, (0, 255, 0), -1)
+                
             coord_list.append(coords)
-        
-        annotated_frames.append(annotated_frame)
+            annotated_frames.append(annotated_frame)
 
     if len(coord_list) < seq_len:
         return {
