@@ -5,6 +5,7 @@ from werkzeug.utils import secure_filename
 import os
 import cv2
 
+from ai import daily
 from db import user, video, rank, comment #랭킹 추가
 from db.db import get_connection
 from db.video import get_video_by_id, toggle_favorite, add_recommendation
@@ -13,6 +14,8 @@ from db.posture import save_posture_result
 from utils import is_valid_id, is_valid_password, is_valid_email
 from ai.condition import evaluate
 from datetime import date
+import base64
+import numpy as np
 
 app = Flask(__name__)
 CORS(app)
@@ -24,6 +27,94 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 def index():
     return "백엔드 서버 실행 중입니다."
 
+user_states = {}
+
+# frame 분석
+@app.route('/api/analyze_frame', methods=['POST'])
+def analyze_frame():
+    data = request.json
+    if not data or 'image' not in data or 'user_id' not in data:
+        return jsonify({'error': '이미지 또는 사용자 데이터가 없습니다.'}), 400
+    
+    user_id = data['user_id']
+    
+    # 이미지 디코딩
+    image_b64 = data['image']
+    if ',' in image_b64:
+        image_b64 = image_b64.split(',')[1]
+    
+    try:
+        image_bytes = base64.b64decode(image_b64)
+        np_arr = np.frombuffer(image_bytes, np.uint8)
+        frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+    except Exception as e:
+        return jsonify({"error": f"이미지 디코딩 실패: {str(e)}"}), 400
+
+    if frame is None:
+        return jsonify({"error": "이미지 디코딩 실패"}), 400
+
+    # 각도 측정
+    angle = daily.get_crunch_angle_from_frame(frame)
+    
+    if angle is None:
+        return jsonify({"error": "포즈 인식 실패"}), 200
+    
+    # 사용자 상태 초기화
+    if user_id not in user_states:
+        user_states[user_id] = {
+            'prev_status': 0,
+            'ready_to_count': True,
+            'count': 0
+        }
+        
+    state = user_states[user_id]
+    
+    if angle <= 120:
+        status = 1  # 몸 굽힌 상태
+    elif angle >= 150:
+        status = 0  # 몸 편 상태
+    else:
+        status = state['prev_status']  # 중간 상태에서는 이전 상태 유지
+        
+    if state['ready_to_count'] and state['prev_status'] == 0 and status == 1:
+        state['count'] += 1
+        state['ready_to_count'] = False
+    
+    if not state['ready_to_count'] and status == 0:
+        state['ready_to_count'] = True
+        
+    state['prev_status'] = status
+    
+    return jsonify({'angle': angle, 'status': status, 'count': state['count']}), 200
+
+# 데일리미션 보상
+@app.route('/daily_mission/reward', methods=['POST'])
+def daily_mission_reward():
+    data = request.json
+    user_id = data.get('user_id')
+    
+    if not user_id:
+        return jsonify({'error': 'user_id가 없습니다.'}), 400
+    
+    if user_id not in user_states:
+        return jsonify({'error': '미션 기록이 없습니다.'}), 400
+
+    today = date.today().isoformat()
+
+    if user.daily_mission_exists(user_id, today):
+        return jsonify({'error': '오늘은 이미 보상을 받았습니다.'}), 400
+    
+    count = user_states[user_id]['count']
+    success = count >= 50
+    
+    if success:    
+        user.save_daily_mission(user_id, today)
+        user.add_point(user_id)
+        del user_states[user_id]
+        return jsonify({'success': True}), 200
+    else:
+        return jsonify({'error': '미션 목표를 달성하지 못했습니다.'}), 400    
+    
 @app.route('/attendance/month', methods=['POST'])
 def attendance_month():
     data = request.get_json()
