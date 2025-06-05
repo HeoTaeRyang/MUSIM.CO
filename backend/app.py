@@ -31,9 +31,20 @@ def recommend_comment(comment_id):
     user_id = data.get('id')
     
     is_recommended = comment.toggle_recommend_comment(user_id, comment_id)
-    return jsonify({'message': 'Recommend toggled', 'is_recommended': is_recommended}), 200
+    recommend_count = comment.get_comment_recommend_count(comment_id)
+    return jsonify({'message': 'Recommend toggled', 'is_recommended': is_recommended, 'comment_id': comment_id, 'recommend_count': recommend_count}), 200
 
-# 댓글 추천수 조회
+# 영상 추천
+@app.route('/video/<int:video_id>/recommend', methods=['POST'])
+def recommend_video(video_id):
+    data = request.get_json()
+    user_id = data.get('id')
+    
+    is_recommended = video.toggle_recommend_video(user_id, video_id)
+    recommend_count = video.get_video_recommend_count(video_id)
+    return jsonify({'message': 'Recommend toggled', 'is_recommended': is_recommended, 'video_id': video_id, 'recommend_count': recommend_count}), 200
+
+# 댓글 추천수 조회 (사용 안함)
 @app.route('/comment/<int:comment_id>/recommend/count', methods=['GET'])
 def comment_recommend_count(comment_id):
     count = comment.get_comment_recommend_count(comment_id)
@@ -139,13 +150,6 @@ def favorite_video(video_id):
     user_id = data.get('user_id')
     is_favorited = toggle_favorite(user_id, video_id)
     return jsonify({'message': 'Favorite toggled', 'is_favorited': is_favorited}), 200
-
-@app.route('/video/<int:video_id>/recommend', methods=['POST'])
-def recommend_video(video_id):
-    data = request.get_json()
-    user_id = data.get('user_id')
-    add_recommendation(user_id, video_id)
-    return jsonify({'message': 'Recommendation added'}), 200
 
 @app.route('/video/<int:video_id>/comment', methods=['POST'])
 def post_comment(video_id):
