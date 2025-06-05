@@ -2,8 +2,8 @@ from db.db import get_connection
 
 def get_random_video():
     with get_connection().cursor() as cursor:
-        cursor.execute("SELECT * FROM Video ORDER BY RAND() LIMIT 1")
-        return cursor.fetchone()
+        cursor.execute("SELECT * FROM Video ORDER BY RAND() LIMIT 3")
+        return cursor.fetchall()
 
 def get_random_videos():
     with get_connection().cursor() as cursor:

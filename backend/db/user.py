@@ -48,3 +48,14 @@ def get_attendance_month(user_id, year, month):
         cursor.execute("SELECT date FROM Attendance WHERE id = %s AND YEAR(date) = %s AND MONTH(date) = %s", (user_id, year, month))
         rows = cursor.fetchall()
         return [row['date'] for row in rows]
+    
+def daily_mission_exists(user_id, today):
+    with get_connection().cursor() as cursor:
+        cursor.execute("SELECT * FROM DailyMission WHERE user_id = %s AND date = %s", (user_id, today))
+        return cursor.fetchone()
+    
+def save_daily_mission(user_id, today):
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("INSERT INTO DailyMission (user_id, date) VALUES (%s, %s)", (user_id, today))
+            conn.commit()
