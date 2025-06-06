@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "../../styles/MainCalendar.css";
 
@@ -36,6 +36,7 @@ const MainCalendar: React.FC<Props> = ({ userId }) => {
   const todayDate = today.getDate();
 
   const [hasAttended, setHasAttended] = useState(false);
+  const [attendedDates, setAttendedDates] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
 
@@ -46,15 +47,36 @@ const MainCalendar: React.FC<Props> = ({ userId }) => {
     Array.from({ length: lastDate }, (_, i) => i + 1)
   );
 
+  useEffect(() => {
+    const fetchAttendance = async () => {
+      try {
+        const res = await axios.post("/attendance/month", {
+          id: userId,
+        });
+        const recordDates: string[] = res.data.records;
+        const dateNums = recordDates.map((d) => parseInt(d.split("-")[2], 10));
+        setAttendedDates(dateNums);
+        if (dateNums.includes(todayDate)) {
+          setHasAttended(true); // 오늘도 이미 출석했으면 버튼 비활성화
+        }
+      } catch (err) {
+        console.error("출석 기록 불러오기 실패", err);
+      }
+    };
+
+    fetchAttendance();
+  }, [userId]);
+
   const handleAttend = async () => {
     setLoading(true);
     try {
       const res = await axios.post("/attendance", {
-        id: userId, // ✅ 다시 'id'로 복원
+        id: userId,
       });
       console.log("✅ 응답 성공:", res.data);
       setStatusMessage(res.data.message);
       setHasAttended(true);
+      setAttendedDates((prev) => [...prev, todayDate]);
     } catch (err: any) {
       console.error("❌ 에러 발생:", err);
       if (err.response && err.response.status === 400) {
@@ -83,7 +105,7 @@ const MainCalendar: React.FC<Props> = ({ userId }) => {
 
         {dates.map((date, index) => {
           const isToday = date === todayDate;
-          const isAttended = isToday && hasAttended;
+          const isAttended = date != null && attendedDates.includes(date);
 
           return (
             <CalendarCell

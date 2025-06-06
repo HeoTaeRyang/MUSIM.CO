@@ -95,7 +95,6 @@
   /* <--- 비디오를 블록 요소로 처리하여 여백 제거 */
 }
 
-
 /* 오른쪽 업로드 패널 */
 /* 이 부분은 제공해주신 초기 디자인 그대로 유지됩니다. */
 .analyze-panel {
@@ -118,7 +117,6 @@
   align-items: center;
   margin-bottom: 20px;
 }
-
 
 /* 업로드 영역 */
 /* 이 부분은 제공해주신 초기 디자인 그대로 유지됩니다. */
@@ -227,7 +225,7 @@
 
 .upload-icon-react {
   font-size: 64px;
-  color: #034DD2;
+  color: #034dd2;
   margin: 20px;
 }
 
