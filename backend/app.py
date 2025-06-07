@@ -153,6 +153,19 @@ def recommend_video(video_id):
     is_recommended = video.toggle_recommend_video(user_id, video_id)
     recommend_count = video.get_video_recommend_count(video_id)
     return jsonify({'message': 'Recommend toggled', 'is_recommended': is_recommended, 'video_id': video_id, 'recommend_count': recommend_count}), 200
+@app.route('/video/<int:video_id>/recommend/status', methods=['GET'])
+def get_recommend_status(video_id):
+    user_id = request.args.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'user_id 누락'}), 400
+
+    with get_connection().cursor() as cursor:
+        cursor.execute(
+            "SELECT 1 FROM Recommendation WHERE user_id = %s AND video_id = %s",
+            (user_id, video_id)
+        )
+        is_recommended = bool(cursor.fetchone())
+        return jsonify({'is_recommended': is_recommended}), 200
 
 # 댓글 추천수 조회 (사용 안함)
 @app.route('/comment/<int:comment_id>/recommend/count', methods=['GET'])
@@ -221,6 +234,19 @@ def video_favorite():
     if not videos:
         return jsonify({'error': '즐겨 찾기한 영상이 없습니다.'}), 404
     return jsonify(videos), 200
+@app.route('/video/<int:video_id>/favorite/status', methods=['GET'])
+def get_favorite_status(video_id):
+    user_id = request.args.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'user_id 누락'}), 400
+
+    with get_connection().cursor() as cursor:
+        cursor.execute(
+            "SELECT 1 FROM Favorite WHERE user_id = %s AND video_id = %s",
+            (user_id, video_id)
+        )
+        is_favorited = bool(cursor.fetchone())
+        return jsonify({'is_favorited': is_favorited}), 200
 
 @app.route('/video/sort', methods=['POST'])
 def video_sort():
@@ -272,8 +298,23 @@ def post_comment(video_id):
 @app.route('/video/<int:video_id>/comments', methods=['GET'])
 def get_comments(video_id):
     sort = request.args.get("sort", "latest")
+    user_id = request.args.get("user_id")  # 프론트에서 ?user_id=xxx 으로 보내야 함
     comments = get_comments_by_video(video_id, sort)
+
+    # 댓글마다 is_recommended 여부 추가
+    for c in comments:
+        if user_id:
+            with get_connection().cursor() as cursor:
+                cursor.execute(
+                    "SELECT 1 FROM CommentRecommendation WHERE user_id = %s AND comment_id = %s",
+                    (user_id, c['id'])
+                )
+                c['is_recommended'] = bool(cursor.fetchone())
+        else:
+            c['is_recommended'] = False
+
     return jsonify(comments), 200
+
 
 @app.route('/video/<int:video_id>/posture/upload', methods=['POST'])
 def upload_posture_video(video_id):
