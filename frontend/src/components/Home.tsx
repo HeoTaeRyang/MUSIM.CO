@@ -12,12 +12,12 @@ const Home = () => {
   const [userId, setUserId] = useState<string | null>(null);
 
   // dailyMissionVideoId의 초기값을 '1' (더미 ID)로 설정했습니다.
-  const [dailyMissionVideoId, setDailyMissionVideoId] = useState<string | null>("1"); 
+  const [dailyMissionVideoId, setDailyMissionVideoId] = useState<string | null>("1");
 
   const dailyMissionName = "윗몸일으키기";
   const [currentDailyMissionCount, setCurrentDailyMissionCount] = useState(0);
   const targetDailyMissionCount = 50;
-  
+
   useEffect(() => {
     const storedUsername = localStorage.getItem("username");
     const storedUserId = localStorage.getItem("user_id");
@@ -37,7 +37,7 @@ const Home = () => {
   //     // 예시: GET /api/daily-mission-video-id?userId=...
   //     const response = await axios.get(`/daily-mission-video-id`, { params: { user_id: userId } });
   //     const videoIdFromBackend = response.data.videoId || response.data;
-      
+
   //     setDailyMissionVideoId(videoIdFromBackend);
 
   //   } catch (error) {
