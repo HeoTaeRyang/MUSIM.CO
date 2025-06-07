@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import os
 import cv2
+import uuid
 
 from ai import daily
 from db import user, video, rank, comment #랭킹 추가
