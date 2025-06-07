@@ -32,7 +32,7 @@ const VideoAnalyze: React.FC = () => {
       .then((res) => {
         if (res.data) {
           setUploadedUrl(res.data.image_url);
-          setResultText(res.data.result_text);
+          setResultText(res.data.result_text || "정확한 평가를 위해 가이드 영상처럼 따라 해보세요!");
           setShowPanel(false);
         }
       })
@@ -68,7 +68,8 @@ const VideoAnalyze: React.FC = () => {
         video_path,
         user_id: userId,
       });
-      setResultText(ai.data.result_text || "문제 없음");
+      setResultText(ai.data.result_text || "정확한 평가를 위해 가이드 영상처럼 따라 해보세요!");
+
     } catch (err: any) {
       console.error(err);
       setResultText(err.response?.data?.error || "분석 실패!");
@@ -137,7 +138,8 @@ const VideoAnalyze: React.FC = () => {
         video_path,
         user_id: userId,
       });
-      setResultText(ai.data.result_text || "문제 없음");
+      setResultText(ai.data.result_text || "정확한 평가를 위해 가이드 영상처럼 따라 해보세요!");
+
     } catch (err: any) {
       console.error(err);
       setResultText(err.response?.data?.error || "분석 실패!");

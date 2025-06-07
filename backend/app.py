@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import os
 import cv2
+import uuid
 
 from ai import daily
 from db import user, video, rank, comment #랭킹 추가
@@ -329,55 +330,112 @@ def upload_posture_video(video_id):
 
 @app.route('/video/<int:video_id>/posture/analyze', methods=['POST'])
 def analyze_posture(video_id):
-    data = request.get_json()
-    video_path = data.get("video_path")
-    user_id = data.get("user_id")
-
-    cap = cv2.VideoCapture(video_path)
-    frames = []
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
-        frames.append(frame)
-    cap.release()
-
-    with get_connection().cursor() as cursor:
-        cursor.execute("SELECT model_path, num_conditions FROM Posture WHERE video_id = %s LIMIT 1", (video_id,))
-        result = cursor.fetchone()
-        if not result:
-            return jsonify({"error": "Posture 설정을 찾을 수 없습니다."}), 400
-
-        model_path = result['model_path']
-        num_conditions = result['num_conditions']
-
-    print(f"[분석 시작] user_id: {user_id}, video_id: {video_id}")
-    print(f"[프레임 수] {len(frames)}, [모델 경로] {model_path}, [조건 수] {num_conditions}")
     try:
-        result = evaluate(frames, model_path=model_path, num_conditions=num_conditions)
-    except Exception as e:
-        print(f"[ERROR] evaluate() 실패: {str(e)}")
-        return jsonify({"valid": False, "message": f"AI 분석 중 오류 발생: {str(e)}"}), 200
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "JSON 데이터가 필요합니다."}), 400
 
-    if isinstance(result, dict) and not result.get("valid", True):
-        return jsonify(result), 200
+        video_path = data.get("video_path")
+        user_id = data.get("user_id")
+        if not video_path or not user_id:
+            return jsonify({"error": "video_path와 user_id가 필요합니다."}), 400
+
+        # 영상에서 프레임 추출
+        cap = cv2.VideoCapture(video_path)
+        frames = []
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+            frames.append(frame)
+        cap.release()
+
+        # 모델 정보 불러오기
+        with get_connection().cursor() as cursor:
+            cursor.execute("SELECT model_path, num_conditions FROM PostureModel WHERE video_id = %s", (video_id,))
+            result = cursor.fetchone()
+            if not result:
+                return jsonify({"error": "모델 설정이 없습니다."}), 400
+            model_path = result['model_path']
+            num_conditions = result['num_conditions']
+
+        # AI 평가
+        eval_output = evaluate(frames, model_path=model_path, num_conditions=num_conditions)
+
+        if not isinstance(eval_output, dict) or 'results' not in eval_output:
+            raise ValueError("evaluate() 결과가 올바른 딕셔너리 형태가 아닙니다.")
+
+        eval_result = eval_output['results']
+
+        # 조건 인덱스를 설명으로 변환
+        with get_connection().cursor() as cursor:
+            cursor.execute("""
+                SELECT condition_index, description 
+                FROM PostureCondition 
+                WHERE video_id = %s
+            """, (video_id,))
+            condition_map = {row['condition_index']: row['description'] for row in cursor.fetchall()}
+
+        # 사용자에게 보여줄 결과 포맷팅
+        result_lines = []
+        for r in eval_result:
+            idx = r.get('condition', 'Unknown')
+            description = condition_map.get(idx, f"Condition {idx}")
+            score = r.get('score', 0)
+            if r.get('value', True):
+                result_lines.append(f"✅ {description} (score: {score:.2f})")
+            else:
+                result_lines.append(f"❌ {description} 이상 감지 (score: {score:.2f})")
+
+        result_text = "\n".join(result_lines)
+
+        # 결과 저장
+        with get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    INSERT INTO PostureResult (user_id, video_id, result_text, image_url)
+                    VALUES (%s, %s, %s, %s)
+                """, (user_id, video_id, result_text, video_path))
+                conn.commit()
+
+        return jsonify({
+            "result_text": result_text,
+            "results": eval_result
+        }), 200
+
+    except Exception as e:
+        print(f"[ERROR] analyze_posture 실패: {str(e)}")
+        return jsonify({
+            "valid": False,
+            "message": f"분석 실패: {str(e)}"
+        }), 500
+
+    
+# 분석 결과 조회
+@app.route('/video/<int:video_id>/posture/result', methods=['GET'])
+def get_posture_result(video_id):
+    user_id = request.args.get("user_id")
+    if not user_id:
+        return jsonify({"error": "user_id가 필요합니다."}), 400
 
     with get_connection().cursor() as cursor:
-        cursor.execute("SELECT condition_index, description FROM PostureCondition WHERE video_id = %s", (video_id,))
-        condition_map = {row['condition_index']: row['description'] for row in cursor.fetchall()}
+        cursor.execute("""
+            INSERT INTO PostureResult (user_id, video_id, result_text, image_url)
+            VALUES (%s, %s, %s, %s)
+            ON DUPLICATE KEY UPDATE
+                result_text = VALUES(result_text),
+                image_url = VALUES(image_url),
+                saved_at = NOW()
+        """, (user_id, video_id, result_text, image_url))
+        result = cursor.fetchone()
 
-    violated = []
-    for r in result:
-        if not r['value']:
-            condition = condition_map.get(r['condition'], f"Condition {r['condition']}")
-            violated.append(f"{condition} 이상 감지 (score: {r['score']:.2f})")
-    result_text = "\n".join(violated) if violated else "문제 없음"
-
-    save_posture_result(user_id, video_id, result_text, image_url="")
+        if not result:
+            return jsonify({"message": "분석 결과가 없습니다."}), 404
 
     return jsonify({
-        "result_text": result_text,
-        "raw_result": result
+        "result_text": result['result_text'],
+        "image_url": result['image_url'],
+        "saved_at": result['saved_at']
     }), 200
 
 @app.route('/video/<int:video_id>/posture/save', methods=['POST'])
@@ -388,33 +446,12 @@ def save_posture(video_id):
     image_url = data.get("image_url")
 
     with get_connection().cursor() as cursor:
-        cursor.execute("SELECT model_path, num_conditions FROM Posture WHERE video_id = %s LIMIT 1", (video_id,))
-        result = cursor.fetchone()
-        model_path = result['model_path'] if result else ''
-        num_conditions = result['num_conditions'] if result else 0
-
-    saved = save_posture_result(user_id, video_id, result_text, image_url)
-    return jsonify(saved), 201
-
-@app.route('/video/<int:video_id>/posture/result', methods=['GET'])
-def get_posture_result(video_id):
-    user_id = request.args.get("user_id")
-    if not user_id:
-        return jsonify({"error": "user_id가 필요합니다."}), 400
-
-    with get_connection().cursor() as cursor:
         cursor.execute("""
-            SELECT id, user_id, video_id, result_text, image_url, saved_at, model_path, num_conditions
-            FROM Posture
-            WHERE user_id = %s AND video_id = %s 
-            ORDER BY saved_at DESC LIMIT 1
-        """, (user_id, video_id))
-        result = cursor.fetchone()
+            INSERT INTO PostureResult (user_id, video_id, result_text, image_url)
+            VALUES (%s, %s, %s, %s)
+        """, (user_id, video_id, result_text, image_url))
 
-        if not result:
-            return jsonify({"message": "분석 결과가 없습니다."}), 404
-
-        return jsonify(result), 200
+    return jsonify({"message": "분석 결과 저장 완료"}), 201
 
 
 @app.route('/login', methods=['POST'])
