@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import "../styles/VideoDetail.css";
 
 interface Comment {
@@ -32,6 +32,14 @@ interface VideoInfo {
   correctable: number;
 }
 
+interface RawComment {
+  id: number;
+  user_id: string;
+  created_at: string;
+  content: string;
+  is_recommended: boolean;
+}
+
 interface Props {
   videoId?: string;
   videoSrc?: string;
@@ -50,7 +58,6 @@ const API_BASE_URL = "http://127.0.0.1:5000";
 const VideoDetail: React.FC<Props> = (props) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { videoId } = useParams();
 
   const video: Video = location.state?.video || {
     id: props.videoId ?? "sample",
@@ -88,9 +95,9 @@ const VideoDetail: React.FC<Props> = (props) => {
       }/comments?sort=latest&user_id=${localStorage.getItem("user_id")}`
     )
       .then((res) => res.json())
-      .then(async (data) => {
+      .then(async (data: RawComment[]) => {
         const mapped = await Promise.all(
-          data.map(async (c: any) => {
+          data.map(async (c: RawComment) => {
             const res = await fetch(
               `${API_BASE_URL}/comment/${c.id}/recommend/count`
             );
@@ -112,6 +119,7 @@ const VideoDetail: React.FC<Props> = (props) => {
       })
       .catch((err) => console.error("댓글 불러오기 실패:", err));
   }, [video.id]);
+
   useEffect(() => {
     const userId = localStorage.getItem("user_id");
     if (userId) {
