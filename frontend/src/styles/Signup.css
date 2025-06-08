@@ -1,64 +1,17 @@
-
-
+/* ========================================================= */
+/* 1. PC 버전 (기본값: 1025px 이상) - 미디어 쿼리 없이 작성 */
+/* ========================================================= */
 .signup-frame {
     background: #ffffff;
-    max-width: 990px;
-    margin: 100px auto; /* 중앙 정렬 및 상하 여백 조정 */
+    max-width: 990px; /* PC 버전에서의 최대 너비 */
+    margin: 100px auto; /* 중앙 정렬 및 상하 여백 */
     padding: 30px;
     box-sizing: border-box;
-    position: relative; /* 자식 요소 absolute positioning 기준 */
-  }
-
-/* 1. input-row (우편번호 & 주소검색 버튼) */
-.input-row {
-  display: flex;
-  gap: 10px; /* 입력칸과 버튼 사이 간격 */
-  align-items: center;
-  margin-bottom: 15px; /* 주소검색 다음 줄과의 간격 */
-  /* .input-row 자체가 하나의 "행"을 나타내므로,
-     여기에 width: 100% (부모 td에 대해)를 주는 것이 좋습니다. */
-  width: 100%; /* 부모 td에 맞춰 너비 설정 */
+    position: relative;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* 그림자 추가 (선택 사항) */
 }
 
-.input-box input {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  font-size: 14px;
-  box-sizing: border-box;
-}
-
-.zipcode-input input {
-  width: 200px;
-}
-
-.address1-input input,
-.address2-input input {
-  width: 500px;
-  margin-top: 10px;
-}
-
-.address-search-button {
-  background-color: #007bff;
-  color: white;
-  padding: 10px 16px;
-  border-radius: 10px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  margin-bottom:15px;
-}
-
-.address-search-button:hover {
-  background-color: #0056b3;
-}
-
-.align-left{
-    text-align: left;
-  }
-
-  .signup-title {
+.signup-title {
     color: #000000;
     text-align: center;
     font-family: "SpaceGrotesk-Medium", sans-serif;
@@ -66,64 +19,74 @@
     line-height: 28px;
     font-weight: 500;
     margin-bottom: 30px;
-  }
-  
-  .required-info-text {
-    text-align: left;
-    font-family: "SpaceGrotesk-Regular", sans-serif;
-    font-size: 16px;
-    color: #767676;
-    margin-bottom: 10px;
-  }
+    padding: 80px; /* PC 버전 패딩 */
+}
 
-  .required-info-text-right {
-    text-align: right;
+.align-left {
+    text-align: left;
+}
+
+.basic-info-title {
+    font-size: 18px;
+}
+
+.required-info-text,
+.required-info-text-right {
     font-family: "SpaceGrotesk-Regular", sans-serif;
     font-size: 16px;
     color: #767676;
     margin-bottom: 10px;
-  }
-  
-  .required {
+}
+.required-info-text-right {
+    text-align: right; /* PC 버전에서는 오른쪽 정렬 유지 */
+}
+
+.required-info-text-span {
+    font-size: 18px;
+}
+
+.required {
     color: #ff0000;
     margin-right: 4px;
-  }
-  
-  .required-text {
-    color: #767676;
-  }
-  
-  .id-rules,
-  .password-rules {
+}
+
+.id-rules,
+.password-rules {
     color: #767676;
     text-align: left;
     font-family: "SpaceGrotesk-Regular", sans-serif;
     font-size: 14px;
     line-height: 20px;
     margin-bottom: 15px;
-  }
-  
+}
 
-  
-  .member-type-group {
+/* 회원구분 그룹 */
+.member-type-group {
     display: flex;
-    gap: 20px;
+    /* gap: 20px;  이전 간격은 주석 처리하거나 제거 */
     margin-bottom: 20px;
     justify-content: center;
-  }
-  
-  .member-type-group label {
+    flex-wrap: nowrap;
+}
+
+.member-type-label {
+    padding: 10px;
+}
+
+.member-type-option {
     display: flex;
     align-items: center;
     font-size: 16px;
-    margin-right: 200px;
-  }
-  
-  .member-type-group input[type="radio"] {
+    white-space: nowrap;
+    margin-right: 50px; /* 각 옵션 사이에 50px 간격 추가 */
+}
+
+.member-type-group input[type="radio"] {
     margin-right: 5px;
-  }
-  
-  .progress-step {
+}
+
+/* progress bar (PC 버전에서는 보임) */
+.progress-step {
     color: #000000;
     text-align: left;
     font-family: "SpaceGrotesk-Medium", sans-serif;
@@ -131,34 +94,36 @@
     font-weight: 500;
     position: absolute;
     top: 80px;
-  }
-  
-  .progress-auth {
+    display: block; /* PC에서는 보임 */
+}
+
+.progress-auth {
     left: 20%;
-  }
-  
-  .progress-info {
+}
+
+.progress-info {
     left: 50%;
-  }
-  
-  .progress-indicator {
+}
+
+.progress-indicator {
     border-radius: 50%;
     border: 1px solid #bbbede;
     width: 16px;
     height: 16px;
     position: absolute;
     top: 83px;
-  }
-  
-  .progress-indicator-1 {
+    display: block; /* PC에서는 보임 */
+}
+
+.progress-indicator-1 {
     left: 15%;
-  }
-  
-  .progress-indicator-2 {
+}
+
+.progress-indicator-2 {
     left: 45%;
-  }
-  
-  .progress-line {
+}
+
+.progress-line {
     border-top: 1px solid #000;
     width: 30%;
     height: 0;
@@ -166,22 +131,23 @@
     top: 91px;
     left: 17%;
     z-index: -1;
-  }
-  
-  .label {
+    display: block; /* PC에서는 보임 */
+}
+
+.label {
     text-align: left;
     font-family: "SpaceGrotesk-Medium", sans-serif;
     font-size: 16px;
     font-weight: 500;
     margin-bottom: 5px;
     display: block;
-  }
-  
-  .id-label {
+}
+
+.id-label {
     margin-top: 30px;
-  }
-  
-  .input-box {
+}
+
+.input-box {
     background: #ffffff;
     border-radius: 8px;
     border: 1px solid #bbbede;
@@ -190,48 +156,45 @@
     display: flex;
     align-items: center;
     padding: 0 10px;
-  }
-  
-  .input-box input[type="text"],
-  .input-box input[type="password"],
-  .input-box input[type="email"],
-  .input-box input[type="number"],
-  .input-box select { /* select도 너비를 100%로 맞추기 위해 추가 */
-    border: none; /* input-box에 border가 있으므로 여기서는 border 제거 */
-    outline: none;
-    font-size: 16px;
-    width: 100%; /* 부모 .input-box의 꽉 채우도록 */
-    height: 38px; /* 일관된 높이 */
-    padding: 0; /* input-box에서 패딩을 주므로 여기서는 0 */
-    box-sizing: border-box; /* 패딩, 보더 포함 너비 계산 */
-    background: transparent; /* input-box의 배경을 따르도록 */
-  }
-  
-  .input-box select {
+}
+
+.input-box input[type="text"],
+.input-box input[type="password"],
+.input-box input[type="email"],
+.input-box input[type="number"],
+.input-box select {
     border: none;
     outline: none;
     font-size: 16px;
-    padding: 5px;
-  }
-  
-  .phone-group,
-  .mobile-group {
+    width: 100%;
+    height: 38px;
+    padding: 0;
+    box-sizing: border-box;
+    background: transparent;
+}
+
+/* 각 입력 필드의 너비 (PC 기본) */
+.id-input,
+.password-input,
+.confirm-password-input,
+.name-input,
+.email-input {
+    width: 60%;
+}
+
+.zipcode-input {
+    width: 120px;
+}
+
+.input-row {
     display: flex;
     gap: 10px;
     align-items: center;
-  }
-  
-  .phone-separator {
-    margin: 0 5px;
-  }
-  
-  .address-group {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .address-search-button {
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+.address-search-button {
     background-color: #034dd2;
     color: #ffffff;
     border: none;
@@ -241,10 +204,59 @@
     cursor: pointer;
     width: 120px;
     text-align: center;
-  }
-  
-  .signup-button,
-  .cancel-button {
+    margin-bottom: 0;
+    flex-shrink: 0; /* 버튼이 줄어들지 않도록 */
+}
+
+.address-search-button:hover {
+    background-color: #0056b3;
+}
+
+.address1-input,
+.address2-input {
+    width: 60%; /* PC에서 address input-box 너비 */
+    margin-top: 10px;
+}
+
+/* 전화번호 그룹 및 칸 크기/간격 조정 (PC) */
+.phone-group-container,
+.mobile-group-container {
+    width: 700px; /* td width에 맞춤 */
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+.phone-group,
+.mobile-group {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    width: 100%; /* td의 100%를 차지하도록 */
+}
+
+.phone-separator {
+    margin: 0 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: #767676;
+    flex-shrink: 0;
+}
+
+.phone1-input,
+.phone2-input,
+.phone3-input,
+.mobile1-input,
+.mobile2-input,
+.mobile3-input {
+    flex-grow: 1;
+    max-width: 80px; /* PC에서 각 칸의 최대 너비 */
+}
+
+/* 버튼 스타일 */
+.signup-button,
+.cancel-button {
     background-color: #034dd2;
     color: #ffffff;
     border: none;
@@ -256,42 +268,478 @@
     margin-top: 20px;
     width: 100%;
     box-sizing: border-box;
-  }
-  
-  .cancel-button {
+}
+
+.cancel-button {
     background-color: #ffffff;
     color: #000000;
     border: 1px solid #bbbede;
-  }
-  
-  /* 각 입력 필드에 대한 구체적인 스타일 (선택 사항) */
-  .id-input {
-    width: 60%;
-  }
-  
-  .password-input,
-  .confirm-password-input,
-  .name-input,
-  .email-input {
-    width: 60%;
-  }
-  
-  .phone1-input,
-  .phone2-input,
-  .phone3-input,
-  .mobile1-input,
-  .mobile2-input,
-  .mobile3-input {
-    width: auto;
-    flex-grow: 1;
-  }
-  
-  .zipcode-input {
-    width: 35%;
-    margin-right: 10px;
-  }
-  
-  .address1-input,
-  .address2-input {
+}
+
+/* 버튼 테이블 셀 너비 (PC) */
+.button-table {
+    display: block; /* 테이블을 블록처럼 만들어 margin: 0 auto 적용 */
+    margin: 0 auto;
+}
+.button-table tbody {
+    display: flex; /* tbody를 flex로 만들어 자식 tr을 가로 정렬 */
+    justify-content: center; /* 중앙 정렬 */
     width: 100%;
-  }
+}
+.button-table tr {
+    display: flex; /* tr도 flex로 만들어 자식 td를 가로 정렬 */
+    width: 100%;
+    gap: 20px; /* 버튼 사이 간격 */
+}
+.button-table td {
+    width: 450px; /* PC에서 각 버튼 셀의 너비 */
+    height: 100px; /* PC에서 각 버튼 셀의 높이 */
+    display: flex; /* 내부 버튼을 flex로 정렬 */
+    align-items: center; /* 수직 중앙 정렬 */
+    justify-content: center; /* 수평 중앙 정렬 */
+    box-sizing: border-box;
+}
+
+/* Table CSS (PC버전 기본) - 각 td의 width를 CSS에서 제어 */
+.signup-frame table {
+    width: 100%; /* 테이블 전체 너비 */
+    border-collapse: collapse; /* 테이블 셀 경계 병합 */
+    margin-bottom: 20px; /* 테이블 아래 여백 */
+}
+
+.signup-frame table tr {
+    display: flex; /* 테이블 행을 Flex 컨테이너로 */
+    align-items: center; /* 수직 중앙 정렬 */
+    flex-wrap: wrap; /* 내용이 길어지면 다음 줄로 넘어가도록 */
+    border-bottom: 1px solid #eee; /* 하단 구분선 */
+    padding: 10px 0; /* 각 행의 패딩 */
+}
+.signup-frame table tr:last-child {
+    border-bottom: none; /* 마지막 행은 구분선 없음 */
+}
+
+.signup-frame table td {
+    padding: 5px 10px; /* 셀 내부 패딩 */
+    box-sizing: border-box;
+    /* 기본적으로 flex 아이템처럼 동작 (width는 각 클래스에서 지정) */
+    flex-grow: 1; /* 남은 공간을 채우도록 설정 (필요시) */
+}
+
+/* 첫 번째 td (라벨 부분) 너비 */
+.signup-frame table tr td:first-child {
+    flex-basis: 150px; /* PC에서 라벨 컬럼의 기준 너비 */
+    flex-shrink: 0; /* 라벨 컬럼이 줄어들지 않도록 */
+}
+
+/* 두 번째 td (input/콘텐츠 부분) 너비 */
+.signup-frame table tr td:last-child {
+    flex-basis: calc(100% - 150px - 20px); /* 전체 너비 - 라벨 너비 - 간격 */
+    /* width: 700px; (기존 TSX에서 가져온 값과 유사하게) */
+    flex-grow: 1;
+}
+
+
+/* ========================================================= */
+/* 2. 태블릿 버전 (max-width: 1024px, min-width: 769px) */
+/* ========================================================= */
+@media (max-width: 1024px) and (min-width: 769px) {
+    .signup-frame {
+        margin: 80px 30px;
+        padding: 25px;
+        max-width: 90%; /* 화면 너비에 맞춰 유동적으로 */
+    }
+
+    .signup-title {
+        font-size: 26px;
+        padding: 60px; /* 패딩 조정 */
+    }
+
+    .member-type-group {
+        gap: 15px; /* 태블릿 간격 */
+    }
+
+    .member-type-option {
+        font-size: 15px;
+    }
+
+    /* 진행바는 태블릿에서도 보임 */
+    .progress-step {
+        font-size: 15px;
+        top: 70px;
+    }
+    .progress-auth { left: 18%; }
+    .progress-info { left: 48%; }
+    .progress-indicator { top: 73px; }
+    .progress-indicator-1 { left: 13%; }
+    .progress-indicator-2 { left: 43%; }
+    .progress-line { width: 30%; top: 81px; left: 15%; }
+
+    .label {
+        font-size: 15px;
+    }
+
+    .input-box {
+        height: 38px;
+        margin-bottom: 12px;
+    }
+
+    .input-box input[type="text"],
+    .input-box input[type="password"],
+    .input-box input[type="email"],
+    .input-box input[type="number"],
+    .input-box select {
+        font-size: 15px;
+        height: 36px;
+    }
+
+    /* 입력 필드 너비 조정 */
+    .id-input,
+    .password-input,
+    .confirm-password-input,
+    .name-input,
+    .email-input {
+        width: 80%; /* 태블릿에서는 더 넓게 */
+    }
+
+    .zipcode-input {
+        width: 100px; /* 약간 줄임 */
+    }
+    .address-search-button {
+        width: 100px; /* 약간 줄임 */
+        padding: 9px 12px;
+        font-size: 15px;
+    }
+    .address1-input,
+    .address2-input {
+        width: 80%; /* 태블릿에서 address input-box 너비 */
+    }
+
+    /* 전화번호 그룹 */
+    .phone-group-container,
+    .mobile-group-container {
+        width: 100% !important; /* td 너비 100%로 */
+        justify-content: flex-start;
+    }
+    .phone1-input,
+    .phone2-input,
+    .phone3-input,
+    .mobile1-input,
+    .mobile2-input,
+    .mobile3-input {
+        max-width: 70px; /* 태블릿에서 각 칸의 최대 너비 */
+    }
+
+    /* 버튼 스타일 */
+    .signup-button,
+    .cancel-button {
+        padding: 14px 18px;
+        font-size: 17px;
+    }
+    .button-table td {
+        width: 48%; /* 2개씩 한 줄에 배치 */
+        height: 90px;
+    }
+
+    /* Table CSS (태블릿) */
+    .signup-frame table tr td:first-child {
+        flex-basis: 120px; /* 라벨 컬럼 너비 조정 */
+    }
+    .signup-frame table tr td:last-child {
+        flex-basis: calc(100% - 120px - 20px);
+    }
+}
+
+
+/* ========================================================= */
+/* 3. 모바일 버전 (max-width: 768px, min-width: 481px) */
+/* ========================================================= */
+@media (max-width: 768px) and (min-width: 481px) {
+    .signup-frame {
+        margin: 50px 20px;
+        padding: 20px;
+    }
+
+    .signup-title {
+        font-size: 24px;
+        margin-bottom: 20px;
+        padding: 40px; /* 패딩 조정 */
+    }
+
+    .required-info-text,
+    .required-info-text-right {
+        font-size: 14px;
+        text-align: left; /* 모바일에서는 모두 왼쪽 정렬 */
+    }
+    .required-info-text-span {
+        font-size: 16px;
+    }
+
+    /* Progress Bar 숨기기 */
+    .progress-step,
+    .progress-indicator,
+    .progress-line {
+        display: none;
+    }
+
+    .label {
+        font-size: 14px;
+    }
+
+    /* 회원구분 (라디오 버튼) */
+    .member-type-group {
+        flex-direction: column; /* 세로로 쌓기 */
+        align-items: flex-start; /* 왼쪽 정렬 */
+        gap: 10px; /* 간격 조정 */
+        justify-content: flex-start; /* 왼쪽 정렬 */
+    }
+
+    .member-type-option {
+        font-size: 14px;
+    }
+
+    /* Table CSS: TD들을 블록 요소처럼 만들어 줄바꿈 */
+    .signup-frame table tr {
+        flex-direction: column; /* 행 내부를 세로로 쌓기 */
+        align-items: flex-start; /* 왼쪽 정렬 */
+        padding: 5px 0;
+    }
+    .signup-frame table td {
+        width: 100% !important; /* 모든 td 너비 100% */
+        flex-basis: auto !important; /* flex-basis 초기화 */
+        display: block; /* 블록 요소처럼 동작 */
+        padding: 0; /* td 자체 패딩 제거 */
+        margin-bottom: 5px; /* 각 td 사이에 간격 */
+    }
+    .signup-frame table tr td:first-child {
+        margin-bottom: 5px; /* 라벨과 input 간 간격 */
+    }
+
+    /* 입력 필드 */
+    .input-box {
+        width: 100%; /* 모든 input-box를 100%로 */
+        height: 38px;
+        margin-bottom: 10px; /* 마진 조정 */
+    }
+    .input-box input[type="text"],
+    .input-box input[type="password"],
+    .input-box input[type="email"],
+    .input-box input[type="number"],
+    .input-box select {
+        font-size: 14px;
+        height: 36px;
+    }
+
+    .zipcode-input {
+        width: 100%;
+        margin-right: 0;
+    }
+
+    .input-row {
+        flex-direction: column; /* 세로로 쌓기 */
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .address-search-button {
+        width: 100%; /* 버튼도 100% */
+        margin-top: 0; /* input-row의 gap으로 충분 */
+        padding: 12px 15px;
+        font-size: 16px;
+    }
+
+    .address1-input,
+    .address2-input {
+        width: 100%; /* 모바일에서 address input-box 너비 */
+        margin-top: 0; /* input-row의 gap으로 충분 */
+    }
+
+    /* 전화번호 그룹 */
+    .phone-group-container,
+    .mobile-group-container {
+        width: 100% !important; /* td 너비 100%로 */
+        justify-content: flex-start;
+    }
+    .phone-group,
+    .mobile-group {
+        flex-direction: row;
+        gap: 5px;
+        width: 100%;
+    }
+    .phone-separator {
+        margin: 0 3px;
+        font-size: 14px;
+    }
+    .phone1-input,
+    .phone2-input,
+    .phone3-input,
+    .mobile1-input,
+    .mobile2-input,
+    .mobile3-input {
+        flex-grow: 1;
+        max-width: none; /* 최대 너비 제한 해제 */
+    }
+
+    /* 버튼 그룹 */
+    .button-table {
+        display: block;
+        width: 100%;
+    }
+    .button-table tbody, .button-table tr {
+        flex-direction: column; /* 버튼 세로로 쌓기 */
+        gap: 10px;
+    }
+    .button-table td {
+        width: 100% !important; /* 각 버튼 셀 100% */
+        height: auto !important; /* 높이도 자동 */
+        padding: 0; /* 패딩 제거 */
+        margin-bottom: 0;
+    }
+    .signup-button,
+    .cancel-button {
+        padding: 12px 15px;
+        font-size: 16px;
+        margin-top: 0;
+    }
+}
+
+
+/* ========================================================= */
+/* 4. 더 작은 모바일 버전 (max-width: 480px) */
+/* ========================================================= */
+@media (max-width: 480px) {
+    .signup-frame {
+
+        margin: 15px 8px;
+        margin-top: 50px;
+        padding: 10px;
+    }
+
+    .signup-title {
+        font-size: 18px;
+        margin-bottom: 10px;
+        padding: 30px;
+    }
+
+    .required-info-text,
+    .required-info-text-right {
+        font-size: 11px;
+        margin-bottom: 5px;
+        text-align: left;
+    }
+    .required-info-text-span {
+        font-size: 14px;
+    }
+
+    /* 회원구분 - 극단적 작은 화면에 맞게 재조정 */
+    .member-type-group {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px; /* 요청대로 5px */
+        margin-bottom: 15px;
+    }
+
+    .member-type-group label {
+        font-size: 13px;
+        white-space: nowrap;
+    }
+
+    /* Progress Bar 숨기기 */
+    .progress-step,
+    .progress-indicator,
+    .progress-line {
+        display: none;
+    }
+
+    .label {
+        font-size: 12px;
+        margin-bottom: 3px;
+    }
+
+    .input-box {
+        height: 32px;
+        margin-bottom: 8px;
+        padding: 0 6px;
+    }
+
+    .input-box input[type="text"],
+    .input-box input[type="password"],
+    .input-box input[type="email"],
+    .input-box input[type="number"],
+    .input-box select {
+        font-size: 12px;
+        height: 30px;
+    }
+
+    .id-rules,
+    .password-rules {
+        font-size: 11px;
+        line-height: 15px;
+        margin-bottom: 10px;
+    }
+
+    .input-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+        margin-bottom: 10px;
+    }
+
+    .zipcode-input {
+        width: 100%;
+        margin-right: 0;
+    }
+
+    .address-search-button {
+        padding: 8px 10px;
+        font-size: 13px;
+        margin-top: 0;
+        width: 100%;
+    }
+
+    /* 전화번호 그룹 */
+    .phone-group-container,
+    .mobile-group-container {
+        width: 100% !important; /* td 너비 100%로 */
+    }
+    .phone-group,
+    .mobile-group {
+        flex-direction: row;
+        gap: 3px;
+        width: 100%;
+    }
+
+    .phone-separator {
+        margin: 0 1px;
+        font-size: 13px;
+    }
+
+    .phone1-input,
+    .phone2-input,
+    .phone3-input,
+    .mobile1-input,
+    .mobile2-input,
+    .mobile3-input {
+        flex-grow: 1;
+        min-width: 35px; /* 더 작은 화면에서 최소 너비 더 줄임 */
+    }
+
+    .signup-button,
+    .cancel-button {
+        padding: 10px 15px;
+        font-size: 15px;
+        margin-top: 10px;
+    }
+
+    /* 버튼 그룹 - 모바일과 동일하게 세로로 쌓기 */
+    .button-table tbody, .button-table tr {
+        flex-direction: column;
+        gap: 8px; /* 간격 더 줄임 */
+    }
+    .button-table td {
+        width: 100% !important;
+        height: auto !important;
+    }
+    .signup-button,
+    .cancel-button {
+        margin-top: 0;
+    }
+}
