@@ -326,15 +326,15 @@ def upload_posture_video(video_id):
     if not file:
         return jsonify({"error": "파일이 없습니다."}), 400
 
-    # 업로드 파일 저장
+    # 1. 업로드 파일 저장 (원본 영상)
     filename = secure_filename(file.filename)
     video_path = os.path.join(UPLOAD_FOLDER, filename)
     file.save(video_path)
 
-    # 프레임 추출
+    # 2. 프레임 추출
     frames = read_video_to_frames(video_path)
 
-    # 모델 정보 가져오기 (PostureModel 테이블에서)
+    # 3. 모델 정보 가져오기
     with get_connection().cursor() as cursor:
         cursor.execute("SELECT model_path, num_conditions FROM PostureModel WHERE video_id = %s", (video_id,))
         model_row = cursor.fetchone()
@@ -344,23 +344,24 @@ def upload_posture_video(video_id):
     model_path = model_row["model_path"]
     num_conditions = model_row["num_conditions"]
 
-    # AI 분석 실행
+    # 4. AI 분석 실행
     eval_output = evaluate(frames, model_path=model_path, num_conditions=num_conditions)
     eval_result = eval_output["results"]
+    annotated_frames = eval_output.get("annotated_frames", frames)
 
-    # 결과 영상 저장
+    # 5. 결과 영상 저장 (분석된 프레임 사용)
     output_filename = f"{user_id}_{video_id}_result.mp4"
     output_path = os.path.join(UPLOAD_FOLDER, output_filename)
-    save_success = save_result_video(frames, output_path)
+    save_success = save_result_video(annotated_frames, output_path)
     if not save_success:
         return jsonify({"error": "결과 영상 저장 실패"}), 500
 
-    #조건 설명 불러오기 (PostureCondition)
+    # 6. 조건 설명 불러오기
     with get_connection().cursor() as cursor:
         cursor.execute("SELECT condition_index, description FROM PostureCondition WHERE video_id = %s", (video_id,))
         condition_map = {row['condition_index']: row['description'] for row in cursor.fetchall()}
 
-    #결과 텍스트 만들기
+    # 7. 결과 텍스트 생성
     result_lines = []
     for r in eval_result:
         cond = r['condition']
@@ -372,7 +373,7 @@ def upload_posture_video(video_id):
 
     result_text = "\n".join(result_lines)
 
-    #DB 저장 (PostureResult)
+    # 8. DB 저장 (PostureResult)
     with get_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute("""
@@ -382,12 +383,12 @@ def upload_posture_video(video_id):
                 user_id,
                 video_id,
                 result_text,
-                video_path,     # 사용자가 업로드한 영상
-                output_path     # AI가 생성한 결과 영상
+                video_path,     # 원본 영상 경로
+                output_path     # 분석 결과 영상 경로
             ))
             conn.commit()
 
-    # 응답
+    # 9. 응답 반환
     return jsonify({
         "message": "분석 완료",
         "result_text": result_text,
