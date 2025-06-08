@@ -1,2 +1,5 @@
-[packages]
-system = ["mesa"]
+[phases.setup]
+nixPkgs = ["mesa", "glib", "libGL"]
+
+[start]
+cmd = "python backend/app.py"
