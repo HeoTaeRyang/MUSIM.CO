@@ -1,395 +1,275 @@
-/* src/styles/Exercise.css */
-/* 기존 .correction-tag 아래 또는 유사한 위치에 추가 */
-.favorite-tag {
-  display: inline-block;
-  background-color: #FFD700; /* 황금색 (노란색 계열) */
-  color: #333; /* 글씨 색상 */
-  font-size: 0.7em;
-  padding: 3px 6px;
-  border-radius: 4px;
-  margin-left: 8px; /* 다른 태그와의 간격 */
-  font-weight: bold;
-  vertical-align: middle; /* 텍스트 정렬 */
-}
+/* Exercise.css */
+
+/* ====================================================================
+   섹션 1: 기존 검색창, 필터/정렬, 비디오 카드 디자인 (사용자님 원본)
+   ==================================================================== */
+
 .ex-container {
-  padding: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
-  margin-top: 150px;
-  margin-bottom: 150px;
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    margin-top: 130px;
 }
 
 /* 검색창 섹션 */
 .search-section {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 30px;
-  position: relative;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 30px;
+    position: relative;
 }
 
 .search-input-wrapper {
-  position: relative;
-  width: 80%;
-  max-width: 600px;
-  border-bottom: 2px solid #ccc;
-  display: flex;
-  align-items: center;
+    position: relative;
+    width: 80%;
+    max-width: 600px;
+    border-bottom: 2px solid #ccc; /* 밑줄 디자인 */
+    display: flex;
+    align-items: center;
 }
 
 .search-input-styled {
-  flex-grow: 1;
-  padding: 10px 0;
-  border: none;
-  outline: none;
-  font-size: 18px;
-  box-sizing: border-box;
+    flex-grow: 1;
+    padding: 10px 0; /* 상하 패딩만 적용 */
+    border: none;
+    outline: none;
+    font-size: 18px;
+    box-sizing: border-box;
+    /* 추가: input 기본 스타일 제거 */
+    background: transparent;
 }
 
+/* 검색 아이콘 (돋보기) 및 X 버튼 */
 .search-icon {
-  color: #888; /* X 버튼 텍스트에만 영향 */
-  cursor: pointer;
-  padding: 0 10px;
-  display: flex; /* 내부 이미지 중앙 정렬을 위해 */
-  align-items: center;
-  justify-content: center;
+    color: #888;
+    cursor: pointer;
+    padding: 0 10px; /* 좌우 패딩 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* 돋보기 이미지 아이콘 전용 스타일 */
 .search-image-icon {
-    width: 24px; /* 원하는 크기로 설정 */
-    height: 24px; /* 원하는 크기로 설정 */
-    object-fit: contain; /* 이미지 비율을 유지하면서 요소에 맞춤 */
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
 }
 
-/* X 버튼 스타일 */
+/* X 버튼 (지우기) 스타일 */
 .search-icon.clear-icon {
-  font-size: 30px;
-  font-weight: bold;
-  color: #888;
+    font-size: 30px; /* 더 크게 */
+    font-weight: bold;
+    color: #888;
 }
 
-
+/* 자동 완성 추천 목록 */
 .autocomplete-suggestions {
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 80%;
-  max-width: 600px;
-  max-height: 200px;
-  overflow-y: auto;
-  border: 1px solid #ddd;
-  border-top: none;
-  border-radius: 0 0 5px 5px;
-  background-color: white;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  z-index: 10;
-  text-align: left;
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%; /* 검색 입력창과 동일한 너비 */
+    max-width: 600px;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-top: none;
+    border-radius: 0 0 5px 5px;
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+    text-align: left;
 }
 
 .suggestion-item {
-  padding: 10px;
-  cursor: pointer;
-  border-bottom: 1px solid #eee;
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
 }
 
 .suggestion-item:last-child {
-  border-bottom: none;
+    border-bottom: none;
 }
 
 .suggestion-item:hover {
-  background-color: #f0f0f0;
+    background-color: #f0f0f0;
 }
 
 
 /* 필터 및 정렬 섹션 */
 .filter-sort-section {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  margin-bottom: 20px;
-  gap: 15px;
+    display: flex;
+    justify-content: flex-end; /* 오른쪽 정렬 */
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 15px; /* 필터 버튼과 드롭다운 사이 간격 */
 }
 
 .filter-button-wrapper {
-  position: relative;
-  display: inline-block;
+    position: relative;
+    display: inline-block;
 }
 
 .filter-button {
-  background-color: #f5f5f5;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  padding: 8px 12px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 1em;
-  color: #555;
-  transition: background-color 0.2s ease;
+    background-color: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 8px 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px; /* 아이콘과 텍스트 사이 간격 */
+    font-size: 1em;
+    color: #555;
+    transition: background-color 0.2s ease;
 }
 
 .filter-button:hover {
-  background-color: #eee;
+    background-color: #eee;
 }
 
 .filter-icon svg {
-  width: 20px;
-  height: 20px;
-  color: #8a2be2;
+    width: 20px;
+    height: 20px;
+    color: #8a2be2; /* 보라색 아이콘 */
 }
 
 .filter-options-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  background-color: white;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  z-index: 20;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  white-space: nowrap;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 20;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    white-space: nowrap; /* 내용이 줄바꿈되지 않도록 */
 }
 
 .filter-options-dropdown label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  font-size: 0.95em;
-  color: #333;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 0.95em;
+    color: #333;
 }
 
 .sort-dropdown-wrapper {
-  position: relative;
-  display: inline-block;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  background-color: #f5f5f5;
+    position: relative;
+    display: inline-block;
+    border: 1px solid #ddd; /* 드롭다운 자체에 테두리 적용 */
+    border-radius: 5px;
+    background-color: #f5f5f5; /* 드롭다운 자체에 배경색 적용 */
 }
 
 .sort-dropdown {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-color: transparent;
-  border: none;
-  padding: 8px 30px 8px 12px;
-  font-size: 1em;
-  color: #555;
-  cursor: pointer;
-  outline: none;
-  width: 100%;
+    appearance: none; /* 기본 드롭다운 화살표 제거 */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: transparent; /* 부모 배경색 상속 */
+    border: none; /* 부모에 테두리 있으므로 여기서는 제거 */
+    padding: 8px 30px 8px 12px; /* 패딩 조정, 오른쪽은 화살표 공간 확보 */
+    font-size: 1em;
+    color: #555;
+    cursor: pointer;
+    outline: none;
+    width: 100%; /* 부모 너비에 맞춤 */
 }
 
 .sort-dropdown:focus {
-  outline: none;
+    outline: none;
 }
 
 .dropdown-arrow {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 0;
-  height: 0;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-top: 5px solid #888;
-  pointer-events: none;
-}
-
-
-/* 배너 섹션 */
-.overlapping-banners-wrapper {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  margin: 40px auto;
-  position: relative;
-  width: 1350px;
-  height: 600px;
-  overflow: hidden;
-  cursor: grab;
-  user-select: none;
-}
-
-.overlapping-banners-wrapper.active-drag {
-  cursor: grabbing;
-}
-
-.banners-inner-container {
-  display: flex;
-  position: absolute;
-  left: 0;
-  top: 0;
-  height: 100%;
-  transition: transform 0.3s ease-out;
-}
-
-.overlapping-banners-wrapper.active-drag .banners-inner-container {
-  transition: none;
-}
-
-.banner-container {
-  flex-shrink: 0;
-  width: 600px;
-  height: 600px;
-  position: relative;
-  cursor: pointer;
-  overflow: hidden;
-  border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  transition: all 0.5s ease-in-out;
-  margin-right: -225px;
-
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  align-items: flex-start;
-  padding: 20px;
-  box-sizing: border-box;
-}
-
-.banner-container.active {
-  z-index: 10;
-  opacity: 1;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-}
-
-.overlapping-banners-wrapper .banner-container:not(.active) {
-    opacity: 0.4;
-    filter: brightness(0.7);
-    box-shadow: none;
-    z-index: 1;
-}
-
-.banner-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: -1;
-  border-radius: 8px;
-  transition: filter 0.5s ease-in-out;
-}
-
-.banner-container.active .banner-image {
-  filter: brightness(1);
-}
-
-.text-overlay {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  align-items: flex-start;
-  padding: 0 20px 20px 20px;
-  box-sizing: border-box;
-  transition: opacity 0.5s ease-in-out;
-}
-
-.toptext {
-  font-size: 1.65em;
-  font-weight: bold;
-  color: white;
-  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
-  margin-bottom: 8px;
-}
-
-.middletext {
-  font-size: 3.3em;
-  font-weight: bolder;
-  color: white;
-  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
-  margin-bottom: 8px;
-}
-
-.bottomtext {
-  font-size: 2.7em;
-  color: white;
-  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid #888; /* 아래쪽을 향하는 삼각형 */
+    pointer-events: none; /* 화살표 클릭 시 드롭다운 대신 select 클릭 */
 }
 
 
 /* 하단 영상 목록 */
 .video-list {
-  display: flex;
-  flex-direction: column;
-  gap: 25px;
-  margin-top: 50px;
-  padding: 0 20px;
-  max-width: 900px;
-  margin-left: auto;
-  margin-right: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    margin-top: 50px;
+    padding: 0 20px;
+    max-width: 900px; /* 중앙 정렬을 위한 최대 너비 */
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom:100px;
 }
 
 .video-card {
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  gap: 25px;
-  background-color: white;
-  width: 100%;
-  box-sizing: border-box;
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* 그림자 강화 */
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 25px; /* 썸네일과 디테일 사이 간격 */
+    background-color: white;
+    width: 100%;
+    box-sizing: border-box; /* 패딩이 너비에 포함되도록 */
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 
 .video-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    transform: translateY(-3px); /* 살짝 위로 */
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15); /* 그림자 더 강하게 */
 }
 
 .video-thumbnail {
-  width: 120px; /* 정사각형을 위해 width와 height를 동일하게 설정 */
-  height: 120px; /* 정사각형을 위해 width와 height를 동일하게 설정 */
-  object-fit: cover;
-  border-radius: 6px;
-  flex-shrink: 0;
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 6px;
+    flex-shrink: 0; /* 공간이 부족해도 줄어들지 않도록 */
 }
 
 .video-details {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  min-height: 120px; /* 썸네일 높이에 맞춤 (정사각형 크기로 조정) */
+    flex-grow: 1; /* 남은 공간을 채우도록 */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* 제목과 메타 정보 분리 */
+    min-height: 120px; /* 썸네일 높이에 맞춤 (정사각형 크기로 조정) */
 }
 
 .video-title {
-  font-weight: bold;
-  font-size: 1.3em;
-  margin-bottom: 12px;
-  color: #222;
-  line-height: 1.3;
-  max-height: 2.6em;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+    font-weight: bold;
+    font-size: 1.3em;
+    margin-bottom: 12px;
+    color: #222;
+    line-height: 1.3;
+    max-height: 2.6em; /* 두 줄 (1.3em * 2) */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* 2줄로 제한 */
+    -webkit-box-orient: vertical;
 }
 
 .video-meta {
-  font-size: 0.95em;
-  color: #555;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: auto;
+    font-size: 0.95em;
+    color: #555;
+    display: flex;
+    flex-wrap: wrap; /* 태그가 많아지면 다음 줄로 */
+    gap: 10px; /* 태그 사이 간격 */
+    margin-top: auto; /* 제목이 짧아도 항상 하단에 위치 */
 }
 
 .correction-tag, .favorite-tag {
@@ -399,10 +279,290 @@
     border-radius: 4px;
     font-size: 0.8em;
     font-weight: bold;
-    white-space: nowrap;
+    white-space: nowrap; /* 태그 내용이 줄바꿈되지 않도록 */
 }
 
 .favorite-tag {
     background-color: #fffde7;
-    color: #fbc02d;
+    color: #fbc02d; /* 노란색 계열 */
+}
+
+/* 즐겨찾기 별 아이콘 */
+.favorite-star-icon {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 20; /* 썸네일 위에 오도록 */
+    color: rgba(255, 255, 255, 0.7); /* 기본 흰색 투명 */
+    stroke: #333; /* 테두리 색상 */
+    stroke-width: 1;
+    cursor: pointer;
+    transition: color 0.2s, stroke 0.2s;
+}
+
+.favorite-star-icon.filled {
+    fill: #FFD700; /* 채워진 색상 */
+    color: #FFD700; /* 채워졌을 때 노란색 */
+    stroke: #FFD700;
+}
+
+.favorite-star-icon:hover {
+    color: #FFD700; /* 호버 시 노란색 (비활성 별에도 적용) */
+    stroke: #FFD700;
+}
+
+/* 로딩 및 에러 메시지 */
+.loading-message, .no-videos-message, .error-message {
+    grid-column: 1 / -1; /* 그리드 전체 너비 차지 */
+    text-align: center;
+    padding: 50px 20px;
+    font-size: 1.2em;
+    color: #666;
+}
+
+.error-message {
+    color: red;
+}
+
+
+.overlapping-banners-wrapper {
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 20px;
+    height: 500px; /* 배너 높이 조절 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+}
+
+.banners-carousel-container {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+}
+
+.banners-inner-wrapper {
+    display: flex;
+    height: 100%;
+    width: 500%; /* totalSlides + 2 (클론) * 100% */
+    /* JS에서 transition 속성을 동적으로 제어하므로, 여기에 transition 속성을 두지 않습니다.
+       JS 코드에서 'transform 0.5s ease-in-out'을 조건부로 적용하는 로직이 있으므로,
+       CSS에서는 모든 배너의 기본 상태를 동일하게 유지하는 데 집중합니다. */
+}
+
+.banner-container {
+    flex-shrink: 0; /* 각 배너가 줄어들지 않도록 */
+    width: calc(100% / 5); /* 5개 중 하나가 보여야 하므로 (100% / carouselLength) */
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: #f0f0f0; /* Empty banner background */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #333;
+    margin: 0 0px; /* 각 배너 사이의 간격 (유지) */
+    box-sizing: border-box; 
+}
+
+/* ★ 중앙 배너 스타일 (.central 클래스) 에서 크기/투명도 관련 스타일을 제거합니다. */
+.banner-container.central {
+    /* transform: scale(1.05); */ /* 제거 */
+    /* opacity: 1; */ /* 제거 */
+    z-index: 5; /* 중앙 배너가 다른 배너 위에 오도록 z-index는 유지 */
+}
+
+/* ★ 사이드 배너 스타일 (.side 클래스) 자체를 제거합니다. */
+/* .banner-container.side {
+    transform: scale(0.9);
+    opacity: 0.7;
+    z-index: 1;
+} */
+/* 이 .banner-container.side 블록 전체를 주석 처리하거나 삭제합니다.
+   이렇게 하면 .side 클래스가 적용된 요소도 .banner-container의 기본 스타일을 따르게 됩니다. */
+
+
+.banner-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+}
+
+.text-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+    color: white;
+    padding: 15px;
+    box-sizing: border-box;
+    z-index: 2;
+    text-align: left;
+}
+
+.toptext {
+    font-size: 0.9em;
+    font-weight: 500;
+    margin-bottom: 5px;
+    opacity: 0.8;
+}
+
+.middletext {
+    font-size: 1.3em;
+    font-weight: bold;
+    margin-bottom: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bottomtext {
+    font-size: 0.8em;
+    opacity: 0.7;
+}
+
+.empty-banner-content {
+    color: #555;
+    font-size: 1.2em;
+    font-weight: bold;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+}
+
+
+/* 캐러셀 버튼 스타일 (기존과 동일) */
+.carousel-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: 1.5em;
+    border-radius: 50%;
+    z-index: 10;
+    opacity: 0.8;
+    transition: opacity 0.3s ease;
+}
+
+.carousel-arrow:hover {
+    opacity: 1;
+}
+
+.left-arrow {
+    left: 10px;
+}
+
+.right-arrow {
+    right: 10px;
+}
+
+
+/* ====================================================================
+   섹션 3: 반응형 디자인 (원본 유지 + 배너 관련 추가)
+   ==================================================================== */
+@media (max-width: 768px) {
+    .video-list {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); /* 이 부분은 원래 Flexbox 기반이었으므로 조정 필요 */
+        flex-direction: column; /* 다시 flex로 변경 */
+        gap: 15px; /* 간격 조정 */
+        padding: 0 10px; /* 패딩 조정 */
+    }
+    .video-card {
+        flex-direction: column; /* 세로로 쌓이도록 */
+        align-items: flex-start; /* 좌측 정렬 */
+        gap: 15px; /* 간격 조정 */
+        padding: 15px;
+    }
+    .video-thumbnail {
+        width: 100%; /* 너비를 꽉 채우도록 */
+        height: 180px; /* 높이 조정 */
+    }
+    .video-details {
+        min-height: auto; /* 최소 높이 제거 */
+    }
+
+    .filter-sort-section {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    .sort-dropdown-wrapper {
+        width: 100%;
+    }
+    .sort-dropdown {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .video-list {
+        grid-template-columns: 1fr; /* 모바일에서는 1열 */
+    }
+    .ex-container {
+        padding: 10px;
+        margin-top: 80px;
+    }
+    .search-input-styled {
+        font-size: 16px;
+        padding: 8px 30px 8px 10px;
+    }
+    .search-icon {
+        padding: 0 5px;
+    }
+    .search-image-icon {
+        width: 20px;
+        height: 20px;
+    }
+    .search-icon.clear-icon {
+        font-size: 24px;
+    }
+    .autocomplete-suggestions {
+        width: 90%;
+    }
+    .filter-button, .sort-dropdown {
+        font-size: 0.9em;
+        padding: 6px 10px;
+    }
+    .filter-icon svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    /* 배너 관련 반응형 */
+    .banner-container {
+        height: 200px; /* 모바일에서 배너 높이 조정 */
+    }
+    .toptext {
+        font-size: 1.2em;
+    }
+    .middletext {
+        font-size: 1em;
+    }
+    .bottomtext {
+        font-size: 0.8em;
+    }
+    .carousel-arrow {
+        width: 40px;
+        height: 40px;
+        font-size: 1.5em;
+        padding: 5px 8px;
+    }
 }

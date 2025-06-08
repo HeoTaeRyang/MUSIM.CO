@@ -1,3 +1,5 @@
+/* src/styles/VideoDetail.css - 데스크탑 + 모바일 반응형 포함 (사이드바 가로 정렬) */
+
 .video-detail-container {
   width: 100%;
   max-width: 1200px;
@@ -12,6 +14,7 @@
   justify-content: center;
   align-items: flex-start;
   gap: 32px;
+  flex-wrap: wrap;
 }
 
 .video-player-section {
@@ -24,28 +27,36 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+.video-side-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #eaf4ff;
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  max-height: 400px;
+  width: 10px;
+}
+
 .video-side-buttons {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  padding-top: 110px;
+  align-items: center;
 }
 
 .side-btn {
   border: none;
   background: none;
-  cursor: pointer;
   padding: 8px;
   width: 52px;
   height: 52px;
-  border-radius: 14px;
-  background: #f1f1f1;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   transition: all 0.2s;
-}
-
-.side-btn:hover {
-  background: #e0e0e0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
 }
 
 .side-btn img {
@@ -53,18 +64,7 @@
   height: 24px;
 }
 
-@media (max-width: 768px) {
-  .horizontal-layout {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .video-side-buttons {
-    flex-direction: row;
-    gap: 12px;
-    padding-top: 12px;
-  }
-}
+/* --- 댓글 작성 영역 --- */
 .comment-input-section {
   display: flex;
   align-items: center;
@@ -105,6 +105,7 @@
   background: #273fb6;
 }
 
+/* --- 댓글 리스트 --- */
 .comments-list {
   display: flex;
   flex-direction: column;
@@ -158,12 +159,6 @@
   font-weight: 400;
 }
 
-.comment-header .rating {
-  margin-left: auto;
-  font-size: 15.5px;
-  color: #ffd700;
-}
-
 .comment-text {
   font-size: 16px;
   color: #272f3e;
@@ -173,20 +168,117 @@
   text-align: left;
 }
 
-@media (max-width: 720px) {
+.like-section {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.like-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+}
+
+.like-btn img {
+  width: 18px;
+  height: 18px;
+}
+
+/* --- 정보 모달 --- */
+.info-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.info-content {
+  background-color: white;
+  padding: 30px 40px;
+  border-radius: 16px;
+  width: 500px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  font-size: 16px;
+  position: relative;
+}
+
+.info-content img {
+  width: 100%;
+  border-radius: 8px;
+  margin-top: 12px;
+}
+
+.close-btn {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #555;
+}
+
+.close-btn:hover {
+  color: #000;
+}
+
+/* --- 모바일: 사이드버튼 가로 정렬 --- */
+@media (max-width: 768px) {
+  .horizontal-layout {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .video-side-wrapper {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 12px;
+    margin-top: 20px;
+    padding: 16px 12px;
+    height: 10px;
+  }
+
+  .video-side-buttons {
+    flex-direction: row;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .side-btn img {
+    width: 24px;
+    height: 24px;
+  }
+
   .comment-card {
     padding: 13px 7px 11px 7px;
     border-radius: 11px;
   }
+
   .comment-card .avatar {
     width: 34px;
     height: 34px;
   }
+
   .comment-input-section input[type="text"] {
     font-size: 15px;
     padding: 10px;
     border-radius: 10px;
   }
+
   .submit-btn {
     font-size: 14px;
     padding: 6px 12px;

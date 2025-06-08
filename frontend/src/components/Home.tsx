@@ -1,56 +1,70 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import "../styles/Home.css";
 import MainCalendar from "./HomePart/MainCalendar";
 import Ranking from "./HomePart/Ranking";
 import DailyMission from "./HomePart/DailyMission";
-// import axios from 'axios'; // axios 임포트 주석 처리
+// import axios from 'axios'; // axios 임포트 주석 처리 (기존과 동일)
 
-// axios.defaults.baseURL = "/"; // axios 기본 URL 설정 주석 처리
+// axios.defaults.baseURL = "/"; // axios 기본 URL 설정 주석 처리 (기존과 동일)
 
 const Home = () => {
   const [username, setUsername] = useState("사용자");
   const [userId, setUserId] = useState<string | null>(null);
 
-  // dailyMissionVideoId의 초기값을 '1' (더미 ID)로 설정했습니다.
-  const [dailyMissionVideoId, setDailyMissionVideoId] = useState<string | null>("1"); 
+  
+  const dailyMissionVideoId: string = "1";
 
   const dailyMissionName = "윗몸일으키기";
-  const [currentDailyMissionCount, setCurrentDailyMissionCount] = useState(0);
   const targetDailyMissionCount = 50;
-  
+
+  // **** LOCAL STORAGE 관련 코드 시작 ****
+  const getInitialDailyMissionCount = useCallback(() => {
+    const storedUserId = localStorage.getItem("user_id");
+    if (
+      !storedUserId ||
+      typeof storedUserId !== "string" ||
+      storedUserId.trim() === ""
+    ) {
+      return 0;
+    }
+    const storedCount = localStorage.getItem(
+      `dailyMissionCount_${storedUserId}`
+    );
+    const parsedCount = storedCount ? parseInt(storedCount, 10) : 0;
+    return isNaN(parsedCount) ? 0 : parsedCount;
+  }, []);
+
+  const [currentDailyMissionCount, setCurrentDailyMissionCount] = useState(
+    getInitialDailyMissionCount()
+  );
+
+  useEffect(() => {
+    setCurrentDailyMissionCount(getInitialDailyMissionCount());
+  }, [userId, getInitialDailyMissionCount]);
+  // **** LOCAL STORAGE 관련 코드 끝 ****
+
   useEffect(() => {
     const storedUsername = localStorage.getItem("username");
     const storedUserId = localStorage.getItem("user_id");
     if (storedUsername) setUsername(storedUsername);
     if (storedUserId) setUserId(storedUserId);
-
-    // 백엔드 API 호출 로직은 주석 처리합니다.
-    // if (storedUserId) {
-    //   fetchDailyMissionVideoId(storedUserId);
-    // }
   }, []);
 
   // 백엔드에서 데일리 미션 비디오 ID를 가져오는 함수 (현재 사용하지 않음)
   // const fetchDailyMissionVideoId = async (userId: string) => {
-  //   try {
-  //     // TODO: 실제 백엔드 API 엔드포인트로 변경해야 합니다.
-  //     // 예시: GET /api/daily-mission-video-id?userId=...
-  //     const response = await axios.get(`/daily-mission-video-id`, { params: { user_id: userId } });
-  //     const videoIdFromBackend = response.data.videoId || response.data;
-      
-  //     setDailyMissionVideoId(videoIdFromBackend);
-
-  //   } catch (error) {
-  //     console.error("데일리 미션 비디오 ID를 가져오는 데 실패했습니다.", error);
-  //     // 실패 시 더미 값 '1'이 유지됩니다.
-  //   }
+  //   try {
+  //     const response = await axios.get(`/daily-mission-video-id`, { params: { user_id: userId } });
+  //     const videoIdFromBackend = response.data.videoId || response.data;
+  //     setDailyMissionVideoId(videoIdFromBackend); // 이 함수를 주석 해제하면 setDailyMissionVideoId 경고가 사라집니다.
+  //   } catch (error) {
+  //     console.error("데일리 미션 비디오 ID를 가져오는 데 실패했습니다.", error);
+  //   }
   // };
 
-  const completeDailyMissionItem = () => {
-    if (currentDailyMissionCount < targetDailyMissionCount) {
-      setCurrentDailyMissionCount((prev) => prev + 1);
-    }
-  };
+  // 'completeDailyMissionItem' 함수는 더 이상 사용되지 않으므로 제거합니다.
+  // 만약 DailyMission 컴포넌트에서 이 함수가 필요하다면,
+  // DailyMission 컴포넌트 자체에서 이 함수를 정의하거나,
+  // Home 컴포넌트에서 이 함수를 다시 추가하고 DailyMission 컴포넌트에 prop으로 전달해야 합니다.
 
   return (
     <div className="dashboard">
@@ -65,12 +79,11 @@ const Home = () => {
           <Ranking />
         </div>
 
-        {/* dailyMissionVideoId는 항상 '1'이므로 DailyMission이 항상 렌더링됩니다. */}
         <DailyMission
           missionName={dailyMissionName}
           currentCount={currentDailyMissionCount}
           targetCount={targetDailyMissionCount}
-          videoId={dailyMissionVideoId} // <-- 더미 ID '1'이 전달됩니다.
+          videoId={dailyMissionVideoId}
         />
 
         <div className="right-panel">

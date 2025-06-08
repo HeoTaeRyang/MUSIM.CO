@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "../../styles/MainCalendar.css";
 
@@ -36,35 +36,62 @@ const MainCalendar: React.FC<Props> = ({ userId }) => {
   const todayDate = today.getDate();
 
   const [hasAttended, setHasAttended] = useState(false);
+  const [attendedDates, setAttendedDates] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
 
   const firstDay = new Date(currentYear, currentMonth, 1).getDay();
   const lastDate = new Date(currentYear, currentMonth + 1, 0).getDate();
 
-  const dates = Array.from({ length: firstDay }, () => null).concat(
-    Array.from({ length: lastDate }, (_, i) => i + 1)
+  const emptyDates: (number | null)[] = Array.from(
+    { length: firstDay },
+    () => null
   );
+  const filledDates: (number | null)[] = Array.from(
+    { length: lastDate },
+    (_, i) => i + 1
+  );
+  const dates: (number | null)[] = [...emptyDates, ...filledDates];
+
+  useEffect(() => {
+    const fetchAttendance = async () => {
+      try {
+        const res = await axios.post("/attendance/month", { id: userId });
+        const recordDates: string[] = res.data.records;
+        const dateNums = recordDates.map((d) => parseInt(d.split("-")[2], 10));
+        setAttendedDates(dateNums);
+        if (dateNums.includes(todayDate)) {
+          setHasAttended(true);
+        }
+      } catch (err) {
+        console.error("출석 기록 불러오기 실패", err);
+      }
+    };
+
+    fetchAttendance();
+  }, [userId, todayDate]);
 
   const handleAttend = async () => {
     setLoading(true);
     try {
-      const res = await axios.post("/attendance", {
-        id: userId, // ✅ 다시 'id'로 복원
-      });
+      const res = await axios.post("/attendance", { id: userId });
       console.log("✅ 응답 성공:", res.data);
       setStatusMessage(res.data.message);
       setHasAttended(true);
-    } catch (err: any) {
-      console.error("❌ 에러 발생:", err);
-      if (err.response && err.response.status === 400) {
-        setStatusMessage(err.response.data.message);
-        setHasAttended(true);
+      setAttendedDates((prev) => [...prev, todayDate]);
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        console.error("❌ 응답 에러:", err.response?.data);
+        if (err.response?.status === 400) {
+          setStatusMessage(err.response.data.message);
+          setHasAttended(true);
+        } else {
+          setStatusMessage("출석 처리에 실패했습니다.");
+        }
       } else {
-        setStatusMessage("출석 처리에 실패했습니다.");
+        console.error("❌ 예기치 못한 에러:", err);
+        setStatusMessage("알 수 없는 오류가 발생했습니다.");
       }
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -83,7 +110,7 @@ const MainCalendar: React.FC<Props> = ({ userId }) => {
 
         {dates.map((date, index) => {
           const isToday = date === todayDate;
-          const isAttended = isToday && hasAttended;
+          const isAttended = date != null && attendedDates.includes(date);
 
           return (
             <CalendarCell

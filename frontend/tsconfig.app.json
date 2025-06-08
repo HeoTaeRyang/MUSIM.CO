@@ -22,5 +22,14 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src"]
+  "include": [
+    "src", // 이미 이 부분이 있다면 대부분의 src 파일은 포함됩니다.
+    // 하지만 명시적으로 .d.ts 파일을 포함하는 패턴을 추가하는 것이 안전합니다.
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.d.ts" // 이 줄을 추가하여 모든 선언 파일을 포함시킵니다.
+  ],
+  "exclude": [
+    "node_modules" // node_modules는 보통 제외됩니다.
+  ]
 }

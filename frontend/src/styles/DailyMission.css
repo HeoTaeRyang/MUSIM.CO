@@ -143,3 +143,50 @@
   white-space: nowrap;
   flex-shrink: 0;
 }
+
+
+/* src/styles/DailyMission.css */
+
+/* 기존 스타일 유지 */
+
+.reward-button {
+  display: block; /* 블록 요소로 만들어서 줄바꿈 */
+  width: calc(100% - 20px); /* 패딩 제외한 너비 */
+  padding: 10px 15px;
+  margin: 15px 10px 0; /* 상단 여백 추가 */
+  background-color: #4CAF50; /* 초록색 */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.reward-button:hover:not(:disabled) {
+  background-color: #45a049;
+}
+
+.reward-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.reward-message {
+  text-align: center;
+  margin-top: 10px;
+  font-size: 0.9em;
+  color: #333;
+}
+
+/* 추가적으로, .daily-mission-card.bottom-card 에 flex-direction: column; 을 추가하여
+   내부 요소들이 세로로 정렬되도록 하면 더 보기 좋습니다. */
+.daily-mission-card.bottom-card {
+  display: flex;
+  flex-direction: column; /* 추가 */
+  justify-content: center;
+  align-items: center;
+  max-height: 500px;
+  /* ... (기존 스타일) ... */
+}

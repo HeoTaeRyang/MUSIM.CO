@@ -1,216 +1,76 @@
-/* src/styles/VideoAnalyze.css (제공해주신 초기 CSS 기반 + 수정) */
+/* VideoAnalyze.css 개선: 1:1 비율 유지 및 중앙 정렬 */
 
 .video-analyze-container {
   display: flex;
   flex-direction: column;
-  /* 세로로 쌓기 */
-  width: 100%;
-  min-height: calc(100vh - 110px);
-  /* 원하는 높이 조정 */
-  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 120px);
   padding: 20px;
-  /* <--- 전체 컨테이너에 여백 추가 */
-  gap: 20px;
-  /* <--- 자식 요소들 사이에 간격 추가 */
-}
-
-.video-analyze-mission-display {
-  /* DailyMission.css의 .daily-mission-card.top-card 스타일을 재사용합니다. */
-  /* 필요하다면 VideoAnalyze에 특화된 추가적인 스타일을 여기에 정의할 수 있습니다. */
-
-  margin-top: 150px;
-  width: 100%;
-  /* 너비를 100%로 설정하여 공간 확보 */
-  max-width: 900px;
-  /* 너무 넓어지지 않도록 최대 너비 설정 */
-  align-self: center;
-  /* flex-direction: column일 때 중앙 정렬 */
   box-sizing: border-box;
-  /* 패딩, 보더 포함 너비 계산 */
-  background-color: white;
-  border: none;
-  /* <--- 테두리 제거 */
-  box-shadow: none;
-  /* <--- 그림자 제거 */
 }
 
-/* 두 패널(왼/오른쪽)을 수평으로 배치 */
 .panels {
   display: flex;
-  flex: 1;
-  height: auto;
-  overflow: visible;
-  gap: 20px;
-  /* <--- 비디오 영역과 분석 패널 사이의 간격 추가 */
-  margin-bottom: 20px;
-  /* <--- 분석 결과 부분과의 간격 추가 */
-  flex-wrap: wrap;
-  /* <--- 작은 화면에서 패널이 줄바꿈되도록 추가 */
-}
-
-/* 왼쪽 비디오 영역 */
-.video-area {
-  flex: 1;
-  transition: flex 0.3s;
-
-  display: flex;
-  /* <--- VideoDetail 내부 요소의 정렬을 위해 */
   justify-content: center;
-  /* <--- VideoDetail 내부 요소의 정렬을 위해 */
+  align-items: flex-start;
+  gap: 40px;
+  flex-wrap: wrap;
+  max-width: 1440px;
+  width: 100%;
+  margin-top: 110px
+}
+
+
+.video-area {
+  flex: 2;
+  position: relative;
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  display: flex;
   align-items: center;
-  /* <--- VideoDetail 내부 요소의 정렬을 위해 */
-  border: none;
-  /* <--- 영상 틀 주변의 불필요한 테두리 제거 */
-  border-radius: 8px;
-  /* <--- 모서리 둥글게 */
+  justify-content: center;
   overflow: hidden;
-  /* <--- 내용이 넘칠 경우 숨김 */
-  box-shadow: none;
-  /* <--- 불필요한 그림자 제거 */
+
 }
 
-.video-area.with-panel {
-  flex: 1 1 50%;
-  max-width: 50%;
-  min-width: 300px;
-  /* <--- 모바일 등 작은 화면에서 너무 작아지지 않도록 최소 너비 지정 */
+.video-analyze-panel {
+  width: 560px;
+  height: 605px;
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 16px;
+  box-sizing: border-box;
 }
 
-/* VideoDetail 컴포넌트 내부의 실제 비디오 태그에 적용 */
-/* 이 부분은 VideoDetail.css가 없거나 여기에 오버라이드해야 할 경우 사용합니다. */
-.video-area video {
+
+.video-area iframe,
+.video-area video,
+.uploaded-video,
+.webcam-live-preview {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  /* <--- 영상 비율을 유지하면서 컨테이너에 맞춤 */
-  background-color: black;
-  /* <--- 영상의 빈 공간은 검은색으로 */
   border: none;
-  /* <--- 비디오 자체의 테두리 제거 */
-  outline: none;
-  /* <--- 포커스 시 나타나는 파란색/검은색 윤곽선 제거 */
-  box-shadow: none;
-  /* <--- 비디오 자체의 그림자 제거 */
-  display: block;
-  /* <--- 비디오를 블록 요소로 처리하여 여백 제거 */
 }
 
-
-/* 오른쪽 업로드 패널 */
-/* 이 부분은 제공해주신 초기 디자인 그대로 유지됩니다. */
-.analyze-panel {
-  flex: 1;
-  max-width: 50%;
-  min-width: 300px;
-  background: #fff;
-  border-left: 1px solid #eee;
-  display: flex;
-  flex-direction: column;
-  padding: 20px;
-  box-sizing: border-box;
-  overflow: hidden;
-}
-
-/* 업로드 헤더 */
-.analyze-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-
-/* 업로드 영역 */
-/* 이 부분은 제공해주신 초기 디자인 그대로 유지됩니다. */
-.upload-area {
-  flex: 1 0 auto;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border: 2px dashed #ddd;
-  border-radius: 8px;
-  height: 200px;
-  margin-top: 20px;
-  width: 100%;
-}
-
-.upload-label {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  color: #777;
-  cursor: pointer;
-}
-
-.upload-label input {
-  display: none;
-}
-
-.upload-icon {
-  font-size: 2rem;
-  margin-bottom: 8px;
-}
-
-/* uploaded-video 스타일 (제공해주신 초기 디자인 그대로 유지됩니다.) */
-.uploaded-video {
-  width: 100%;
-  height: 100%;
-  border-radius: 8px;
-}
-
-/* ── 두 패널 하단에 표시되는 분석 결과 ──────────────────────────── */
-.analysis-result-below {
-  text-align: center;
-  padding: 20px;
-  background: #fafafa;
-  border-radius: 8px;
-  /* 모서리 둥글게 */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  /* 그림자 효과 추가 */
-}
-
-.analysis-result-below h3 {
-  margin: 0 0 8px;
-  color: #034dd2;
-  font-size: 1.2rem;
-}
-
-.analysis-result-below p {
-  margin: 0 0 16px;
-  line-height: 1.5;
-  color: #333;
-}
-
-.result-buttons {
-  display: inline-flex;
-  gap: 16px;
-}
-
-.reset-btn,
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border: 1px solid #034dd2;
-  background: #fff;
-  color: #034dd2;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: background 0.2s, color 0.2s;
-}
-
-.btn:hover {
-  background: #034dd2;
-  color: #fff;
-}
 
 .upload-buttons-container {
   display: flex;
   justify-content: center;
   gap: 40px;
-  margin-top: 2rem;
+  margin-top: 1rem;
+}
+
+.upload-buttons-container.hidden {
+  display: none;
 }
 
 .upload-button {
@@ -226,41 +86,102 @@
 }
 
 .upload-icon-react {
-  font-size: 64px;
-  color: #034DD2;
-  margin: 20px;
+  font-size: 48px;
+  color: #034dd2;
+  margin-bottom: 8px;
 }
 
+/* 녹화 중 화면 */
 .recording-preview {
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 2rem;
+  gap: 20px;
+  padding: 20px 0;
+  box-sizing: border-box;
 }
 
-.webcam-live-preview {
+.recording-preview p {
+  margin: 0;
+  font-size: 1rem;
+  color: #034dd2;
+  font-weight: bold;
+}
+
+.recording-preview video {
   width: 100%;
-  max-width: 480px;
+  max-height: 300px;
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-  margin-bottom: 1rem;
 }
 
-.stop-btn {
-  background-color: crimson;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
+/* 분석 결과 및 로딩 */
+.analysis-result-below,
 .loading-container {
-  margin-top: 2rem;
+  margin-top: 40px;
+  text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+
+}
+
+.analysis-result-below {
+  padding: 20px;
+  background: #fafafa;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.analysis-result-below h3 {
+  margin: 0 0 8px;
+  color: #034dd2;
+  font-size: 1.2rem;
+}
+
+
+.analysis-result-below p {
+  margin: 0 0 16px;
+  color: #333;
+  white-space: nowrap;
+  overflow-x: auto;
+  text-overflow: clip;
+  max-width: 100%;
+}
+
+.result-buttons {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 20px;
+  margin-bottom: 50px;
+}
+
+.reset-btn,
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid #034dd2;
+  background: #fff;
+  color: #034dd2;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.2s, color 0.2s;
+  margin-top: 5px;
+
+}
+
+.btn:hover {
+  background: #034dd2;
+  color: #fff;
+}
+
+.loading-container {
   animation: fadeIn 0.3s ease-in-out;
 }
 
@@ -271,6 +192,7 @@
   margin-bottom: 1rem;
 }
 
+/* 애니메이션 */
 @keyframes spin {
   0% {
     transform: rotate(0deg);

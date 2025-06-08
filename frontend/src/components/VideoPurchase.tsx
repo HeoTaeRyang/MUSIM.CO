@@ -23,7 +23,7 @@ const VideoPurchase: React.FC = () => {
   return (
     <div className="video-purchase-container">
       {/* 영상 영역 */}
-      <div className="video-area" style={{ flex: showCart ? 2 : 1 }}>
+      <div className="video-area-p" style={{ flex: showCart ? 2 : 1 }}>
         <VideoDetail
           videoId={video.id}
           videoSrc={video.video} // ★ 현재 영상 정보 전달!

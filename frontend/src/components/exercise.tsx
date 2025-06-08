@@ -1,15 +1,27 @@
-import React, { useState, useMemo, useRef, useEffect, useCallback } from "react";
+import React, {
+  useState,
+  useMemo,
+  useRef,
+  useEffect,
+  useCallback,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Exercise.css"; // Make sure your CSS path is correct
 import searchimg from "../assets/search.png";
 
 // ★ Favorite Star Icon Component (이 부분은 동일)
-const StarIcon = ({ filled, onClick }: { filled: boolean; onClick: () => void }) => (
+const StarIcon = ({
+  filled,
+  onClick,
+}: {
+  filled: boolean;
+  onClick: (event: React.MouseEvent<SVGElement>) => void; // Change here
+}) => (
   <svg
     className={`favorite-star-icon ${filled ? "filled" : ""}`}
     onClick={(e) => {
       e.stopPropagation(); // Prevent video card click event from firing
-      onClick();
+      onClick(e); // Pass the event object to onClick
     }}
     viewBox="0 0 24 24"
     fill={filled ? "#FFD700" : "currentColor"} // Yellow if filled, default color otherwise
@@ -17,7 +29,14 @@ const StarIcon = ({ filled, onClick }: { filled: boolean; onClick: () => void })
     strokeWidth="1"
     width="24"
     height="24"
-    style={{ cursor: "pointer", position: "absolute", top: '8px', right: '8px', zIndex: 10, color: '#e0e0e0' }}
+    style={{
+      cursor: "pointer",
+      position: "absolute",
+      top: "8px",
+      right: "8px",
+      zIndex: 10,
+      color: "#e0e0e0",
+    }}
   >
     <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63L2 9.24l5.46 4.73L5.82 21z" />
   </svg>
@@ -48,12 +67,14 @@ interface TodayVideo extends Video {
 
 // --- Exercise Component ---
 const Exercise = () => {
-  const [sortType, setSortType] = useState<"recent" | "like" | "watch">("recent");
+  const [sortType, setSortType] = useState<"recent" | "like" | "watch">(
+    "recent"
+  );
   const [searchQuery, setSearchQuery] = useState("");
-  const [hoveredBannerIndex, setHoveredBannerIndex] = useState<number | null>(0);
   const [showAutocomplete, setShowAutocomplete] = useState(false);
   const [showFilterOptions, setShowFilterOptions] = useState(false);
-  const [showOnlyCorrectionVideos, setShowOnlyCorrectionVideos] = useState(false);
+  const [showOnlyCorrectionVideos, setShowOnlyCorrectionVideos] =
+    useState(false);
   const [showOnlyFavoriteVideos, setShowOnlyFavoriteVideos] = useState(false);
 
   const [bannerVideos, setBannerVideos] = useState<TodayVideo[]>([]);
@@ -68,29 +89,65 @@ const Exercise = () => {
 
   const navigate = useNavigate();
 
-  // --- Data Fetching Functions (이 부분은 동일) ---
+  // --- 슬라이드 관련 상태 ---
+  // totalSlides: 백엔드에서 받아올 실제 추천 영상의 개수 (3개)
+  const totalSlides = 3;
+  // displayedBanners 배열의 총 길이 (실제 3개 + 양쪽 클론 2개 = 5개)
+  const carouselLength = totalSlides + 2;
+
+  // centralBannerIndex: 렌더링에 사용될 expandedBanners 배열 내의 현재 중앙 요소 인덱스
+  // 초기값은 실제 첫 번째 비디오 (expandedBanners의 인덱스 1)
+  const [centralBannerIndex, setCentralBannerIndex] = useState(1);
+  const slideIntervalRef = useRef<number | null>(null);
+  const isAnimating = useRef(false); // 애니메이션 중복 실행 방지 플래그
+
+  // --- Data Fetching Functions ---
   const fetchTodayVideos = useCallback(async () => {
     setLoadingBanner(true);
     setErrorBanner(null);
     try {
       const response = await fetch(`${API_BASE_URL}/video/today`);
       if (!response.ok) {
+        if (response.status === 404) {
+          setErrorBanner("추천 운동 영상이 없습니다.");
+          setBannerVideos([]);
+          setLoadingBanner(false);
+          return;
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const data: Video = await response.json();
+      const videosData: Video[] = await response.json();
 
-      const todayVideoData: TodayVideo = {
-        ...data,
-        topText: "오늘의 추천 운동",
-        middleText: data.title,
-        bottomText: `조회수: ${data.views}회 | 추천수: ${data.recommendations}회`,
-      };
-      setBannerVideos([todayVideoData]);
+      if (videosData.length === 0) {
+        setErrorBanner("추천 운동 영상이 없습니다.");
+        setBannerVideos([]);
+      } else {
+        // 백엔드에서 받은 비디오 데이터에 topText, middleText, bottomText 추가
+        const formattedVideos: TodayVideo[] = videosData.map((video, index) => {
+          let topText = "";
+          if (index === 0) {
+            topText = "오늘의 추천 운동 1";
+          } else if (index === 1) {
+            topText = "오늘의 추천 운동 2"; // 두 번째 비디오에 대한 텍스트
+          } else if (index === 2) {
+            topText = "오늘의 추천 운동 3"; // 세 번째 비디오에 대한 텍스트
+          }
+
+          return {
+            ...video,
+            topText: topText,
+            middleText: video.title,
+            bottomText: `조회수: ${video.views}회 | 추천수: ${video.recommendations}회`,
+          };
+        });
+
+        setBannerVideos(formattedVideos);
+        // 중앙 배너 인덱스를 실제 첫 번째 영상의 인덱스로 설정 (expandedBanners 기준)
+        setCentralBannerIndex(1); // expandedBanners에서 첫 번째 실제 영상의 위치
+      }
     } catch (err: any) {
       console.error("Failed to fetch today's videos:", err);
-      setErrorBanner(
-        err.message || "오늘의 추천 영상 로드 실패"
-      );
+      setErrorBanner(err.message || "오늘의 추천 영상 로드 실패");
       setBannerVideos([]);
     } finally {
       setLoadingBanner(false);
@@ -147,25 +204,40 @@ const Exercise = () => {
         }
         let fetchedData: Video[] = await response.json();
 
-        // 사용자 로그인 상태 및 즐겨찾기 여부에 따라 isFavorite 플래그 설정
         if (userId) {
-            const favoriteResponse = await fetch(`${API_BASE_URL}/user/${userId}/favorites`);
-            if (favoriteResponse.ok) {
-                const favoriteVideoIds = await favoriteResponse.json();
-                fetchedData = fetchedData.map(video => ({
-                    ...video,
-                    isFavorite: favoriteVideoIds.includes(video.id)
-                }));
-            } else {
-                console.error("Failed to fetch user favorites for display.");
-                fetchedData = fetchedData.map(video => ({ ...video, isFavorite: false }));
+          const favoriteResponse = await fetch(
+            `${API_BASE_URL}/video/favorite`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id: userId }),
             }
+          );
+          if (favoriteResponse.ok) {
+            const favoriteVideos: Video[] = await favoriteResponse.json();
+            const favoriteVideoIds = new Set(
+              favoriteVideos.map((video) => video.id)
+            );
+
+            fetchedData = fetchedData.map((video) => ({
+              ...video,
+              isFavorite: favoriteVideoIds.has(video.id),
+            }));
+          } else {
+            console.error(
+              "Failed to fetch user favorites for display:",
+              favoriteResponse.status
+            );
+            fetchedData = fetchedData.map((video) => ({
+              ...video,
+              isFavorite: false,
+            }));
+          }
         } else {
-            fetchedData = fetchedData.map(video => ({ ...video, isFavorite: false }));
-        }
-        
-        if (filterFavorite) {
-            fetchedData = fetchedData.filter(video => video.isFavorite);
+          fetchedData = fetchedData.map((video) => ({
+            ...video,
+            isFavorite: false,
+          }));
         }
 
         let sortedData = [...fetchedData];
@@ -184,9 +256,7 @@ const Exercise = () => {
         setVideosToDisplay(sortedData);
       } catch (err: any) {
         console.error("Failed to fetch videos:", err);
-        setErrorVideos(
-          err.message || "영상 목록 로드 실패"
-        );
+        setErrorVideos(err.message || "영상 목록 로드 실패");
         setVideosToDisplay([]);
       } finally {
         setLoadingVideos(false);
@@ -195,48 +265,53 @@ const Exercise = () => {
     []
   );
 
-  const toggleFavorite = useCallback(async (videoId: number) => {
-    const userId = localStorage.getItem("user_id");
-    if (!userId) {
-      alert("로그인이 필요합니다.");
-      return;
-    }
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/video/${videoId}/favorite`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId }),
-      });
-
-      if (!response.ok) {
-        throw new Error("즐겨찾기 상태 변경 실패");
+  const toggleFavorite = useCallback(
+    async (videoId: number) => {
+      const userId = localStorage.getItem("user_id");
+      if (!userId) {
+        alert("로그인이 필요합니다.");
+        return;
       }
-      const data = await response.json();
-      const isFavorited = data.is_favorited;
 
-      setVideosToDisplay(prevVideos => {
-        const updatedVideos = prevVideos.map(video =>
-          video.id === videoId ? { ...video, isFavorite: isFavorited } : video
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/video/${videoId}/favorite`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user_id: userId }),
+          }
         );
-        
-        if (showOnlyFavoriteVideos && !isFavorited) {
-            return updatedVideos.filter(video => video.id !== videoId);
+
+        if (!response.ok) {
+          throw new Error("즐겨찾기 상태 변경 실패");
         }
-        return updatedVideos;
-      });
+        const data = await response.json();
+        const isFavorited = data.is_favorited;
 
-      alert(
-        isFavorited ? "즐겨찾기 등록했습니다!" : "즐겨찾기를 해제했습니다!"
-      );
+        setVideosToDisplay((prevVideos) => {
+          const updatedVideos = prevVideos.map((video) =>
+            video.id === videoId ? { ...video, isFavorite: isFavorited } : video
+          );
 
-    } catch (err) {
-      console.error("즐겨찾기 토글 실패:", err);
-      alert("즐겨찾기 상태 변경 중 오류가 발생했습니다.");
-    }
-  }, [showOnlyFavoriteVideos]);
+          if (showOnlyFavoriteVideos && !isFavorited) {
+            return updatedVideos.filter((video) => video.id !== videoId);
+          }
+          return updatedVideos;
+        });
 
-  // --- Effects (이 부분은 동일) ---
+        alert(
+          isFavorited ? "즐겨찾기 등록했습니다!" : "즐겨찾기를 해제했습니다!"
+        );
+      } catch (err) {
+        console.error("즐겨찾기 토글 실패:", err);
+        alert("즐겨찾기 상태 변경 중 오류가 발생했습니다.");
+      }
+    },
+    [showOnlyFavoriteVideos]
+  );
+
+  // --- Effects ---
   useEffect(() => {
     fetchTodayVideos();
   }, [fetchTodayVideos]);
@@ -278,6 +353,130 @@ const Exercise = () => {
     };
   }, [showFilterOptions]);
 
+  // --- 슬라이드 기능 로직 ---
+
+  // 자동 슬라이드 타이머 관리
+  const resetInterval = useCallback(() => {
+    if (slideIntervalRef.current) {
+      clearInterval(slideIntervalRef.current);
+    }
+    slideIntervalRef.current = window.setInterval(() => {
+      // 다음 슬라이드로 이동 (애니메이션 포함)
+      if (!isAnimating.current) {
+        // 애니메이션 중이 아닐 때만 이동
+        setCentralBannerIndex((prevIndex) => prevIndex + 1);
+        isAnimating.current = true; // 애니메이션 시작 플래그
+      }
+    }, 7000);
+  }, []);
+
+  useEffect(() => {
+    // bannerVideos 데이터가 로드될 때만 인터벌 시작
+    if (bannerVideos.length > 0) {
+      resetInterval();
+    }
+    return () => {
+      if (slideIntervalRef.current) {
+        clearInterval(slideIntervalRef.current);
+      }
+    };
+  }, [bannerVideos, resetInterval]);
+
+  // `displayedBanners`는 무한 루프를 위해 클론된 배열을 생성합니다.
+  const displayedBanners = useMemo(() => {
+    if (bannerVideos.length === 0) {
+      // 비디오가 없을 경우 빈 플레이스홀더 3개를 만듭니다.
+      const emptyBanner: TodayVideo = {
+        id: -1,
+        views: 0,
+        recommendations: 0,
+        upload_date: new Date().toISOString(),
+        title: "준비중입니다.",
+        video_url: "",
+        correctable: 0,
+        thumbnail_url: "placeholder_image_url.png",
+        description: "새로운 영상이 곧 업데이트됩니다.",
+        product_link: null,
+        topText: "다음 추천 운동",
+        middleText: "준비중입니다.",
+        bottomText: "",
+      };
+      // 5개 (양쪽 클론 포함)의 빈 배너를 생성
+      return Array.from({ length: carouselLength }).map((_, i) => ({
+        ...emptyBanner,
+        id: -(i + 1), // 고유한 더미 ID 부여
+        topText: `다음 추천 운동 ${i > 0 && i < carouselLength - 1 ? i : ""}`,
+        middleText: "준비중입니다.",
+      }));
+    }
+
+    // 실제 비디오가 3개일 경우 (백엔드에서 3개만 온다고 가정)
+    // [마지막 영상, 실제 첫 영상, 실제 두 번째 영상, 실제 세 번째 영상, 첫 번째 영상]
+    // 이렇게 구성하여 무한 루프 시뮬레이션을 위한 클론을 생성합니다.
+    const firstClone = { ...bannerVideos[bannerVideos.length - 1], id: -999 }; // 마지막 영상 클론
+    const lastClone = { ...bannerVideos[0], id: -998 }; // 첫 영상 클론
+
+    const expanded = [firstClone, ...bannerVideos, lastClone];
+    return expanded;
+  }, [bannerVideos, carouselLength]);
+
+  // 슬라이드 애니메이션 완료 시점 처리 (클론 <-> 실제 위치 점프)
+  const handleTransitionEnd = useCallback(() => {
+    if (isAnimating.current) {
+      // 애니메이션이 끝났을 때만 처리
+      let nextIndex = centralBannerIndex;
+      let shouldJump = false;
+
+      // 마지막 클론에 도달했을 때 (실제 첫 번째 비디오로 점프)
+      if (centralBannerIndex === carouselLength - 1) {
+        nextIndex = 1; // 실제 첫 번째 비디오의 인덱스
+        shouldJump = true;
+      }
+      // 첫 번째 클론에 도달했을 때 (실제 마지막 비디오로 점프)
+      else if (centralBannerIndex === 0) {
+        nextIndex = totalSlides; // 실제 마지막 비디오의 인덱스
+        shouldJump = true;
+      }
+
+      if (shouldJump) {
+        // transition을 끄고 위치를 즉시 변경
+        const innerWrapper = document.querySelector(
+          ".banners-inner-wrapper"
+        ) as HTMLElement;
+        if (innerWrapper) {
+          innerWrapper.style.transition = "none";
+          setCentralBannerIndex(nextIndex);
+          // DOM이 업데이트될 시간을 준 후 다시 transition을 켜기
+          requestAnimationFrame(() => {
+            if (innerWrapper) {
+              // 다시 확인
+              innerWrapper.style.transition = ""; // 기본 transition으로 복원
+            }
+          });
+        }
+      }
+      isAnimating.current = false; // 애니메이션 종료 플래그
+    }
+  }, [centralBannerIndex, carouselLength, totalSlides]);
+
+  // 이전 버튼 클릭 핸들러
+  const handlePrevSlide = () => {
+    resetInterval(); // 수동 조작 시 타이머 리셋
+    if (!isAnimating.current) {
+      setCentralBannerIndex((prevIndex) => prevIndex - 1);
+      isAnimating.current = true;
+    }
+  };
+
+  // 다음 버튼 클릭 핸들러
+  const handleNextSlide = () => {
+    resetInterval(); // 수동 조작 시 타이머 리셋
+    if (!isAnimating.current) {
+      setCentralBannerIndex((prevIndex) => prevIndex + 1);
+      isAnimating.current = true;
+    }
+  };
+
   // --- Memoized Values (이 부분은 동일) ---
   const autocompleteSuggestions = useMemo(() => {
     if (searchQuery.trim() === "") return [];
@@ -291,63 +490,85 @@ const Exercise = () => {
     return Array.from(suggestions).slice(0, 5);
   }, [videosToDisplay, searchQuery]);
 
-  // --- Child Components / Handlers (이 부분은 동일) ---
+  // --- Child Components / Handlers ---
   const UnifiedBanner = ({
     imageSrc,
     videoData,
     topText,
     middleText,
     bottomText,
-    index,
-    onMouseEnter,
-    onMouseLeave,
+    isCentral,
   }: {
-    imageSrc: string;
-    videoData: Video;
+    imageSrc?: string;
+    videoData?: Video;
     topText?: string;
     middleText?: string;
     bottomText?: string;
-    index: number;
-    onMouseEnter: () => void;
-    onMouseLeave: () => void;
+    isCentral: boolean;
   }) => {
-    const isActive = hoveredBannerIndex === index;
-
     const handleBannerClick = () => {
-      console.log(`영상을 재생합니다: ${videoData.video_url}`);
-      navigate(`/video/${videoData.id}`, {
-        state: {
-          video: {
-            id: String(videoData.id),
-            title: videoData.title,
-            video: videoData.video_url,
+      if (
+        videoData &&
+        videoData.id > 0 // 더미 ID가 아닐 때만 이동 (id < 0 이면 더미)
+      ) {
+        console.log(`영상을 재생합니다: ${videoData.video_url}`);
+        navigate(`/video/${videoData.id}`, {
+          state: {
+            video: {
+              id: String(videoData.id),
+              title: videoData.title,
+              video: videoData.video_url.startsWith("http")
+                ? videoData.video_url
+                : `${API_BASE_URL}/${videoData.video_url}`, // Path correction
+            },
           },
-        },
-      });
+        });
+      }
     };
 
     return (
       <div
-        className={`banner-container ${isActive ? "active" : ""}`}
-        onMouseEnter={onMouseEnter}
-        onMouseLeave={onMouseLeave}
+        className={`banner-container ${
+          !videoData || videoData.id < 0 ? "empty" : ""
+        } ${isCentral ? "central" : "side"}`}
         onClick={handleBannerClick}
+        style={{
+          cursor: videoData && videoData.id > 0 ? "pointer" : "default",
+        }}
       >
-        <img
-          src={imageSrc}
-          className="banner-image"
-          alt={middleText || "배너 이미지"}
-        />
-        <div className="text-overlay">
-          {isActive && <div className="toptext">{topText}</div>}
-          <div className="middletext">{middleText}</div>
-          <div className="bottomtext">{bottomText}</div>
-        </div>
+        {videoData && videoData.id > 0 ? ( // 실제 데이터가 있을 때만 이미지와 텍스트 오버레이 렌더링
+          <>
+            <img
+              src={imageSrc}
+              className="banner-image"
+              alt={middleText || "배너 이미지"}
+            />
+            <div className="text-overlay">
+              {isCentral && <div className="toptext">{topText}</div>}{" "}
+              {/* 중앙일 때만 topText 표시 */}
+              <div className="middletext">{middleText}</div>
+              <div className="bottomtext">{bottomText}</div>
+            </div>
+          </>
+        ) : (
+          // 빈 박스 내용 렌더링
+          <div className="empty-banner-content">
+            <p>{middleText}</p>
+          </div>
+        )}
       </div>
     );
   };
 
-  const handleVideoCardClick = (video: Video) => {
+  const handleVideoCardClick = async (video: Video) => {
+    try {
+      await fetch(`http://127.0.0.1:5000/video/${video.id}/view`, {
+        method: "POST",
+      });
+    } catch (error) {
+      console.error("조회수 증가 실패:", error);
+    }
+
     navigate(`/video/${video.id}`, {
       state: {
         video: {
@@ -355,7 +576,7 @@ const Exercise = () => {
           title: video.title,
           video: video.video_url.startsWith("http")
             ? video.video_url
-            : `${API_BASE_URL}/${video.video_url}`, // Path correction
+            : `${API_BASE_URL}/${video.video_url}`,
         },
       },
     });
@@ -366,38 +587,62 @@ const Exercise = () => {
     <div className="ex-container">
       {/* Banner Section */}
       <div className="overlapping-banners-wrapper">
-        <div className="banners-inner-container">
-          {loadingBanner && (
-            <div className="loading-message">
-              오늘의 추천 영상을 불러오는 중...
+        {loadingBanner && (
+          <div className="loading-message">
+            오늘의 추천 영상을 불러오는 중...
+          </div>
+        )}
+        {errorBanner && (
+          <div className="error-message">Error: {errorBanner}</div>
+        )}
+        {!loadingBanner && (
+          <div className="banners-carousel-container">
+            <div
+              className="banners-inner-wrapper"
+              // centralBannerIndex에 따라 translateX 값을 설정
+              // `carouselLength`에 기반하여 전체 너비 중 각 슬라이드의 비율을 계산합니다.
+              // `transition` 속성은 CSS에서 정의하여 애니메이션을 적용합니다.
+              style={{
+                transform: `translateX(-${
+                  centralBannerIndex * (100 / carouselLength)
+                }%)`,
+                transition: isAnimating.current
+                  ? "transform 0.5s ease-in-out"
+                  : "none", // 애니메이션 중일 때만 transition 적용
+              }}
+              onTransitionEnd={handleTransitionEnd} // 애니메이션 종료 이벤트 리스너 추가
+            >
+              {displayedBanners.map((banner, i) => (
+                <UnifiedBanner
+                  key={banner?.id !== undefined ? banner.id : `empty-${i}`} // 유니크한 key를 부여, 더미 ID 고려
+                  imageSrc={banner?.thumbnail_url}
+                  videoData={banner || undefined}
+                  topText={banner?.topText}
+                  middleText={banner?.middleText || "준비중입니다."}
+                  bottomText={banner?.bottomText}
+                  isCentral={i === centralBannerIndex} // 현재 중앙 배너인지 확인
+                />
+              ))}
             </div>
-          )}
-          {errorBanner && (
-            <div className="error-message">Error: {errorBanner}</div>
-          )}
-          {!loadingBanner &&
-            bannerVideos.length > 0 &&
-            bannerVideos.map((banner, index) => (
-              <UnifiedBanner
-                key={banner.id || index}
-                index={index}
-                imageSrc={banner.thumbnail_url}
-                videoData={banner}
-                topText={banner.topText}
-                middleText={banner.middleText}
-                bottomText={banner.bottomText}
-                onMouseEnter={() => {
-                  setHoveredBannerIndex(index);
-                }}
-                onMouseLeave={() => {
-                  setHoveredBannerIndex(null);
-                }}
-              />
-            ))}
-        </div>
+            {/* 이전 버튼 */}
+            <button
+              className="carousel-arrow left-arrow"
+              onClick={handlePrevSlide}
+            >
+              &#9664; {/* 왼쪽 화살표 문자 */}
+            </button>
+            {/* 다음 버튼 */}
+            <button
+              className="carousel-arrow right-arrow"
+              onClick={handleNextSlide}
+            >
+              &#9654; {/* 오른쪽 화살표 문자 */}
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Search Section */}
+      {/* Search Section (동일) */}
       <div className="search-section">
         <div className="search-input-wrapper">
           <input
@@ -445,7 +690,7 @@ const Exercise = () => {
         )}
       </div>
 
-      {/* Filter and Sort Section */}
+      {/* Filter and Sort Section (동일) */}
       <div className="filter-sort-section">
         <div className="filter-button-wrapper" ref={filterButtonRef}>
           <button
@@ -469,9 +714,10 @@ const Exercise = () => {
                 <input
                   type="checkbox"
                   checked={showOnlyCorrectionVideos}
-                  onChange={() =>
-                    setShowOnlyCorrectionVideos(!showOnlyCorrectionVideos)
-                  }
+                  onChange={() => {
+                    setShowOnlyCorrectionVideos(!showOnlyCorrectionVideos); // 현재 상태 토글
+                    setShowOnlyFavoriteVideos(false); // 즐겨찾기는 항상 해제
+                  }}
                 />
                 자세 교정 가능한 영상만 보기
               </label>
@@ -479,9 +725,10 @@ const Exercise = () => {
                 <input
                   type="checkbox"
                   checked={showOnlyFavoriteVideos}
-                  onChange={() =>
-                    setShowOnlyFavoriteVideos(!showOnlyFavoriteVideos)
-                  }
+                  onChange={() => {
+                    setShowOnlyFavoriteVideos(!showOnlyFavoriteVideos); // 현재 상태 토글
+                    setShowOnlyCorrectionVideos(false); // 자세 교정은 항상 해제
+                  }}
                 />
                 즐겨 찾기한 영상만 보기
               </label>
@@ -505,7 +752,7 @@ const Exercise = () => {
         </div>
       </div>
 
-      {/* Video List (Thumbnails and Info) */}
+      {/* Video List (동일) */}
       <div className="video-list">
         {loadingVideos && (
           <div className="loading-message">
@@ -560,14 +807,11 @@ const Exercise = () => {
               </div>
             </div>
           ))
-        ) : (
-          !loadingVideos &&
-          !errorVideos && (
-            <div className="no-videos-message">
-              검색 결과가 없거나 영상을 불러올 수 없습니다.
-            </div>
-          )
-        )}
+        ) : !loadingVideos && !errorVideos ? (
+          <div className="no-videos-message">
+            검색 결과가 없거나 영상을 불러올 수 없습니다.
+          </div>
+        ) : null}
       </div>
     </div>
   );
