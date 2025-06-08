@@ -2,8 +2,5 @@
   "build": {
     "builder": "NIXPACKS",
     "buildCommand": "cd backend && pip install -r requirements.txt"
-  },
-  "start": {
-    "startCommand": "cd backend && python app.py"
   }
 }
