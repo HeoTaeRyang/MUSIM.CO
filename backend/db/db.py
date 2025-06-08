@@ -1,12 +1,13 @@
+import os
 import pymysql
 
 def get_connection():
     return pymysql.connect(
-        host='centerbeam.proxy.rlwy.net',
-        port=21462,
-        user='root',
-        password='KnaOFbzLtjWhKWMBjCdHdBCFezdJayot',
-        database='musimco',
+        host=os.getenv("MYSQLHOST"),
+        port=int(os.getenv("MYSQLPORT")),
+        user=os.getenv("MYSQLUSER"),
+        password=os.getenv("MYSQLPASSWORD"),
+        database=os.getenv("MYSQLDATABASE"),
         charset='utf8mb4',
         cursorclass=pymysql.cursors.DictCursor
     )
