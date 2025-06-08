@@ -181,7 +181,7 @@ const VideoAnalyze: React.FC = () => {
         </div>
 
         {showPanel && (
-          <div className="analyze-panel">
+          <div className="video-analyze-panel">
             <p className="instruction-text">⚠️운동하는 부분만 업로드해야 합니다⚠️</p>
             <div className="upload-area">
               {!uploadedUrl && !isRecording ? (
