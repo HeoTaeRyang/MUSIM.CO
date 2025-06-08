@@ -39,7 +39,22 @@ const Header = () => {
                 <Link to="/">홈</Link>
                 <Link to="/ranking">랭킹</Link>
                 <Link to="/exercise">운동</Link>
-                <Link to="/shop">제품구매</Link>
+                <button
+                    className="shop-button"
+                    onClick={() =>
+                        alert("제품 구매 배너는 존재하지만, 제품 구매 페이지는 준비중입니다")
+                    }
+                    style={{
+                        background: "none",
+                        border: "none",
+                        color: "inherit",
+                        cursor: "pointer",
+                        font: "inherit",
+                        padding: 0,
+                    }}
+                >
+                    제품구매
+                </button>
             </nav>
         </header>
     );
