@@ -14,6 +14,8 @@ from db.comment import get_comments_by_video, add_comment
 from db.posture import save_posture_result
 from utils import is_valid_id, is_valid_password, is_valid_email
 from ai.condition import evaluate
+from utils import read_video_to_frames
+from utils import save_result_video
 from datetime import date
 import base64
 import numpy as np
@@ -317,16 +319,81 @@ def get_comments(video_id):
     return jsonify(comments), 200
 
 
-@app.route('/video/<int:video_id>/posture/upload', methods=['POST'])
+@app.route('/video/<int:video_id>/posture/upload', methods=['POST']) 
 def upload_posture_video(video_id):
     user_id = request.form.get("user_id")
     file = request.files.get("video_file")
     if not file:
         return jsonify({"error": "파일이 없습니다."}), 400
+
+    # 업로드 파일 저장
     filename = secure_filename(file.filename)
-    filepath = os.path.join(UPLOAD_FOLDER, filename)
-    file.save(filepath)
-    return jsonify({"message": "업로드 완료", "path": filepath}), 200
+    video_path = os.path.join(UPLOAD_FOLDER, filename)
+    file.save(video_path)
+
+    # 프레임 추출
+    frames = read_video_to_frames(video_path)
+
+    # 모델 정보 가져오기 (PostureModel 테이블에서)
+    with get_connection().cursor() as cursor:
+        cursor.execute("SELECT model_path, num_conditions FROM PostureModel WHERE video_id = %s", (video_id,))
+        model_row = cursor.fetchone()
+        if not model_row:
+            return jsonify({"error": "모델 정보가 없습니다."}), 400
+
+    model_path = model_row["model_path"]
+    num_conditions = model_row["num_conditions"]
+
+    # AI 분석 실행
+    eval_output = evaluate(frames, model_path=model_path, num_conditions=num_conditions)
+    eval_result = eval_output["results"]
+
+    # 결과 영상 저장
+    output_filename = f"{user_id}_{video_id}_result.mp4"
+    output_path = os.path.join(UPLOAD_FOLDER, output_filename)
+    save_success = save_result_video(frames, output_path)
+    if not save_success:
+        return jsonify({"error": "결과 영상 저장 실패"}), 500
+
+    #조건 설명 불러오기 (PostureCondition)
+    with get_connection().cursor() as cursor:
+        cursor.execute("SELECT condition_index, description FROM PostureCondition WHERE video_id = %s", (video_id,))
+        condition_map = {row['condition_index']: row['description'] for row in cursor.fetchall()}
+
+    #결과 텍스트 만들기
+    result_lines = []
+    for r in eval_result:
+        cond = r['condition']
+        score = r['score']
+        passed = r['value']
+        desc = condition_map.get(cond, f"조건 {cond}")
+        emoji = "✅" if passed else "❌"
+        result_lines.append(f"{emoji} {desc} (score: {score:.2f})")
+
+    result_text = "\n".join(result_lines)
+
+    #DB 저장 (PostureResult)
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO PostureResult (user_id, video_id, result_text, image_url, result_video_url, saved_at)
+                VALUES (%s, %s, %s, %s, %s, NOW())
+            """, (
+                user_id,
+                video_id,
+                result_text,
+                video_path,     # 사용자가 업로드한 영상
+                output_path     # AI가 생성한 결과 영상
+            ))
+            conn.commit()
+
+    # 응답
+    return jsonify({
+        "message": "분석 완료",
+        "result_text": result_text,
+        "upload_video_url": f"/{video_path}",
+        "result_video_url": f"/{output_path}"
+    }), 200
 
 @app.route('/video/<int:video_id>/posture/analyze', methods=['POST'])
 def analyze_posture(video_id):
@@ -452,7 +519,6 @@ def save_posture(video_id):
         """, (user_id, video_id, result_text, image_url))
 
     return jsonify({"message": "분석 결과 저장 완료"}), 201
-
 
 @app.route('/login', methods=['POST'])
 def login():
