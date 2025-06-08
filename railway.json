@@ -1,9 +1,9 @@
 {
   "build": {
     "builder": "NIXPACKS",
-    "buildCommand": "nix-env -iA nixpkgs.python39 && cd backend && python3 -m pip install -r requirements.txt"
+    "buildCommand": "cd backend && pip install -r requirements.txt"
   },
   "start": {
-    "startCommand": "cd backend && python3 app.py"
+    "startCommand": "python3 backend/app.py"
   }
 }
