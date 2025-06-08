@@ -41,11 +41,31 @@
   /* ---------- 여기를 수정합니다 ---------- */
   width: 90%; /* 부모 요소(camera-control-area)의 90% 너비를 사용 */
   max-width: 700px; /* 최대 너비를 900px로 제한 (원하는 값으로 변경 가능) */
-  min-height: 550px; /* 최소 높이를 700px로 설정 (원하는 값으로 변경 가능) */
+  min-height: 800px; /* 최소 높이를 700px로 설정 (원하는 값으로 변경 가능) */
   /* height: auto; /* (기본값) 내부 콘텐츠에 따라 높이 자동 조절 */
   /* margin: 0 auto; /* 좌우 자동 마진으로 중앙 정렬 */
   /* -------------------------------------- */
 }
+
+/* 개별 데일리 미션 카드들의 공통 스타일 */
+.daily-mission-cont {
+  margin-top: 70px;
+  background-color:white;
+  border-radius: 20px; /* 둥근 모서리 */
+  padding: 15px 20px; /* 카드 내부 기본 패딩 */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05); /* 은은한 그림자 */
+  display: flex;
+  /* (top-card에서 flex-direction 오버라이드) */
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  box-sizing: border-box; /* 패딩과 보더를 너비/높이에 포함 */
+  width: 100%; /* 부모 컨테이너(daily-mission-container)에 맞춰 너비 100% 사용 */
+  min-height: 150px; /* 최소 높이 유지 */
+  max-height: 200px; /* 최대 높이 유지 */
+}
+
+
 
 .camera-control-area {
     /* 이 부분이 DailyMissionVideo.tsx에서 추가된 버튼과 패널을 감싸는 div 입니다. */
@@ -65,6 +85,7 @@
     justify-content: space-between; /* 요소들을 양 끝으로 정렬 */
     align-items: center;
     margin-bottom: 10px;
+    gap:400px;
 }
 
 .analyze-header h3 {

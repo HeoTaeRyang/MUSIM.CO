@@ -3,9 +3,8 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import "../styles/DailyMissionVideo.css";
 import axios from "axios";
-
 import flameIcon from '../assets/flame.png';
-import '../styles/DailyMission.css';
+
 
 axios.defaults.baseURL = "http://127.0.0.1:5000"; 
 
@@ -163,7 +162,7 @@ const DailyMissionVideo: React.FC = () => {
     <div className="page-center-container">
       <div className="video-analyze-container">
         {dailyMissionDisplayData && (
-          <div className="daily-mission-card top-card video-analyze-mission-display">
+          <div className="daily-mission-cont">
             <img src={flameIcon} alt="불꽃 아이콘" className="flame-icon" />
             <div className="daily-mission-right-content">
               <div className="mission-title">데일리미션</div>
