@@ -588,4 +588,5 @@ def register():
     return jsonify({'message': '회원가입 성공!'}), 200
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    port = int(os.environ.get('PORT', 5000))  # PORT 환경변수 없으면 5000 사용
+    app.run(debug=True, host='0.0.0.0', port=port)
