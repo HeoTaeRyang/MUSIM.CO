@@ -8,9 +8,18 @@
 }
 
 /* ─── 왼쪽: 영상 + 컨트롤바 ───────────────────────────────────── */
-.video-area {
+.video-area-p {
   flex: 2;
   position: relative;
+  margin-top: 150px;
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+
 }
 
 /* ─── 오른쪽: 상품 구매 패널 ───────────────────────────────────── */
