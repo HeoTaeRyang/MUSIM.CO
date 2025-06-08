@@ -15,13 +15,13 @@ const StarIcon = ({
   onClick,
 }: {
   filled: boolean;
-  onClick: () => void;
+  onClick: (event: React.MouseEvent<SVGElement>) => void; // Change here
 }) => (
   <svg
     className={`favorite-star-icon ${filled ? "filled" : ""}`}
     onClick={(e) => {
       e.stopPropagation(); // Prevent video card click event from firing
-      onClick();
+      onClick(e); // Pass the event object to onClick
     }}
     viewBox="0 0 24 24"
     fill={filled ? "#FFD700" : "currentColor"} // Yellow if filled, default color otherwise
@@ -362,7 +362,8 @@ const Exercise = () => {
     }
     slideIntervalRef.current = window.setInterval(() => {
       // 다음 슬라이드로 이동 (애니메이션 포함)
-      if (!isAnimating.current) { // 애니메이션 중이 아닐 때만 이동
+      if (!isAnimating.current) {
+        // 애니메이션 중이 아닐 때만 이동
         setCentralBannerIndex((prevIndex) => prevIndex + 1);
         isAnimating.current = true; // 애니메이션 시작 플래그
       }
@@ -380,7 +381,6 @@ const Exercise = () => {
       }
     };
   }, [bannerVideos, resetInterval]);
-
 
   // `displayedBanners`는 무한 루프를 위해 클론된 배열을 생성합니다.
   const displayedBanners = useMemo(() => {
@@ -403,10 +403,10 @@ const Exercise = () => {
       };
       // 5개 (양쪽 클론 포함)의 빈 배너를 생성
       return Array.from({ length: carouselLength }).map((_, i) => ({
-          ...emptyBanner,
-          id: -(i + 1), // 고유한 더미 ID 부여
-          topText: `다음 추천 운동 ${i > 0 && i < carouselLength -1 ? i : ''}`,
-          middleText: "준비중입니다.",
+        ...emptyBanner,
+        id: -(i + 1), // 고유한 더미 ID 부여
+        topText: `다음 추천 운동 ${i > 0 && i < carouselLength - 1 ? i : ""}`,
+        middleText: "준비중입니다.",
       }));
     }
 
@@ -422,7 +422,8 @@ const Exercise = () => {
 
   // 슬라이드 애니메이션 완료 시점 처리 (클론 <-> 실제 위치 점프)
   const handleTransitionEnd = useCallback(() => {
-    if (isAnimating.current) { // 애니메이션이 끝났을 때만 처리
+    if (isAnimating.current) {
+      // 애니메이션이 끝났을 때만 처리
       let nextIndex = centralBannerIndex;
       let shouldJump = false;
 
@@ -439,14 +440,17 @@ const Exercise = () => {
 
       if (shouldJump) {
         // transition을 끄고 위치를 즉시 변경
-        const innerWrapper = document.querySelector('.banners-inner-wrapper') as HTMLElement;
+        const innerWrapper = document.querySelector(
+          ".banners-inner-wrapper"
+        ) as HTMLElement;
         if (innerWrapper) {
-          innerWrapper.style.transition = 'none';
+          innerWrapper.style.transition = "none";
           setCentralBannerIndex(nextIndex);
           // DOM이 업데이트될 시간을 준 후 다시 transition을 켜기
           requestAnimationFrame(() => {
-            if (innerWrapper) { // 다시 확인
-              innerWrapper.style.transition = ''; // 기본 transition으로 복원
+            if (innerWrapper) {
+              // 다시 확인
+              innerWrapper.style.transition = ""; // 기본 transition으로 복원
             }
           });
         }
@@ -454,7 +458,6 @@ const Exercise = () => {
       isAnimating.current = false; // 애니메이션 종료 플래그
     }
   }, [centralBannerIndex, carouselLength, totalSlides]);
-
 
   // 이전 버튼 클릭 핸들러
   const handlePrevSlide = () => {
@@ -603,7 +606,9 @@ const Exercise = () => {
                 transform: `translateX(-${
                   centralBannerIndex * (100 / carouselLength)
                 }%)`,
-                transition: isAnimating.current ? 'transform 0.5s ease-in-out' : 'none', // 애니메이션 중일 때만 transition 적용
+                transition: isAnimating.current
+                  ? "transform 0.5s ease-in-out"
+                  : "none", // 애니메이션 중일 때만 transition 적용
               }}
               onTransitionEnd={handleTransitionEnd} // 애니메이션 종료 이벤트 리스너 추가
             >
@@ -763,51 +768,50 @@ const Exercise = () => {
           </div>
         )}
 
-        {!loadingVideos && videosToDisplay.length > 0
-          ? videosToDisplay.map((video) => (
-              <div
-                key={video.id}
-                className="video-card"
-                onClick={() => handleVideoCardClick(video)}
-              >
-                <img
-                  src={video.thumbnail_url}
-                  alt={video.title}
-                  className="video-thumbnail"
-                />
-                {/* ★ 즐겨찾기 별 버튼 추가 */}
-                <StarIcon
-                  filled={video.isFavorite || false}
-                  onClick={(e) => {
-                    e.stopPropagation(); // Stop propagation to prevent video card click
-                    toggleFavorite(video.id);
-                  }}
-                />
-                <div className="video-details">
-                  <div className="video-title">{video.title}</div>
-                  <div className="video-meta">
-                    <span>조회수: {video.views}</span>
-                    <span>추천: {video.recommendations}</span>
-                    <span>
-                      날짜: {new Date(video.upload_date).toLocaleDateString()}
-                    </span>
-                    {video.correctable === 1 && (
-                      <span className="correction-tag">자세 교정</span>
-                    )}
-                    {/* ★ 즐겨찾기 태그 추가 */}
-                    {video.isFavorite && (
-                      <span className="favorite-tag">즐겨찾기</span>
-                    )}
-                  </div>
+        {!loadingVideos && videosToDisplay.length > 0 ? (
+          videosToDisplay.map((video) => (
+            <div
+              key={video.id}
+              className="video-card"
+              onClick={() => handleVideoCardClick(video)}
+            >
+              <img
+                src={video.thumbnail_url}
+                alt={video.title}
+                className="video-thumbnail"
+              />
+              {/* ★ 즐겨찾기 별 버튼 추가 */}
+              <StarIcon
+                filled={video.isFavorite || false}
+                onClick={(e) => {
+                  e.stopPropagation(); // Stop propagation to prevent video card click
+                  toggleFavorite(video.id);
+                }}
+              />
+              <div className="video-details">
+                <div className="video-title">{video.title}</div>
+                <div className="video-meta">
+                  <span>조회수: {video.views}</span>
+                  <span>추천: {video.recommendations}</span>
+                  <span>
+                    날짜: {new Date(video.upload_date).toLocaleDateString()}
+                  </span>
+                  {video.correctable === 1 && (
+                    <span className="correction-tag">자세 교정</span>
+                  )}
+                  {/* ★ 즐겨찾기 태그 추가 */}
+                  {video.isFavorite && (
+                    <span className="favorite-tag">즐겨찾기</span>
+                  )}
                 </div>
               </div>
-            ))
-          : !loadingVideos &&
-            !errorVideos && (
-              <div className="no-videos-message">
-                검색 결과가 없거나 영상을 불러올 수 없습니다.
-              </div>
-            )}
+            </div>
+          ))
+        ) : !loadingVideos && !errorVideos ? (
+          <div className="no-videos-message">
+            검색 결과가 없거나 영상을 불러올 수 없습니다.
+          </div>
+        ) : null}
       </div>
     </div>
   );

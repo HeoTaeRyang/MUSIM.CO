@@ -2,6 +2,10 @@ import { useState, ChangeEvent, FormEvent } from "react";
 import "../styles/Signup.css";
 import { useNavigate } from "react-router-dom";
 
+// Daum Postcode API를 사용하려면 HTML 파일에 <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+// 이 스크립트 태그가 반드시 추가되어 있어야 합니다.
+// (일반적으로 public/index.html 파일에 추가합니다.)
+
 const Signup = () => {
   // 백엔드 파라미터명에 맞춰 변수명 재구성
   const [usertype, setUsertype] = useState<string>("personal"); // memberType -> usertype
@@ -75,19 +79,15 @@ const Signup = () => {
     setPhoneSuffix(event.target.value);
   };
 
-  const handleZipcodeChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setZipcode(event.target.value);
-  };
-
-  const handleAddrChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setAddr(event.target.value);
-  };
+  // handleZipcodeChange와 handleAddrChange는 input이 readOnly이므로 제거합니다.
+  // 주소는 Daum Postcode API를 통해 직접 상태가 업데이트됩니다.
 
   const handleAddr_detailChange = (event: ChangeEvent<HTMLInputElement>) => {
     setAddr_detail(event.target.value);
   };
 
   const handleSearchAddress = () => {
+    // window.daum에 대한 타입 정의가 global.d.ts에 추가되어야 합니다.
     new window.daum.Postcode({
       oncomplete: function (data: any) {
         let fullAddr = data.address; // 기본 주소
@@ -104,9 +104,9 @@ const Signup = () => {
           }
         }
 
-        setZipcode(data.zonecode); // 우편번호
-        setAddr(fullAddr); // 기본 주소
-        setAddr_detail(""); // 상세 주소는 사용자가 입력
+        setZipcode(data.zonecode); // 우편번호 업데이트
+        setAddr(fullAddr); // 기본 주소 업데이트
+        setAddr_detail(""); // 상세 주소는 사용자가 다시 입력하도록 초기화
       },
     }).open();
   };
@@ -138,7 +138,6 @@ const Signup = () => {
     // TODO: 실제 API 호출 로직 구현
     try {
       const response = await fetch("http://localhost:5000/register", {
-        // <--- 이 부분을 수정!
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -341,7 +340,6 @@ const Signup = () => {
       <hr />
 
       {/* 주소 */}
-      {/* 주소 */}
       <table>
         <tbody>
           <tr>
@@ -393,7 +391,6 @@ const Signup = () => {
               <div className="input-box phone1-input">
                 <select value={telPrefix} onChange={handleTelPrefixChange}>
                   {" "}
-                  {/* tel1 -> telPrefix, handleTel1Change -> handleTelPrefixChange */}
                   <option value="">선택</option>
                   <option value="02">02</option>
                   <option value="031">031</option>
@@ -424,7 +421,6 @@ const Signup = () => {
                   value={telMiddle}
                   onChange={handleTelMiddleChange}
                 />{" "}
-                {/* tel2 -> telMiddle, handleTel2Change -> handleTelMiddleChange */}
               </div>
             </td>
             -
@@ -435,7 +431,6 @@ const Signup = () => {
                   value={telSuffix}
                   onChange={handleTelSuffixChange}
                 />{" "}
-                {/* tel3 -> telSuffix, handleTel3Change -> handleTelSuffixChange */}
               </div>
             </td>
           </tr>
@@ -458,7 +453,6 @@ const Signup = () => {
               <div className="input-box mobile1-input">
                 <select value={phonePrefix} onChange={handlePhonePrefixChange}>
                   {" "}
-                  {/* mobile1 -> phonePrefix, handleMobile1Change -> handlePhonePrefixChange */}
                   <option value="">선택</option>
                   <option value="010">010</option>
                   <option value="011">011</option>
@@ -477,7 +471,6 @@ const Signup = () => {
                   value={phoneMiddle}
                   onChange={handlePhoneMiddleChange}
                 />{" "}
-                {/* mobile2 -> phoneMiddle, handleMobile2Change -> handlePhoneMiddleChange */}
               </div>
             </td>
             -
@@ -488,7 +481,6 @@ const Signup = () => {
                   value={phoneSuffix}
                   onChange={handlePhoneSuffixChange}
                 />{" "}
-                {/* mobile3 -> phoneSuffix, handleMobile3Change -> handlePhoneSuffixChange */}
               </div>
             </td>
           </tr>

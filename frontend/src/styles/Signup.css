@@ -9,11 +9,15 @@
     position: relative; /* 자식 요소 absolute positioning 기준 */
   }
 
+/* 1. input-row (우편번호 & 주소검색 버튼) */
 .input-row {
   display: flex;
-  gap: 10px;
+  gap: 10px; /* 입력칸과 버튼 사이 간격 */
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 15px; /* 주소검색 다음 줄과의 간격 */
+  /* .input-row 자체가 하나의 "행"을 나타내므로,
+     여기에 width: 100% (부모 td에 대해)를 주는 것이 좋습니다. */
+  width: 100%; /* 부모 td에 맞춰 너비 설정 */
 }
 
 .input-box input {
@@ -43,6 +47,7 @@
   font-size: 14px;
   cursor: pointer;
   transition: background-color 0.2s;
+  margin-bottom:15px;
 }
 
 .address-search-button:hover {
@@ -190,11 +195,16 @@
   .input-box input[type="text"],
   .input-box input[type="password"],
   .input-box input[type="email"],
-  .input-box input[type="number"] {
-    border: none;
+  .input-box input[type="number"],
+  .input-box select { /* select도 너비를 100%로 맞추기 위해 추가 */
+    border: none; /* input-box에 border가 있으므로 여기서는 border 제거 */
     outline: none;
     font-size: 16px;
-    width: 100%;
+    width: 100%; /* 부모 .input-box의 꽉 채우도록 */
+    height: 38px; /* 일관된 높이 */
+    padding: 0; /* input-box에서 패딩을 주므로 여기서는 0 */
+    box-sizing: border-box; /* 패딩, 보더 포함 너비 계산 */
+    background: transparent; /* input-box의 배경을 따르도록 */
   }
   
   .input-box select {
@@ -277,7 +287,7 @@
   }
   
   .zipcode-input {
-    width: 40%;
+    width: 35%;
     margin-right: 10px;
   }
   
