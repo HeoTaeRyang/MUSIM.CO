@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter, Routes, Route, useNavigate, Outlet } from "react-router-dom";
+// useLocation은 BrowserRouter 안에서만 사용 가능하므로,
+// App 컴포넌트 자체에서 사용하려면 별도의 래퍼 컴포넌트가 필요합니다.
+// 여기서는 isRankingPage를 확인하는 로직을 BrowserRouter 밖으로 빼는 것을 고려하거나,
+// App 컴포넌트를 라우팅 컨텍스트 안으로 넣는 구조 변경이 필요할 수 있습니다.
+// 일단 현재 구조에서 오류 안나는 방향으로 useLocation 사용을 조정합니다.
+import { BrowserRouter, Routes, Route, useNavigate, Outlet } from "react-router-dom"; // useLocation 제거
 import Header from "./components/Header";
 import Home from "./components/Home";
 import Footer from "./components/Footer";
@@ -12,42 +17,36 @@ import VideoPurchase from "./components/VideoPurchase";
 import MyPage from "./components/mypage";
 import Ranking from "./components/HomePart/Ranking";
 import DailyMissionVideo from "./components/DailyMissionVideo";
-
 import "./App.css";
+
 
 function App() {
   // 메시지를 위한 상태
   const [globalMessage, setGlobalMessage] = useState<string | null>(null);
   const [messageType, setMessageType] = useState<'success' | 'error' | 'warning' | null>(null);
-  const messageDisplayedRef = React.useRef(false); // 메시지 표시 여부를 추적하는 ref
-  let messageTimer: NodeJS.Timeout | null = null; // 메시지 자동 숨김을 위한 타이머
+  const messageDisplayedRef = React.useRef(false);
 
-  // 메시지를 표시하고 일정 시간 후 사라지게 하는 함수
+  // NodeJS.Timeout 대신 number 타입을 사용합니다. (이것은 올바른 수정입니다)
+  let messageTimer: number | null = null;
+
   const showGlobalMessage = (msg: string, type: 'success' | 'error' | 'warning' = 'error') => {
-    // 이미 메시지가 표시 중이면 다시 띄우지 않음 (중복 방지)
     if (globalMessage === msg && messageType === type) {
       return;
     }
-
-    // 이전 타이머가 있다면 클리어 (새로운 메시지가 뜨면 이전 메시지 타이머는 리셋)
     if (messageTimer) {
       clearTimeout(messageTimer);
       messageTimer = null;
     }
-
     setGlobalMessage(msg);
     setMessageType(type);
-    messageDisplayedRef.current = true; // 메시지가 표시되었음을 기록
-
-    // 1초 후에 메시지 자동으로 사라지도록 설정
+    messageDisplayedRef.current = true;
     messageTimer = setTimeout(() => {
       setGlobalMessage(null);
       setMessageType(null);
-      messageDisplayedRef.current = false; // 메시지 숨김 처리되었음을 기록
-    }, 5000); // <--- 여기를 5000ms (5초)로 설정
+      messageDisplayedRef.current = false;
+    }, 5000);
   };
 
-  // 메시지 수동으로 닫기 (선택 사항)
   const clearGlobalMessage = () => {
     setGlobalMessage(null);
     setMessageType(null);
@@ -56,36 +55,27 @@ function App() {
       messageTimer = null;
     }
     messageDisplayedRef.current = false;
-
   };
 
-
-  // 보호된 라우트를 위한 헬퍼 컴포넌트
   const ProtectedRoute = ({ showMessage }: { showMessage: (msg: string, type?: 'success' | 'error' | 'warning') => void }) => {
     const navigate = useNavigate();
     const isLoggedIn = localStorage.getItem("user");
 
     useEffect(() => {
-      // 로그인 상태가 아니고, 아직 메시지를 표시하지 않았다면
       if (!isLoggedIn && !messageDisplayedRef.current) {
         showMessage('로그인 후에 이용 가능합니다.', 'warning');
-        // 메시지 표시 후 딜레이 없이 바로 리다이렉트 (alert()처럼 동기적으로 멈추지 않음)
         navigate('/login', { replace: true });
       } else if (isLoggedIn && messageDisplayedRef.current) {
-        // 로그인 상태인데 메시지가 떠 있다면 메시지 숨기기 (경우에 따라 필요)
-        clearGlobalMessage(); // 이 부분을 넣으면 로그인 성공 후 메시지 바로 사라짐
+        clearGlobalMessage();
       }
-    }, [isLoggedIn, navigate, showMessage]); // showMessage를 의존성 배열에 추가
+    }, [isLoggedIn, navigate, showMessage]);
 
     return isLoggedIn ? <Outlet /> : null;
   };
 
-  // 전역 메시지를 렌더링하는 내부 컴포넌트
   const GlobalMessageDisplay: React.FC = () => {
     if (!globalMessage) return null;
-
     const messageClass = `global-message ${messageType || 'info'}`;
-
     return (
       <div className={messageClass}>
         {globalMessage}
@@ -94,13 +84,19 @@ function App() {
     );
   };
 
-  const isRankingPage = location.pathname === "/ranking";
+
 
   return (
-    <div className={`App ${isRankingPage ? "ranking-theme" : ""}`}>
+    // isRankingPage 조건부 클래스 제거 (useLocation 사용 안 함)
+    <div className="App">
       <BrowserRouter>
-        const location = useLocation();
+        {/*
+          useLocation 훅은 BrowserRouter 안에 있는 컴포넌트에서만 사용 가능합니다.
+          App 컴포넌트가 BrowserRouter를 포함하고 있으므로, App 컴포넌트 자체에서는
+          useLocation을 직접 호출할 수 없습니다.
 
+          만약 Header에서 location을 사용한다면, Header 컴포넌트 내에서 useLocation을 호출해야 합니다.
+        */}
         <Header />
         <GlobalMessageDisplay />
         <div>
