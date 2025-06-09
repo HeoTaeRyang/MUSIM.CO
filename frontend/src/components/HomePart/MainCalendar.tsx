@@ -92,6 +92,8 @@ const MainCalendar: React.FC<Props> = ({ userId }) => {
         console.error("❌ 예기치 못한 에러:", err);
         setStatusMessage("알 수 없는 오류가 발생했습니다.");
       }
+    } finally {
+      setLoading(false);
     }
   };
 
