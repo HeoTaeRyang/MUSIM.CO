@@ -3,10 +3,9 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import "../styles/DailyMissionVideo.css";
 import axios from "axios";
-import flameIcon from '../assets/flame.png';
+import flameIcon from "../assets/flame.png";
 
-
-axios.defaults.baseURL = "http://127.0.0.1:5000";
+axios.defaults.baseURL = "https://web-production-6e732.up.railway.app";
 
 const DailyMissionVideo: React.FC = () => {
   const { videoId } = useParams<{ videoId: string }>();
@@ -25,7 +24,7 @@ const DailyMissionVideo: React.FC = () => {
 
   // **** LOCAL STORAGE 관련 코드 (이전과 동일, userId 유효성 검사 포함) ****
   const getInitialCountFromLocalStorage = useCallback(() => {
-    if (!userId || typeof userId !== 'string' || userId.trim() === '') {
+    if (!userId || typeof userId !== "string" || userId.trim() === "") {
       return 0;
     }
     const storedCount = localStorage.getItem(`dailyMissionCount_${userId}`);
@@ -33,11 +32,16 @@ const DailyMissionVideo: React.FC = () => {
     return isNaN(parsedCount) ? 0 : parsedCount;
   }, [userId]);
 
-  const [currentCount, setCurrentCount] = useState<number>(getInitialCountFromLocalStorage());
+  const [currentCount, setCurrentCount] = useState<number>(
+    getInitialCountFromLocalStorage()
+  );
 
   useEffect(() => {
-    if (userId && typeof userId === 'string' && userId.trim() !== '') {
-      localStorage.setItem(`dailyMissionCount_${userId}`, currentCount.toString());
+    if (userId && typeof userId === "string" && userId.trim() !== "") {
+      localStorage.setItem(
+        `dailyMissionCount_${userId}`,
+        currentCount.toString()
+      );
     }
   }, [currentCount, userId]);
   // **** LOCAL STORAGE 관련 코드 끝 ****
@@ -52,17 +56,31 @@ const DailyMissionVideo: React.FC = () => {
   } | null>(null);
 
   useEffect(() => {
-    if (location.state && typeof location.state === 'object' && 'missionName' in location.state) {
-      const { missionName, currentCount: initialCount, targetCount } = location.state as {
+    if (
+      location.state &&
+      typeof location.state === "object" &&
+      "missionName" in location.state
+    ) {
+      const {
+        missionName,
+        currentCount: initialCount,
+        targetCount,
+      } = location.state as {
         missionName: string;
         currentCount: number;
         targetCount: number;
       };
-      setDailyMissionDisplayData({ missionName, currentCount: initialCount, targetCount });
+      setDailyMissionDisplayData({
+        missionName,
+        currentCount: initialCount,
+        targetCount,
+      });
       setCurrentCount(initialCount);
     } else {
       setDailyMissionDisplayData(null);
-      console.warn("location.state에 데일리 미션 데이터가 없습니다. 데일리 미션 박스를 숨깁니다.");
+      console.warn(
+        "location.state에 데일리 미션 데이터가 없습니다. 데일리 미션 박스를 숨깁니다."
+      );
     }
   }, [id, userId, location.state]);
 
@@ -91,22 +109,34 @@ const DailyMissionVideo: React.FC = () => {
           setCurrentStatus(status);
 
           // **** 여기만 수정됨: count가 유효한 숫자일 때만 업데이트 ****
-          if (typeof count === 'number' && !isNaN(count)) {
+          if (typeof count === "number" && !isNaN(count)) {
             setCurrentCount(count);
           }
           // ******************************************************
 
-          if (angle === null || typeof angle !== 'number') {
-            setResultText("포즈 인식 실패. 다시 시도해주세요. (각도 정보 없음)");
+          if (angle === null || typeof angle !== "number") {
+            setResultText(
+              "포즈 인식 실패. 다시 시도해주세요. (각도 정보 없음)"
+            );
           } else {
-            setResultText(`각도: ${angle.toFixed(2)}°, 상태: ${status === 1 ? '몸 굽힘' : '몸 폄'}, 횟수: ${count}회`);
+            setResultText(
+              `각도: ${angle.toFixed(2)}°, 상태: ${
+                status === 1 ? "몸 굽힘" : "몸 폄"
+              }, 횟수: ${count}회`
+            );
           }
         } catch (error) {
           console.error("프레임 분석 오류:", error);
           if (axios.isAxiosError(error) && error.response) {
-            setResultText(`분석 오류: ${error.response.data.error || error.message}`);
+            setResultText(
+              `분석 오류: ${error.response.data.error || error.message}`
+            );
           } else {
-            setResultText(`분석 중 오류 발생: ${error instanceof Error ? error.message : String(error)}`);
+            setResultText(
+              `분석 중 오류 발생: ${
+                error instanceof Error ? error.message : String(error)
+              }`
+            );
           }
         } finally {
           isAnalyzing.current = false;
@@ -125,7 +155,10 @@ const DailyMissionVideo: React.FC = () => {
         videoRef.current.play();
 
         if (captureIntervalId.current) clearInterval(captureIntervalId.current);
-        captureIntervalId.current = window.setInterval(captureFrameAndSend, 100);
+        captureIntervalId.current = window.setInterval(
+          captureFrameAndSend,
+          100
+        );
         setResultText("실시간 촬영 및 분석 중...");
       }
     } catch (err) {
@@ -137,7 +170,9 @@ const DailyMissionVideo: React.FC = () => {
   const stopLiveCamera = () => {
     setShowCameraFeed(false);
     if (videoRef.current && videoRef.current.srcObject) {
-      (videoRef.current.srcObject as MediaStream).getTracks().forEach(track => track.stop());
+      (videoRef.current.srcObject as MediaStream)
+        .getTracks()
+        .forEach((track) => track.stop());
     }
     if (captureIntervalId.current) {
       clearInterval(captureIntervalId.current);
@@ -167,7 +202,8 @@ const DailyMissionVideo: React.FC = () => {
             <div className="daily-mission-right-content">
               <div className="mission-title">데일리미션</div>
               <div className="exercise-progress">
-                {dailyMissionDisplayData.missionName} {currentCount}/{dailyMissionDisplayData.targetCount}
+                {dailyMissionDisplayData.missionName} {currentCount}/
+                {dailyMissionDisplayData.targetCount}
               </div>
             </div>
           </div>
@@ -183,20 +219,41 @@ const DailyMissionVideo: React.FC = () => {
               <div className="analyze-panel full-width">
                 <div className="analyze-header">
                   <h3>운동 분석</h3>
-                  <button className="stop-camera-button" onClick={stopLiveCamera}>
+                  <button
+                    className="stop-camera-button"
+                    onClick={stopLiveCamera}
+                  >
                     촬영 종료
                   </button>
                 </div>
                 <div className="camera-feed-area">
-                  <video ref={videoRef} autoPlay playsInline muted className="camera-video" />
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="camera-video"
+                  />
                   {/* 프레임 캡처를 위해 숨겨진 캔버스 */}
-                  <canvas ref={canvasRef} style={{ display: 'none' }} />
+                  <canvas ref={canvasRef} style={{ display: "none" }} />
                   {resultText && <p className="camera-message">{resultText}</p>}
 
                   {/* 실시간 각도, 상태, 횟수 표시 */}
                   <div className="analysis-results">
-                    <p>현재 각도: {currentAngle !== null && typeof currentAngle === 'number' ? `${currentAngle.toFixed(2)}°` : '측정 중...'}</p>
-                    <p>자세 상태: {currentStatus === 1 ? '몸 굽힘' : (currentStatus === 0 ? '몸 폄' : '측정 중...')}</p>
+                    <p>
+                      현재 각도:{" "}
+                      {currentAngle !== null && typeof currentAngle === "number"
+                        ? `${currentAngle.toFixed(2)}°`
+                        : "측정 중..."}
+                    </p>
+                    <p>
+                      자세 상태:{" "}
+                      {currentStatus === 1
+                        ? "몸 굽힘"
+                        : currentStatus === 0
+                        ? "몸 폄"
+                        : "측정 중..."}
+                    </p>
                     <p>운동 횟수: {currentCount}회</p>
                   </div>
                 </div>

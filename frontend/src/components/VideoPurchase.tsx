@@ -2,8 +2,7 @@ import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import VideoDetail from "./VideoDetail";
 import "../styles/VideoPurchase.css";
-import sampleProduct from '../assets/sample_product.png';
-
+import sampleProduct from "../assets/sample_product.png";
 
 const VideoPurchase: React.FC = () => {
   const [showCart, setShowCart] = useState(true); // 처음부터 패널 열려있게!
@@ -36,7 +35,9 @@ const VideoPurchase: React.FC = () => {
           <>
             <div className="purchase-header">
               <h2>상품 구매</h2>
-              <button className="close-btn" onClick={handleClose}>×</button>
+              <button className="close-btn" onClick={handleClose}>
+                ×
+              </button>
             </div>
 
             <div className="product-card">
@@ -52,9 +53,13 @@ const VideoPurchase: React.FC = () => {
                 <div className="product-rating">
                   {/* ★ 아이콘 5개 + 리뷰 링크 */}
                   {[...Array(5)].map((_, i) => (
-                    <span key={i} className="star">☆</span>
+                    <span key={i} className="star">
+                      ☆
+                    </span>
                   ))}
-                  <a href="#" className="review-link">상품평 남기기</a>
+                  <a href="#" className="review-link">
+                    상품평 남기기
+                  </a>
                 </div>
                 <div className="price">54,000원</div>
                 <div className="color-options">
