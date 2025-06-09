@@ -1,5 +1,6 @@
 import re
 from db.db import get_connection
+import pymysql.cursors
 
 def get_user(id):
     with get_connection().cursor() as cursor:
@@ -8,6 +9,11 @@ def get_user(id):
 
 def get_user_by_id(userid):
     with get_connection().cursor() as cursor:
+        cursor.execute("SELECT * FROM User WHERE id = %s", (userid,))
+        return cursor.fetchone()
+    
+def get_user_my_page(userid):
+    with get_connection().cursor(pymysql.cursors.DictCursor) as cursor:
         cursor.execute("SELECT * FROM User WHERE id = %s", (userid,))
         return cursor.fetchone()
 

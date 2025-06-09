@@ -30,6 +30,34 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 def index():
     return "백엔드 서버 실행 중입니다."
 
+@app.route('/myPage', methods=['POST'])
+def get_my_page():
+    data = request.get_json()
+    
+    if not data or 'user_id' not in data:
+        return jsonify({'error': '사용자 데이터가 없습니다.'}), 400
+    
+    user_id = data.get('user_id')
+    user_info = user.get_user_my_page(user_id)
+    
+    if not user_info:
+        return jsonify({'error': '존재하지 않는 사용자 입니다.'}), 404
+    
+    user_data = {
+        'id': user_info['id'],
+        'username': user_info['username'],
+        'addr': user_info['addr'],
+        'addr_detail': user_info['addr_detail'],
+        'zipcode': user_info['zipcode'],
+        'tel': user_info['tel'],
+        'phone': user_info['phone'],
+        'email': user_info['email'],
+        'usertype': user_info['usertype'],
+        'point': user_info['point']
+    }
+    
+    return jsonify(user_data), 200
+    
 user_states = {}
 
 # frame 분석
@@ -204,6 +232,13 @@ def rank_my():
 @app.route('/rank/top5', methods=['GET'])
 def rank_top5():
     rank_data = rank.get_rank_top5()
+    if not rank_data:
+        return jsonify({'error': '순위 정보를 불러올 수 없습니다.'}), 404
+    return jsonify(rank_data), 200
+
+@app.route('/rank/all', methods=['GET'])
+def rank_all():
+    rank_data = rank.get_rank_all()
     if not rank_data:
         return jsonify({'error': '순위 정보를 불러올 수 없습니다.'}), 404
     return jsonify(rank_data), 200
