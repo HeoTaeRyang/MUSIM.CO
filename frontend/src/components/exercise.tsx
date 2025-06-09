@@ -42,7 +42,7 @@ const StarIcon = ({
   </svg>
 );
 
-const API_BASE_URL = "http://127.0.0.1:5000";
+const API_BASE_URL = "https://web-production-6e732.up.railway.app";
 
 // --- Interfaces (이 부분은 동일) ---
 interface Video {
@@ -562,9 +562,12 @@ const Exercise = () => {
 
   const handleVideoCardClick = async (video: Video) => {
     try {
-      await fetch(`http://127.0.0.1:5000/video/${video.id}/view`, {
-        method: "POST",
-      });
+      await fetch(
+        `https://web-production-6e732.up.railway.app/video/${video.id}/view`,
+        {
+          method: "POST",
+        }
+      );
     } catch (error) {
       console.error("조회수 증가 실패:", error);
     }
