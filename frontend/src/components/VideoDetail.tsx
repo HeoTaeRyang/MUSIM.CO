@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../styles/VideoDetail.css";
-import cart from "/src/assets/video/cart.png";
 interface Comment {
   id: number;
   user: string;
@@ -106,7 +105,7 @@ const VideoDetail: React.FC<Props> = (props) => {
             return {
               id: c.id,
               user: c.user_id || "익명",
-              avatar: "/assets/sample_profile.png",
+              avatar: "/sample_profile.png",
               date: c.created_at || "",
               text: c.content || "",
               rating: 5,
@@ -191,7 +190,7 @@ const VideoDetail: React.FC<Props> = (props) => {
           {
             ...createdComment,
             user: user_id,
-            avatar: "/assets/sample_profile.png",
+            avatar: "/sample_profile.png",
             text: commentText,
             rating: 5,
           },
@@ -293,35 +292,27 @@ const VideoDetail: React.FC<Props> = (props) => {
         <div className="video-side-wrapper">
           <div className="video-side-buttons">
             <button className="side-btn" onClick={handleAnalyzeClick}>
-              <img src="/src/assets/video/camera.png" alt="분석" />
+              <img src="/camera.png" alt="분석" />
             </button>
             <button className="side-btn" onClick={handleCartClick}>
-              <img src={cart} alt="장바구니" />
+              <img src="/cart.png" alt="장바구니" />
             </button>
             <button className="side-btn" onClick={toggleFavorite}>
               <img
-                src={
-                  isFavorite
-                    ? "/src/assets/video/star-filled.png"
-                    : "/src/assets/video/star.png"
-                }
+                src={isFavorite ? "/star-filled.png" : "/star.png"}
                 alt="즐겨찾기"
               />
             </button>
 
             <button className="side-btn" onClick={toggleRecommendation}>
               <img
-                src={
-                  isRecommended
-                    ? "/src/assets/video/thumb-filled.png"
-                    : "/src/assets/video/thumb.png"
-                }
+                src={isRecommended ? "/thumb-filled.png" : "/thumb.png"}
                 alt="추천"
               />
             </button>
 
             <button className="side-btn" onClick={() => setShowInfo(true)}>
-              <img src="/src/assets/video/info.png" alt="정보" />
+              <img src="/info.png" alt="정보" />
             </button>
           </div>
         </div>
@@ -404,8 +395,8 @@ const VideoDetail: React.FC<Props> = (props) => {
                           className="comment-like-icon"
                           src={
                             comment.isRecommended
-                              ? "/src/assets/video/thumb-filled.png"
-                              : "/src/assets/video/thumb.png"
+                              ? "/thumb-filled.png"
+                              : "/thumb.png"
                           }
                           alt="추천"
                         />
