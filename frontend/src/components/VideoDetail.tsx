@@ -299,7 +299,7 @@ const VideoDetail: React.FC<Props> = (props) => {
             </button>
             <button className="side-btn" onClick={toggleFavorite}>
               <img
-                src={isFavorite ? "/star-filled.png" : "/star.png"}
+                src={isFavorite ? "/star-filled.png" : "/Star.png"}
                 alt="즐겨찾기"
               />
             </button>

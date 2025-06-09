@@ -153,50 +153,13 @@ const Signup = () => {
   return (
     <div className="signup-frame">
       <div className="signup-title">회원가입</div> {/* style 제거 */}
-      <div className="align-left">회원인증</div>
-      <hr />
       <table>
         <tbody>
           <tr>
-            <td>
-              {/* member-type-label의 padding 제거, member-type-option 클래스 추가 */}
-              <div className="label member-type-label">
-                <span className="required">*</span>
-                <span>회원구분</span>
-                {/* 비어있는 label 제거 */}
-                <label className="member-type-option">
-                  <input
-                    type="radio"
-                    value="personal"
-                    checked={usertype === "personal"}
-                    onChange={handleUsertypeChange}
-                  />
-                  개인 회원
-                </label>
-                <label className="member-type-option">
-                  <input
-                    type="radio"
-                    value="instructor"
-                    checked={usertype === "instructor"}
-                    onChange={handleUsertypeChange}
-                  />
-                  강사
-                </label>
-                <label className="member-type-option">
-                  <input
-                    type="radio"
-                    value="business"
-                    checked={usertype === "business"}
-                    onChange={handleUsertypeChange}
-                  />
-                  사업자
-                </label>
-              </div>
-            </td>
+            <td></td>
           </tr>
         </tbody>
       </table>
-      <hr />
       <div className="align-left basic-info-title">기본정보</div>
       <div className="required-info-text-right">
         <span className="required">*</span>
