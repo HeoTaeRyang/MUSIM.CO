@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../styles/VideoDetail.css";
-
+import cart from "/src/assets/video/cart.png";
 interface Comment {
   id: number;
   user: string;
@@ -296,7 +296,7 @@ const VideoDetail: React.FC<Props> = (props) => {
               <img src="/src/assets/video/camera.png" alt="분석" />
             </button>
             <button className="side-btn" onClick={handleCartClick}>
-              <img src="/src/assets/video/cart.png" alt="장바구니" />
+              <img src={cart} alt="장바구니" />
             </button>
             <button className="side-btn" onClick={toggleFavorite}>
               <img
