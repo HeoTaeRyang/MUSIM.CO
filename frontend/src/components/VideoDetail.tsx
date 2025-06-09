@@ -312,7 +312,7 @@ const VideoDetail: React.FC<Props> = (props) => {
             </button>
 
             <button className="side-btn" onClick={() => setShowInfo(true)}>
-              <img src="/info.png" alt="정보" />
+              <img src="/Info.png" alt="정보" />
             </button>
           </div>
         </div>

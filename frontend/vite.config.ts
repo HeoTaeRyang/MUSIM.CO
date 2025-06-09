@@ -7,17 +7,17 @@ export default defineConfig({
   server: {
     proxy: {
       "/video": {
-        target: "http://localhost:5000",
+        target: "https://web-production-6e732.up.railway.app",
         changeOrigin: true,
         secure: false,
       },
       "/rank": {
-        target: "http://localhost:5000",
+        target: "https://web-production-6e732.up.railway.app",
         changeOrigin: true,
         secure: false,
       },
       "/attendance": {
-        target: "http://localhost:5000", // ⚠️ 추가 필요!
+        target: "https://web-production-6e732.up.railway.app", // ⚠️ 추가 필요!
         changeOrigin: true,
         secure: false,
       },
