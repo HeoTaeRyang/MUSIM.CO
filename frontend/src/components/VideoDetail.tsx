@@ -53,7 +53,7 @@ const extractYoutubeId = (url: string): string | null => {
   return match ? match[1] : null;
 };
 
-const API_BASE_URL = "http://127.0.0.1:5000";
+const API_BASE_URL = "https://web-production-6e732.up.railway.app";
 
 const VideoDetail: React.FC<Props> = (props) => {
   const navigate = useNavigate();
