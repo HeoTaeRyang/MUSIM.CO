@@ -22,7 +22,8 @@ const VideoAnalyze: React.FC = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
-  const webcamPreviewRef = useRef<HTMLVideoElement>(null);
+  const webcamPreviewRef = useRef<HTMLDivElement>(null);
+  const isRecordingRef = useRef(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const [thumbnails, setThumbnails] = useState<string[]>([]);
@@ -81,7 +82,55 @@ const VideoAnalyze: React.FC = () => {
   const handleStartRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      const recorder = new MediaRecorder(stream);
+
+      const videoTrack = stream.getVideoTracks()[0];
+      const settings = videoTrack.getSettings();
+      const { width = 640, height = 480 } = settings;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("캔버스 컨텍스트를 가져올 수 없습니다.");
+
+      ctx.scale(-1, 1);
+      ctx.translate(-width, 0);
+
+      const videoEl = document.createElement("video");
+      videoEl.srcObject = stream;
+      videoEl.muted = true;
+      videoEl.playsInline = true;
+
+      await videoEl.play();
+
+      // 📍 이 지점 이후에 setTimeout 삽입
+      setTimeout(() => {
+        if (webcamPreviewRef.current) {
+          webcamPreviewRef.current.innerHTML = "";
+          webcamPreviewRef.current.appendChild(canvas);
+          console.log("✅ canvas appended to webcamPreviewRef");
+        } else {
+          console.warn("⚠️ webcamPreviewRef.current is null");
+        }
+      }, 100);
+
+      // ✅ 여기서 로그 찍기
+      console.log("✅ stream tracks:", stream.getTracks());
+      console.log("✅ videoEl.readyState:", videoEl.readyState);
+      console.log("✅ webcamPreviewRef.current:", webcamPreviewRef.current);
+
+      const drawFrame = () => {
+        ctx.drawImage(videoEl, 0, 0, width, height);
+        if (isRecordingRef.current) {
+          requestAnimationFrame(drawFrame);
+        }
+      };
+
+      const canvasStream = canvas.captureStream();
+      const audioTrack = stream.getAudioTracks()[0];
+      canvasStream.addTrack(audioTrack);
+
+      const recorder = new MediaRecorder(canvasStream);
       const chunks: Blob[] = [];
 
       recorder.ondataavailable = (e) => {
@@ -93,31 +142,43 @@ const VideoAnalyze: React.FC = () => {
         setRecordedBlob(blob);
         setUploadedUrl(URL.createObjectURL(blob));
         setIsRecording(false);
+        isRecordingRef.current = false;
         stream.getTracks().forEach((track) => track.stop());
       };
 
+      // ✅ canvas 삽입 직후 로그
+      if (webcamPreviewRef.current) {
+        webcamPreviewRef.current.innerHTML = "";
+        webcamPreviewRef.current.appendChild(canvas);
+
+        console.log("✅ canvas appended to webcamPreviewRef");
+      } else {
+        console.warn("⚠️ webcamPreviewRef.current is null");
+      }
+
       setMediaRecorder(recorder);
       setIsRecording(true);
-
-      setTimeout(() => {
-        if (webcamPreviewRef.current) {
-          webcamPreviewRef.current.srcObject = stream;
-          webcamPreviewRef.current.play().catch((err) => {
-            console.error("비디오 재생 실패:", err);
-          });
-        }
-      }, 100);
-
+      isRecordingRef.current = true;
       recorder.start();
+      drawFrame();
     } catch (error) {
       console.error("카메라 접근 실패:", error);
       alert("카메라 접근을 허용해주세요.");
     }
   };
 
+
+
   const handleStopRecording = () => {
     mediaRecorder?.stop();
+
+    // 캔버스 제거
+    if (webcamPreviewRef.current) {
+      webcamPreviewRef.current.innerHTML = "";
+      console.log("🧹 캔버스 제거 완료");
+    }
   };
+
 
   const handleUploadRecorded = async () => {
     if (!recordedBlob || !userId || !id) return;
@@ -199,7 +260,7 @@ const VideoAnalyze: React.FC = () => {
               ) : isRecording ? (
                 <div className="recording-preview">
                   <p>녹화 중...</p>
-                  <video ref={webcamPreviewRef} autoPlay muted playsInline className="webcam-live-preview" />
+                  <div ref={webcamPreviewRef} className="webcam-live-preview" /> {/* canvas가 여기 들어감 */}
                   <button className="btn stop-btn" onClick={handleStopRecording}>녹화 중지</button>
                 </div>
               ) : (
