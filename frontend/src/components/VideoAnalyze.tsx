@@ -7,7 +7,8 @@ import { MdOutlineFileUpload, MdPhotoCamera } from "react-icons/md";
 import axios from "axios";
 import classNames from "classnames";
 
-axios.defaults.baseURL = "/";
+axios.defaults.baseURL = "https://web-production-6e732.up.railway.app";
+
 
 const VideoAnalyze: React.FC = () => {
   const { videoId } = useParams<{ videoId: string }>();
