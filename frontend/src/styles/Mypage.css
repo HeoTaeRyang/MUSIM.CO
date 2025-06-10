@@ -1,0 +1,57 @@
+.mypage-container {
+  padding-top: 100px;
+  text-align: center;
+  font-family: "Noto Sans KR", sans-serif;
+  color: #222;
+  padding-bottom: 40px;
+}
+
+.mypage-container h2 {
+  font-size: 28px;
+  margin-bottom: 40px;
+}
+
+.user-info {
+  margin: 30px auto;
+  max-width: 400px;
+  text-align: left;
+  border-top: 2px solid #333;
+  padding-top: 20px;
+}
+
+.user-info p {
+  font-size: 16px;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 8px;
+}
+
+.user-info strong {
+  flex: 1;
+  font-weight: 600;
+  color: #000;
+}
+
+.user-info span {
+  flex: 2;
+  text-align: right;
+  color: #555;
+}
+
+.logout-btn {
+  margin-top: 40px;
+  padding: 12px 24px;
+  background-color: #3f51b5;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.logout-btn:hover {
+  background-color: #303f9f;
+}
