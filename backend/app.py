@@ -137,7 +137,7 @@ def daily_mission_reward():
         return jsonify({'error': '오늘은 이미 보상을 받았습니다.'}), 400
     
     count = user_states[user_id]['count']
-    success = count >= 50
+    success = count >= 5
     
     if success:    
         user.save_daily_mission(user_id, today)
