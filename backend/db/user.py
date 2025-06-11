@@ -17,15 +17,15 @@ def get_user_my_page(userid):
         cursor.execute("SELECT * FROM User WHERE id = %s", (userid,))
         return cursor.fetchone()
 
-def add_user(userid, password, username, zipcode, addr, addr_detail, tel, phone, email):
+def add_user(usertype, userid, password, username, zipcode, addr, addr_detail, tel, phone, email):
     with get_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute("""
                 INSERT INTO User (
-                    id, password, username,
+                    usertype, id, password, username,
                     zipcode, addr, addr_detail, tel, phone, email
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (userid, password, username,
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (usertype, userid, password, username,
                   zipcode, addr, addr_detail, tel, phone, email))
             conn.commit()
 
