@@ -24,6 +24,7 @@ const Signup = () => {
   const navigate = useNavigate();
 
 
+
   const handleUseridChange = (event: ChangeEvent<HTMLInputElement>) => {
     setUserid(event.target.value);
   };
@@ -116,13 +117,16 @@ const Signup = () => {
     console.log("회원가입 정보 (백엔드로 전송될 데이터):", formData);
 
     try {
-      const response = await fetch("http://localhost:5000/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+      const response = await fetch(
+        "https://web-production-6e732.up.railway.app/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        }
+      );
 
       const result = await response.json();
 
@@ -145,78 +149,36 @@ const Signup = () => {
   return (
     <div className="signup-frame">
       <div className="signup-title">회원가입</div> {/* style 제거 */}
-
-      <div className="align-left">회원인증</div>
-      <hr />
-
       <table>
         <tbody>
           <tr>
-            <td>
-              {/* member-type-label의 padding 제거, member-type-option 클래스 추가 */}
-              <div className="label member-type-label">
-                <span className="required">*</span>
-                <span>회원구분</span>
-                {/* 비어있는 label 제거 */}
-                <label className="member-type-option">
-                  <input
-                    type="radio"
-                    value="personal"
-                    checked={usertype === "personal"}
-                    onChange={handleUsertypeChange}
-                  />
-                  개인 회원
-                </label>
-                <label className="member-type-option">
-                  <input
-                    type="radio"
-                    value="instructor"
-                    checked={usertype === "instructor"}
-                    onChange={handleUsertypeChange}
-                  />
-                  강사
-                </label>
-                <label className="member-type-option">
-                  <input
-                    type="radio"
-                    value="business"
-                    checked={usertype === "business"}
-                    onChange={handleUsertypeChange}
-                  />
-                  사업자
-                </label>
-              </div>
-            </td>
+            <td></td>
           </tr>
         </tbody>
       </table>
-
-      <hr />
-
-      <div className="align-left basic-info-title">
-        기본정보
-      </div>
-
+      <div className="align-left basic-info-title">기본정보</div>
       <div className="required-info-text-right">
         <span className="required">*</span>
         <span className="required-text required-info-text-span">
           필수입력사항
         </span>
       </div>
-
       <hr />
-
       {/* 아이디 */}
       <table>
         <tbody>
           <tr>
             <td>
-              <div className="label id-label"> {/* width 제거 */}
+              <div className="label id-label">
+                {" "}
+                {/* width 제거 */}
                 <span className="required">*</span>
                 <span>아이디</span>
               </div>
             </td>
-            <td> {/* width 제거 */}
+            <td>
+              {" "}
+              {/* width 제거 */}
               <div className="input-box id-input">
                 <input
                   type="text"
@@ -229,20 +191,22 @@ const Signup = () => {
           </tr>
         </tbody>
       </table>
-
       <hr />
-
       {/* 비밀번호 */}
       <table>
         <tbody>
           <tr>
             <td>
-              <div className="label password-label"> {/* width 제거 */}
+              <div className="label password-label">
+                {" "}
+                {/* width 제거 */}
                 <span className="required">*</span>
                 <span>비밀번호</span>
               </div>
             </td>
-            <td> {/* width 제거 */}
+            <td>
+              {" "}
+              {/* width 제거 */}
               <div className="input-box password-input">
                 <input
                   type="password"
@@ -257,20 +221,22 @@ const Signup = () => {
           </tr>
         </tbody>
       </table>
-
       <hr />
-
       {/* 비밀번호 확인 */}
       <table>
         <tbody>
           <tr>
-            <td> {/* width 제거 */}
+            <td>
+              {" "}
+              {/* width 제거 */}
               <div className="label confirm-password-label">
                 <span className="required">*</span>
                 <span>비밀번호 확인</span>
               </div>
             </td>
-            <td> {/* width 제거 */}
+            <td>
+              {" "}
+              {/* width 제거 */}
               <div className="input-box confirm-password-input">
                 <input
                   type="password"
@@ -282,20 +248,22 @@ const Signup = () => {
           </tr>
         </tbody>
       </table>
-
       <hr />
-
       {/* 이름 */}
       <table>
         <tbody>
           <tr>
             <td>
-              <div className="label name-label"> {/* width 제거 */}
+              <div className="label name-label">
+                {" "}
+                {/* width 제거 */}
                 <span className="required">*</span>
                 <span>이름</span>
               </div>
             </td>
-            <td> {/* width 제거 */}
+            <td>
+              {" "}
+              {/* width 제거 */}
               <div className="input-box name-input">
                 <input
                   type="text"
@@ -307,20 +275,22 @@ const Signup = () => {
           </tr>
         </tbody>
       </table>
-
       <hr />
-
       {/* 주소 */}
       <table>
         <tbody>
           <tr>
             <td>
-              <div className="label address-label"> {/* width 제거 */}
+              <div className="label address-label">
+                {" "}
+                {/* width 제거 */}
                 <span className="required">*</span>
                 <span>주소</span>
               </div>
             </td>
-            <td> {/* width 제거 */}
+            <td>
+              {" "}
+              {/* width 제거 */}
               <div className="input-row">
                 <div className="input-box zipcode-input">
                   <input type="text" value={zipcode} readOnly />
@@ -346,20 +316,24 @@ const Signup = () => {
           </tr>
         </tbody>
       </table>
-
       <hr />
-
       {/* 일반전화 */}
       <table>
         <tbody>
           <tr>
             <td>
-              <div className="label phone-label"> {/* width 제거 */}
+              <div className="label phone-label">
+                {" "}
+                {/* width 제거 */}
                 일반전화
               </div>
             </td>
-            <td className="phone-group-container"> {/* phone-group-container 클래스 추가 */}
-              <div className="phone-group"> {/* phone-group으로 감싸서 flex 적용 */}
+            <td className="phone-group-container">
+              {" "}
+              {/* phone-group-container 클래스 추가 */}
+              <div className="phone-group">
+                {" "}
+                {/* phone-group으로 감싸서 flex 적용 */}
                 <div className="input-box phone1-input">
                   <select value={telPrefix} onChange={handleTelPrefixChange}>
                     <option value="">선택</option>
@@ -383,7 +357,8 @@ const Signup = () => {
                     <option value="070">070</option>
                   </select>
                 </div>
-                <span className="phone-separator">-</span> {/* 하이픈을 span으로 감싸기 */}
+                <span className="phone-separator">-</span>{" "}
+                {/* 하이픈을 span으로 감싸기 */}
                 <div className="input-box phone2-input">
                   <input
                     type="number"
@@ -391,7 +366,8 @@ const Signup = () => {
                     onChange={handleTelMiddleChange}
                   />
                 </div>
-                <span className="phone-separator">-</span> {/* 하이픈을 span으로 감싸기 */}
+                <span className="phone-separator">-</span>{" "}
+                {/* 하이픈을 span으로 감싸기 */}
                 <div className="input-box phone3-input">
                   <input
                     type="number"
@@ -404,23 +380,30 @@ const Signup = () => {
           </tr>
         </tbody>
       </table>
-
       <hr />
-
       {/* 휴대전화 */}
       <table>
         <tbody>
           <tr>
             <td>
-              <div className="label mobile-label"> {/* width 제거 */}
+              <div className="label mobile-label">
+                {" "}
+                {/* width 제거 */}
                 <span className="required">*</span>
                 <span>휴대전화</span>
               </div>
             </td>
-            <td className="mobile-group-container"> {/* mobile-group-container 클래스 추가 */}
-              <div className="mobile-group"> {/* mobile-group으로 감싸서 flex 적용 */}
+            <td className="mobile-group-container">
+              {" "}
+              {/* mobile-group-container 클래스 추가 */}
+              <div className="mobile-group">
+                {" "}
+                {/* mobile-group으로 감싸서 flex 적용 */}
                 <div className="input-box mobile1-input">
-                  <select value={phonePrefix} onChange={handlePhonePrefixChange}>
+                  <select
+                    value={phonePrefix}
+                    onChange={handlePhonePrefixChange}
+                  >
                     <option value="">선택</option>
                     <option value="010">010</option>
                     <option value="011">011</option>
@@ -430,7 +413,8 @@ const Signup = () => {
                     <option value="019">019</option>
                   </select>
                 </div>
-                <span className="phone-separator">-</span> {/* 하이픈을 span으로 감싸기 */}
+                <span className="phone-separator">-</span>{" "}
+                {/* 하이픈을 span으로 감싸기 */}
                 <div className="input-box mobile2-input">
                   <input
                     type="number"
@@ -438,7 +422,8 @@ const Signup = () => {
                     onChange={handlePhoneMiddleChange}
                   />
                 </div>
-                <span className="phone-separator">-</span> {/* 하이픈을 span으로 감싸기 */}
+                <span className="phone-separator">-</span>{" "}
+                {/* 하이픈을 span으로 감싸기 */}
                 <div className="input-box mobile3-input">
                   <input
                     type="number"
@@ -451,20 +436,22 @@ const Signup = () => {
           </tr>
         </tbody>
       </table>
-
       <hr />
-
       {/* 이메일 */}
       <table>
         <tbody>
           <tr>
             <td>
-              <div className="label email-label"> {/* width 제거 */}
+              <div className="label email-label">
+                {" "}
+                {/* width 제거 */}
                 <span className="required">*</span>
                 <span>이메일</span>
               </div>
             </td>
-            <td> {/* width 제거 */}
+            <td>
+              {" "}
+              {/* width 제거 */}
               <div className="input-box email-input">
                 <input
                   type="email"
@@ -476,19 +463,23 @@ const Signup = () => {
           </tr>
         </tbody>
       </table>
-
       <hr />
-
       {/* 버튼 */}
-      <table className="button-table"> {/* 클래스 추가 */}
+      <table className="button-table">
+        {" "}
+        {/* 클래스 추가 */}
         <tbody>
           <tr>
-            <td> {/* width, height 제거 */}
+            <td>
+              {" "}
+              {/* width, height 제거 */}
               <div className="cancel-button" onClick={handleCancel}>
                 취소
               </div>
             </td>
-            <td> {/* width, height 제거 */}
+            <td>
+              {" "}
+              {/* width, height 제거 */}
               <div className="signup-button" onClick={handleSubmit}>
                 가입하기
               </div>
