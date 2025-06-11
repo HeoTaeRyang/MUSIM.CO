@@ -53,6 +53,7 @@ def get_my_page():
         'tel': user_info['tel'],
         'phone': user_info['phone'],
         'email': user_info['email'],
+        'usertype': user_info['usertype'],
         'point': user_info['point']
     }
     
@@ -594,6 +595,7 @@ def login():
 @app.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
+    usertype = data.get('usertype')
     userid = data.get('id')
     password = data.get('password')
     password_confirm = data.get('password_confirm')
@@ -606,7 +608,7 @@ def register():
     tel = data.get('tel', '')
 
     required_fields = {
-        "id": userid, "password": password, "password_confirm": password_confirm,
+        "usertype": usertype, "id": userid, "password": password, "password_confirm": password_confirm,
         "username": username, "addr": addr, "zipcode": zipcode, "phone": phone, "email": email
     }
     missing = [field for field, value in required_fields.items() if not value]
@@ -625,7 +627,7 @@ def register():
 
     hashed_pw = generate_password_hash(password)
     try:
-        user.add_user(userid, hashed_pw, username, zipcode, addr, addr_detail, tel, phone, email)
+        user.add_user(usertype, userid, hashed_pw, username, zipcode, addr, addr_detail, tel, phone, email)
     except Exception as e:
         return jsonify({'error': f'DB 오류: {str(e)}'}), 500
 
