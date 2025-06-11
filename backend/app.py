@@ -5,6 +5,7 @@ from werkzeug.utils import secure_filename
 import os
 import cv2
 import uuid
+import base64
 
 from ai import daily
 from db import user, video, rank, comment #랭킹 추가
@@ -21,7 +22,7 @@ import base64
 import numpy as np
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=["http://localhost:5173", "https://musimco.netlify.app"])
 
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -361,15 +362,12 @@ def upload_posture_video(video_id):
     if not file:
         return jsonify({"error": "파일이 없습니다."}), 400
 
-    # 1. 업로드 파일 저장 (원본 영상)
     filename = secure_filename(file.filename)
     video_path = os.path.join(UPLOAD_FOLDER, filename)
     file.save(video_path)
 
-    # 2. 프레임 추출
     frames = read_video_to_frames(video_path)
 
-    # 3. 모델 정보 가져오기
     with get_connection().cursor() as cursor:
         cursor.execute("SELECT model_path, num_conditions FROM PostureModel WHERE video_id = %s", (video_id,))
         model_row = cursor.fetchone()
@@ -379,24 +377,20 @@ def upload_posture_video(video_id):
     model_path = model_row["model_path"]
     num_conditions = model_row["num_conditions"]
 
-    # 4. AI 분석 실행
     eval_output = evaluate(frames, model_path=model_path, num_conditions=num_conditions)
     eval_result = eval_output["results"]
     annotated_frames = eval_output.get("annotated_frames", frames)
 
-    # 5. 결과 영상 저장 (분석된 프레임 사용)
     output_filename = f"{user_id}_{video_id}_result.mp4"
     output_path = os.path.join(UPLOAD_FOLDER, output_filename)
     save_success = save_result_video(annotated_frames, output_path)
     if not save_success:
         return jsonify({"error": "결과 영상 저장 실패"}), 500
 
-    # 6. 조건 설명 불러오기
     with get_connection().cursor() as cursor:
         cursor.execute("SELECT condition_index, description FROM PostureCondition WHERE video_id = %s", (video_id,))
         condition_map = {row['condition_index']: row['description'] for row in cursor.fetchall()}
 
-    # 7. 결과 텍스트 생성
     result_lines = []
     for r in eval_result:
         cond = r['condition']
@@ -408,7 +402,6 @@ def upload_posture_video(video_id):
 
     result_text = "\n".join(result_lines)
 
-    # 8. DB 저장 (PostureResult)
     with get_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute("""
@@ -418,17 +411,22 @@ def upload_posture_video(video_id):
                 user_id,
                 video_id,
                 result_text,
-                video_path,     # 원본 영상 경로
-                output_path     # 분석 결과 영상 경로
+                video_path,
+                output_path
             ))
             conn.commit()
 
-    # 9. 응답 반환
+    sampled_frames = [annotated_frames[i] for i in range(0, len(annotated_frames), 30)][:10]
+    preview_frames = [
+        base64.b64encode(cv2.imencode(".jpg", f)[1]).decode() for f in sampled_frames
+    ]
+
     return jsonify({
         "message": "분석 완료",
         "result_text": result_text,
-        "upload_video_url": f"/{video_path}",
-        "result_video_url": f"/{output_path}"
+        "image_url": f"/{video_path}",  # ✅ 프론트에서 사용하는 key 이름
+        "result_video_url": f"/{output_path}",
+        "preview_frames": preview_frames
     }), 200
 
 @app.route('/video/<int:video_id>/posture/analyze', methods=['POST'])
@@ -523,23 +521,36 @@ def get_posture_result(video_id):
 
     with get_connection().cursor() as cursor:
         cursor.execute("""
-            INSERT INTO PostureResult (user_id, video_id, result_text, image_url)
-            VALUES (%s, %s, %s, %s)
-            ON DUPLICATE KEY UPDATE
-                result_text = VALUES(result_text),
-                image_url = VALUES(image_url),
-                saved_at = NOW()
-        """, (user_id, video_id, result_text, image_url))
+            SELECT result_text, image_url, result_video_url, saved_at 
+            FROM PostureResult 
+            WHERE user_id = %s AND video_id = %s
+            ORDER BY saved_at DESC
+            LIMIT 1
+        """, (user_id, video_id))
         result = cursor.fetchone()
 
         if not result:
             return jsonify({"message": "분석 결과가 없습니다."}), 404
 
+    #분석된 프레임 재생성 (결과 영상으로부터)
+    try:
+        frames = read_video_to_frames(result["result_video_url"])
+        sampled_frames = [frames[i] for i in range(0, len(frames), 30)][:10]
+        preview_frames = [
+            base64.b64encode(cv2.imencode(".jpg", f)[1]).decode() for f in sampled_frames
+        ]
+    except Exception as e:
+        print(f"preview_frames 생성 실패: {str(e)}")
+        preview_frames = []
+
     return jsonify({
-        "result_text": result['result_text'],
-        "image_url": result['image_url'],
-        "saved_at": result['saved_at']
+        "result_text": result["result_text"],
+        "image_url": result["image_url"],
+        "result_video_url": result["result_video_url"],
+        "saved_at": result["saved_at"],
+        "preview_frames": preview_frames  # 프론트에서 결과 밑에 표시
     }), 200
+
 
 @app.route('/video/<int:video_id>/posture/save', methods=['POST'])
 def save_posture(video_id):

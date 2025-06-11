@@ -7,7 +7,8 @@ import { MdOutlineFileUpload, MdPhotoCamera } from "react-icons/md";
 import axios from "axios";
 import classNames from "classnames";
 
-axios.defaults.baseURL = "/";
+axios.defaults.baseURL = "https://web-production-6e732.up.railway.app";
+
 
 const VideoAnalyze: React.FC = () => {
   const { videoId } = useParams<{ videoId: string }>();
@@ -19,13 +20,19 @@ const VideoAnalyze: React.FC = () => {
   const [resultText, setResultText] = useState<string>("");
   const inputRef = useRef<HTMLInputElement>(null);
 
+
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
-  const webcamPreviewRef = useRef<HTMLVideoElement>(null);
+  const webcamPreviewRef = useRef<HTMLDivElement>(null);
+  const isRecordingRef = useRef(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const [thumbnails, setThumbnails] = useState<string[]>([]);
+  const [previewFrames, setPreviewFrames] = useState<string[]>([]);  //추가
+  const [currentIndex, setCurrentIndex] = useState(0);  // 추가
+
+
 
   useEffect(() => {
     if (!userId || !id) return;
@@ -34,16 +41,27 @@ const VideoAnalyze: React.FC = () => {
         if (res.data) {
           setUploadedUrl(res.data.result_video_url || res.data.image_url);
           setResultText(res.data.result_text || "정확한 평가를 위해 가이드 영상처럼 따라 해보세요!");
+          setPreviewFrames(res.data.preview_frames || []); //추가
           setShowPanel(false);
         }
       }).catch(() => { });
   }, [id, userId]);
+
+  //추가: 프레임 이미지 자동 전환 타이머 
+  useEffect(() => {
+    if (previewFrames.length === 0) return;
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % previewFrames.length);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [previewFrames]);
 
   const handleReset = () => {
     setUploadedUrl(null);
     setResultText("");
     setRecordedBlob(null);
     setThumbnails([]);
+
     if (inputRef.current) inputRef.current.value = "";
   };
 
@@ -81,7 +99,55 @@ const VideoAnalyze: React.FC = () => {
   const handleStartRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      const recorder = new MediaRecorder(stream);
+
+      const videoTrack = stream.getVideoTracks()[0];
+      const settings = videoTrack.getSettings();
+      const { width = 640, height = 480 } = settings;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("캔버스 컨텍스트를 가져올 수 없습니다.");
+
+      ctx.scale(-1, 1);
+      ctx.translate(-width, 0);
+
+      const videoEl = document.createElement("video");
+      videoEl.srcObject = stream;
+      videoEl.muted = true;
+      videoEl.playsInline = true;
+
+      await videoEl.play();
+
+
+      setTimeout(() => {
+        if (webcamPreviewRef.current) {
+          webcamPreviewRef.current.innerHTML = "";
+          webcamPreviewRef.current.appendChild(canvas);
+          console.log("✅ canvas appended to webcamPreviewRef");
+        } else {
+          console.warn("⚠️ webcamPreviewRef.current is null");
+        }
+      }, 100);
+
+      //  웹캠 로그 찍기
+      console.log("✅ stream tracks:", stream.getTracks());
+      console.log("✅ videoEl.readyState:", videoEl.readyState);
+      console.log("✅ webcamPreviewRef.current:", webcamPreviewRef.current);
+
+      const drawFrame = () => {
+        ctx.drawImage(videoEl, 0, 0, width, height);
+        if (isRecordingRef.current) {
+          requestAnimationFrame(drawFrame);
+        }
+      };
+
+      const canvasStream = canvas.captureStream();
+      const audioTrack = stream.getAudioTracks()[0];
+      canvasStream.addTrack(audioTrack);
+
+      const recorder = new MediaRecorder(canvasStream);
       const chunks: Blob[] = [];
 
       recorder.ondataavailable = (e) => {
@@ -93,31 +159,43 @@ const VideoAnalyze: React.FC = () => {
         setRecordedBlob(blob);
         setUploadedUrl(URL.createObjectURL(blob));
         setIsRecording(false);
+        isRecordingRef.current = false;
         stream.getTracks().forEach((track) => track.stop());
       };
 
+      //  canvas 삽입 직후 로그
+      if (webcamPreviewRef.current) {
+        webcamPreviewRef.current.innerHTML = "";
+        webcamPreviewRef.current.appendChild(canvas);
+
+        console.log("anvas appended to webcamPreviewRef");
+      } else {
+        console.warn("webcamPreviewRef.current is null");
+      }
+
       setMediaRecorder(recorder);
       setIsRecording(true);
-
-      setTimeout(() => {
-        if (webcamPreviewRef.current) {
-          webcamPreviewRef.current.srcObject = stream;
-          webcamPreviewRef.current.play().catch((err) => {
-            console.error("비디오 재생 실패:", err);
-          });
-        }
-      }, 100);
-
+      isRecordingRef.current = true;
       recorder.start();
+      drawFrame();
     } catch (error) {
       console.error("카메라 접근 실패:", error);
       alert("카메라 접근을 허용해주세요.");
     }
   };
 
+
+
   const handleStopRecording = () => {
     mediaRecorder?.stop();
+
+    // 캔버스 제거
+    if (webcamPreviewRef.current) {
+      webcamPreviewRef.current.innerHTML = "";
+      console.log(" 캔버스 제거 완료");
+    }
   };
+
 
   const handleUploadRecorded = async () => {
     if (!recordedBlob || !userId || !id) return;
@@ -199,7 +277,7 @@ const VideoAnalyze: React.FC = () => {
               ) : isRecording ? (
                 <div className="recording-preview">
                   <p>녹화 중...</p>
-                  <video ref={webcamPreviewRef} autoPlay muted playsInline className="webcam-live-preview" />
+                  <div ref={webcamPreviewRef} className="webcam-live-preview" /> {/* canvas가 여기 들어감 */}
                   <button className="btn stop-btn" onClick={handleStopRecording}>녹화 중지</button>
                 </div>
               ) : (
@@ -231,6 +309,17 @@ const VideoAnalyze: React.FC = () => {
           <div className="analysis-result-below">
             <h3>결과</h3>
             <p>{resultText}</p>
+            {/*추가: 결과 프레임 이미지 출력 */}
+            {previewFrames.length > 0 && (
+              <div className="preview-frame-result">
+                <img
+                  src={`data:image/jpeg;base64,${previewFrames[currentIndex]}`}
+                  alt="분석 프레임"
+                  style={{ width: "100%", maxWidth: "600px", borderRadius: "12px" }}
+                />
+              </div>
+            )}
+
             <div className="result-buttons">
               <button className="btn save-btn" onClick={handleSave}>
                 <FaDownload /> 저장하기

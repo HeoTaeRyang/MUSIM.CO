@@ -14,13 +14,16 @@ const DailyMissionVideo: React.FC = () => {
   const location = useLocation();
 
   const [showCameraFeed, setShowCameraFeed] = useState(false);
-  const [resultText, setResultText] = useState<string>("준비 중...");
+  const [resultText, setResultText] = useState<string>("운동을 시작하려면 실시간 촬영을 시작해주세요.");
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const userId = localStorage.getItem("user_id") || "";
 
+  // currentAngle과 currentStatus는 마지막으로 유효한 값을 저장합니다.
   const [currentAngle, setCurrentAngle] = useState<number | null>(null);
   const [currentStatus, setCurrentStatus] = useState<number | null>(null);
+  // lastValidAngle 상태는 더 이상 필요하지 않습니다. currentAngle과 currentStatus가 그 역할을 대신합니다.
+  // const [lastValidAngle, setLastValidAngle] = useState<number | null>(null); // 이 줄 삭제
 
   // **** LOCAL STORAGE 관련 코드 (이전과 동일, userId 유효성 검사 포함) ****
   const getInitialCountFromLocalStorage = useCallback(() => {
@@ -93,7 +96,11 @@ const DailyMissionVideo: React.FC = () => {
       if (context) {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
+        context.translate(canvas.width, 0);
+        context.scale(-1, 1);
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        context.setTransform(1, 0, 0, 1, 0, 0);
+
 
         const imageData = canvas.toDataURL("image/jpeg", 0.7);
 
@@ -105,8 +112,16 @@ const DailyMissionVideo: React.FC = () => {
           });
 
           const { angle, status, count } = response.data;
-          setCurrentAngle(angle);
-          setCurrentStatus(status);
+
+          // 각도 값이 유효한 숫자일 때만 업데이트합니다.
+          if (typeof angle === "number" && !isNaN(angle)) {
+            setCurrentAngle(angle);
+          }
+          // 상태 값이 유효한 숫자 (0 또는 1)일 때만 업데이트합니다.
+          if (typeof status === "number" && (status === 0 || status === 1)) {
+            setCurrentStatus(status);
+          }
+
 
           // **** 여기만 수정됨: count가 유효한 숫자일 때만 업데이트 ****
           if (typeof count === "number" && !isNaN(count)) {
@@ -114,30 +129,22 @@ const DailyMissionVideo: React.FC = () => {
           }
           // ******************************************************
 
-          if (angle === null || typeof angle !== "number") {
-            setResultText(
-              "포즈 인식 실패. 다시 시도해주세요. (각도 정보 없음)"
-            );
-          } else {
-            setResultText(
-              `각도: ${angle.toFixed(2)}°, 상태: ${
-                status === 1 ? "몸 굽힘" : "몸 폄"
-              }, 횟수: ${count}회`
-            );
-          }
+          setResultText(
+            "자세를 120도 이하로 굽히고 150도 이상으로 펴면 횟수가 올라갑니다."
+          );
+
         } catch (error) {
           console.error("프레임 분석 오류:", error);
           if (axios.isAxiosError(error) && error.response) {
             setResultText(
-              `분석 오류: ${error.response.data.error || error.message}`
+              "운동 분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
             );
           } else {
             setResultText(
-              `분석 중 오류 발생: ${
-                error instanceof Error ? error.message : String(error)
-              }`
+              "운동 분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
             );
           }
+          // 오류 발생 시 currentAngle, currentStatus를 변경하지 않고 이전 값을 유지
         } finally {
           isAnalyzing.current = false;
         }
@@ -159,7 +166,7 @@ const DailyMissionVideo: React.FC = () => {
           captureFrameAndSend,
           100
         );
-        setResultText("실시간 촬영 및 분석 중...");
+        setResultText("자세를 120도 이하로 굽히고 150도 이상으로 펴면 횟수가 올라갑니다.");
       }
     } catch (err) {
       console.error("카메라 접근 오류: ", err);
@@ -180,11 +187,11 @@ const DailyMissionVideo: React.FC = () => {
     }
     isAnalyzing.current = false;
     setResultText("촬영이 종료되었습니다.");
-    // 필요하다면 여기에서 카운트/각도/상태를 초기화할 수 있습니다.
-    // setCurrentAngle(null);
-    // setCurrentStatus(null);
-    // setCurrentCount(0); // 만약 종료 시 횟수를 0으로 초기화하고 싶다면 주석 해제
-    // localStorage.removeItem(`dailyMissionCount_${userId}`); // localStorage에서도 삭제 (필요하다면)
+    // 촬영 종료 시 각도 및 상태를 초기화
+    setCurrentAngle(null);
+    setCurrentStatus(null);
+    // lastValidAngle 상태가 삭제되었으므로 이 줄도 삭제
+    // setLastValidAngle(null);
   };
 
   useEffect(() => {
@@ -233,6 +240,7 @@ const DailyMissionVideo: React.FC = () => {
                     playsInline
                     muted
                     className="camera-video"
+                    style={{ transform: "scaleX(-1)" }}
                   />
                   {/* 프레임 캡처를 위해 숨겨진 캔버스 */}
                   <canvas ref={canvasRef} style={{ display: "none" }} />
@@ -244,7 +252,8 @@ const DailyMissionVideo: React.FC = () => {
                       현재 각도:{" "}
                       {currentAngle !== null && typeof currentAngle === "number"
                         ? `${currentAngle.toFixed(2)}°`
-                        : "측정 중..."}
+                        : "측정 대기 중..." // 유효한 각도 값이 없을 때만 이 메시지 표시
+                      }
                     </p>
                     <p>
                       자세 상태:{" "}
@@ -252,7 +261,8 @@ const DailyMissionVideo: React.FC = () => {
                         ? "몸 굽힘"
                         : currentStatus === 0
                         ? "몸 폄"
-                        : "측정 중..."}
+                        : "측정 대기 중..." // 유효한 상태 값이 없을 때만 이 메시지 표시
+                      }
                     </p>
                     <p>운동 횟수: {currentCount}회</p>
                   </div>

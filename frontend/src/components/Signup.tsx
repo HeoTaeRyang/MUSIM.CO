@@ -3,7 +3,6 @@ import "../styles/Signup.css";
 import { useNavigate } from "react-router-dom";
 
 const Signup = () => {
-  const [usertype, setUsertype] = useState<string>("personal");
   const [userid, setUserid] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [password_confirm, setPassword_confirm] = useState<string>("");
@@ -24,9 +23,7 @@ const Signup = () => {
 
   const navigate = useNavigate();
 
-  const handleUsertypeChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setUsertype(event.target.value);
-  };
+
 
   const handleUseridChange = (event: ChangeEvent<HTMLInputElement>) => {
     setUserid(event.target.value);
@@ -105,7 +102,6 @@ const Signup = () => {
     const phone = `${phonePrefix}-${phoneMiddle}-${phoneSuffix}`;
 
     const formData = {
-      usertype: usertype,
       id: userid,
       password: password,
       password_confirm: password_confirm,
