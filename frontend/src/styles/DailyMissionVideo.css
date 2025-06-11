@@ -11,6 +11,27 @@
   margin: 0 auto; /* 비디오를 중앙에 정렬 */
 }
 
+.video-analyze-container {
+  margin-top:50px;
+}
+
+.camera-message {
+    color: #ff0000; /* 강렬한 빨간색으로 눈에 띄게 (원하는 색상으로 변경 가능) */
+    font-weight: bold; /* 글씨 두껍게 */
+    text-align: center; /* 텍스트 중앙 정렬 (기존 위치 내에서) */
+    /* 폰트 종류를 변경하고 싶다면 추가: font-family: 'Noto Sans KR', sans-serif; */
+    /* 메시지에 따라 자동으로 줄바꿈 되도록: white-space: pre-wrap; */
+    /* 줄 간격 조절: line-height: 1.4; */
+}
+
+/* (선택 사항) 모바일 화면에서 글씨 크기 조정 */
+@media (max-width: 768px) {
+    .camera-message {
+        font-size: 1.0em; /* 작은 화면에서 글씨 크기 조정 */
+    }
+}
+
+
 /* .analysis-results는 API로부터 받은 각도, 상태, 횟수를 표시할 영역의 스타일입니다. */
 .analysis-results {
   margin-top: 15px;
@@ -85,7 +106,6 @@
     justify-content: space-between; /* 요소들을 양 끝으로 정렬 */
     align-items: center;
     margin-bottom: 10px;
-    gap:400px;
 }
 
 .analyze-header h3 {

@@ -1,6 +1,6 @@
 // src/components/DailyMissionVideo.tsx
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { useParams, useLocation } from "react-router-dom";
+import { useParams, useLocation, useNavigate } from "react-router-dom"; // useNavigate import 추가
 import "../styles/DailyMissionVideo.css";
 import axios from "axios";
 import flameIcon from "../assets/flame.png";
@@ -12,9 +12,10 @@ const DailyMissionVideo: React.FC = () => {
   const id = Number(videoId);
 
   const location = useLocation();
+  const navigate = useNavigate(); // useNavigate 훅 사용
 
   const [showCameraFeed, setShowCameraFeed] = useState(false);
-  const [resultText, setResultText] = useState<string>("준비 중...");
+  const [resultText, setResultText] = useState<string>("운동을 시작하려면 실시간 촬영을 시작해주세요.");
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const userId = localStorage.getItem("user_id") || "";
@@ -22,7 +23,6 @@ const DailyMissionVideo: React.FC = () => {
   const [currentAngle, setCurrentAngle] = useState<number | null>(null);
   const [currentStatus, setCurrentStatus] = useState<number | null>(null);
 
-  // **** LOCAL STORAGE 관련 코드 (이전과 동일, userId 유효성 검사 포함) ****
   const getInitialCountFromLocalStorage = useCallback(() => {
     if (!userId || typeof userId !== "string" || userId.trim() === "") {
       return 0;
@@ -44,7 +44,6 @@ const DailyMissionVideo: React.FC = () => {
       );
     }
   }, [currentCount, userId]);
-  // **** LOCAL STORAGE 관련 코드 끝 ****
 
   const captureIntervalId = useRef<number | null>(null);
   const isAnalyzing = useRef(false);
@@ -93,7 +92,10 @@ const DailyMissionVideo: React.FC = () => {
       if (context) {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
+        context.translate(canvas.width, 0);
+        context.scale(-1, 1);
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        context.setTransform(1, 0, 0, 1, 0, 0);
 
         const imageData = canvas.toDataURL("image/jpeg", 0.7);
 
@@ -105,37 +107,30 @@ const DailyMissionVideo: React.FC = () => {
           });
 
           const { angle, status, count } = response.data;
-          setCurrentAngle(angle);
-          setCurrentStatus(status);
 
-          // **** 여기만 수정됨: count가 유효한 숫자일 때만 업데이트 ****
+          if (typeof angle === "number" && !isNaN(angle)) {
+            setCurrentAngle(angle);
+          }
+          if (typeof status === "number" && (status === 0 || status === 1)) {
+            setCurrentStatus(status);
+          }
+
           if (typeof count === "number" && !isNaN(count)) {
             setCurrentCount(count);
           }
-          // ******************************************************
 
-          if (angle === null || typeof angle !== "number") {
-            setResultText(
-              "포즈 인식 실패. 다시 시도해주세요. (각도 정보 없음)"
-            );
-          } else {
-            setResultText(
-              `각도: ${angle.toFixed(2)}°, 상태: ${
-                status === 1 ? "몸 굽힘" : "몸 폄"
-              }, 횟수: ${count}회`
-            );
-          }
+          setResultText(
+            "자세를 120도 이하로 굽히고 150도 이상으로 펴면 횟수가 올라갑니다."
+          );
         } catch (error) {
           console.error("프레임 분석 오류:", error);
           if (axios.isAxiosError(error) && error.response) {
             setResultText(
-              `분석 오류: ${error.response.data.error || error.message}`
+              "운동 분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
             );
           } else {
             setResultText(
-              `분석 중 오류 발생: ${
-                error instanceof Error ? error.message : String(error)
-              }`
+              "운동 분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
             );
           }
         } finally {
@@ -157,9 +152,9 @@ const DailyMissionVideo: React.FC = () => {
         if (captureIntervalId.current) clearInterval(captureIntervalId.current);
         captureIntervalId.current = window.setInterval(
           captureFrameAndSend,
-          100
+          50
         );
-        setResultText("실시간 촬영 및 분석 중...");
+        setResultText("자세를 120도 이하로 굽히고 150도 이상으로 펴면 횟수가 올라갑니다.");
       }
     } catch (err) {
       console.error("카메라 접근 오류: ", err);
@@ -180,11 +175,14 @@ const DailyMissionVideo: React.FC = () => {
     }
     isAnalyzing.current = false;
     setResultText("촬영이 종료되었습니다.");
-    // 필요하다면 여기에서 카운트/각도/상태를 초기화할 수 있습니다.
-    // setCurrentAngle(null);
-    // setCurrentStatus(null);
-    // setCurrentCount(0); // 만약 종료 시 횟수를 0으로 초기화하고 싶다면 주석 해제
-    // localStorage.removeItem(`dailyMissionCount_${userId}`); // localStorage에서도 삭제 (필요하다면)
+    setCurrentAngle(null);
+    setCurrentStatus(null);
+  };
+
+  // 홈으로 이동하는 함수
+  const handleGoHome = () => {
+    stopLiveCamera(); // 카메라 종료
+    navigate("/"); // 홈 경로로 이동 (루트 경로로 가정)
   };
 
   useEffect(() => {
@@ -219,12 +217,21 @@ const DailyMissionVideo: React.FC = () => {
               <div className="analyze-panel full-width">
                 <div className="analyze-header">
                   <h3>운동 분석</h3>
-                  <button
-                    className="stop-camera-button"
-                    onClick={stopLiveCamera}
-                  >
-                    촬영 종료
-                  </button>
+                  <div className="button-group"> {/* 버튼들을 감싸는 div 추가 */}
+                    <button
+                      className="stop-camera-button"
+                      onClick={stopLiveCamera}
+                    >
+                      촬영 종료
+                    </button>
+                    {/* 홈으로 돌아가기 버튼 추가 */}
+                    <button
+                      className="go-home-button" // 새로운 CSS 클래스 추가
+                      onClick={handleGoHome}
+                    >
+                      홈으로 돌아가기
+                    </button>
+                  </div>
                 </div>
                 <div className="camera-feed-area">
                   <video
@@ -233,18 +240,18 @@ const DailyMissionVideo: React.FC = () => {
                     playsInline
                     muted
                     className="camera-video"
+                    style={{ transform: "scaleX(-1)" }}
                   />
-                  {/* 프레임 캡처를 위해 숨겨진 캔버스 */}
                   <canvas ref={canvasRef} style={{ display: "none" }} />
                   {resultText && <p className="camera-message">{resultText}</p>}
 
-                  {/* 실시간 각도, 상태, 횟수 표시 */}
                   <div className="analysis-results">
                     <p>
                       현재 각도:{" "}
                       {currentAngle !== null && typeof currentAngle === "number"
                         ? `${currentAngle.toFixed(2)}°`
-                        : "측정 중..."}
+                        : "측정 대기 중..."
+                      }
                     </p>
                     <p>
                       자세 상태:{" "}
@@ -252,7 +259,8 @@ const DailyMissionVideo: React.FC = () => {
                         ? "몸 굽힘"
                         : currentStatus === 0
                         ? "몸 폄"
-                        : "측정 중..."}
+                        : "측정 대기 중..."
+                      }
                     </p>
                     <p>운동 횟수: {currentCount}회</p>
                   </div>
