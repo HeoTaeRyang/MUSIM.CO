@@ -39,7 +39,6 @@ CREATE TABLE `user` (
   `exercise_weak` tinyint DEFAULT NULL,
   `exercise_day` tinyint DEFAULT NULL,
   `activity_level` varchar(50) DEFAULT NULL,
-  `usertype` enum('개인회원','강사','사업자') NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
