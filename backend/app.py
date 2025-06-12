@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -6,30 +9,46 @@ import os
 import cv2
 import uuid
 import base64
+import io
+import boto3
+from datetime import date
+import numpy as np
 
 from ai import daily
-from db import user, video, rank, comment #랭킹 추가
+from db import user, video, rank, comment
 from db.db import get_connection
 from db.video import get_video_by_id, toggle_favorite, add_recommendation
 from db.comment import get_comments_by_video, add_comment
 from db.posture import save_posture_result
 from utils import is_valid_id, is_valid_password, is_valid_email
 from ai.condition import evaluate
-from utils import read_video_to_frames
-from utils import save_result_video
-from datetime import date
-import base64
-import numpy as np
+from utils import read_video_to_frames, save_result_video
 
 app = Flask(__name__)
+
+# [수정] 배포 환경에 맞게 CORS 설정을 구체화합니다.
+# 로컬 개발(localhost)과 배포된 프론트엔드(예: Netlify) 주소를 모두 허용합니다.
+# 'https://musimco.netlify.app' 부분은 실제 배포된 프론트엔드 주소로 변경 필요
 CORS(app, origins=["http://localhost:5173", "https://musimco.netlify.app"])
 
-UPLOAD_FOLDER = 'uploads'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+# --- S3 설정 ---
+AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY")
+AWS_SECRET_KEY = os.getenv("AWS_SECRET_KEY")
+BUCKET_NAME = os.getenv("BUCKET_NAME")
+REGION_NAME = os.getenv("REGION_NAME")
 
-@app.route('/')
-def index():
-    return "백엔드 서버 실행 중입니다."
+s3 = boto3.client("s3",
+                  aws_access_key_id=AWS_ACCESS_KEY,
+                  aws_secret_access_key=AWS_SECRET_KEY,
+                  region_name=REGION_NAME)
+
+def upload_fileobj_to_s3(file_obj, s3_path):
+    try:
+        s3.upload_fileobj(file_obj, BUCKET_NAME, s3_path)
+        return f"https://{BUCKET_NAME}.s3.{REGION_NAME}.amazonaws.com/{s3_path}"
+    except Exception as e:
+        print(f"[ERROR] S3 파일 객체 업로드 실패: {e}")
+        return None
 
 @app.route('/myPage', methods=['POST'])
 def get_my_page():
@@ -355,25 +374,40 @@ def get_comments(video_id):
     return jsonify(comments), 200
 
 
-@app.route('/video/<int:video_id>/posture/upload', methods=['POST']) 
+@app.route('/video/<int:video_id>/posture/upload', methods=['POST'])
 def upload_posture_video(video_id):
+    if 'video_file' not in request.files:
+        return jsonify({"error": "영상 파일이 없습니다."}), 400
+
     user_id = request.form.get("user_id")
-    file = request.files.get("video_file")
-    if not file:
-        return jsonify({"error": "파일이 없습니다."}), 400
+    file = request.files["video_file"]
 
-    filename = secure_filename(file.filename)
-    video_path = os.path.join(UPLOAD_FOLDER, filename)
-    file.save(video_path)
+    if not user_id:
+        return jsonify({"error": "사용자 ID가 없습니다."}), 400
+    if file.filename == '':
+        return jsonify({"error": "선택된 파일이 없습니다."}), 400
 
-    frames = read_video_to_frames(video_path)
+    # --- S3 업로드 로직 (최종 완성본과 동일) ---
+    original_filename = secure_filename(file.filename)
+    original_s3_key = f"posture_originals/{user_id}_{video_id}_{uuid.uuid4().hex}_{original_filename}"
+    
+    original_s3_url = upload_fileobj_to_s3(file.stream, original_s3_key)
+    if not original_s3_url:
+        return jsonify({"error": "원본 영상을 S3에 업로드하지 못했습니다."}), 500
 
+    # --- AI 분석 로직 (최종 완성본과 동일) ---
+    try:
+        frames = read_video_to_frames(original_s3_url)
+        if not frames:
+            return jsonify({"error": "영상에서 프레임을 읽을 수 없습니다."}), 400
+    except Exception as e:
+        return jsonify({"error": f"영상 처리 중 오류 발생: {str(e)}"}), 500
+        
     with get_connection().cursor() as cursor:
         cursor.execute("SELECT model_path, num_conditions FROM PostureModel WHERE video_id = %s", (video_id,))
         model_row = cursor.fetchone()
         if not model_row:
-            return jsonify({"error": "모델 정보가 없습니다."}), 400
-
+            return jsonify({"error": "해당 영상에 대한 분석 모델이 없습니다."}), 404
     model_path = model_row["model_path"]
     num_conditions = model_row["num_conditions"]
 
@@ -381,41 +415,39 @@ def upload_posture_video(video_id):
     eval_result = eval_output["results"]
     annotated_frames = eval_output.get("annotated_frames", frames)
 
-    output_filename = f"{user_id}_{video_id}_result.mp4"
-    output_path = os.path.join(UPLOAD_FOLDER, output_filename)
-    save_success = save_result_video(annotated_frames, output_path)
-    if not save_success:
-        return jsonify({"error": "결과 영상 저장 실패"}), 500
+    # --- 결과 영상 S3 업로드 (최종 완성본과 동일) ---
+    output_filename = f"{user_id}_{video_id}_{uuid.uuid4().hex}_result.mp4"
+    
+    result_video_bytes = save_result_video(annotated_frames)
+    if not result_video_bytes:
+        return jsonify({"error": "결과 영상 생성에 실패했습니다."}), 500
 
+    result_s3_key = f"posture_results/{output_filename}"
+    result_s3_url = upload_fileobj_to_s3(io.BytesIO(result_video_bytes), result_s3_key)
+    if not result_s3_url:
+        return jsonify({"error": "결과 영상을 S3에 업로드하지 못했습니다."}), 500
+
+    # --- 결과 텍스트 생성 및 DB 저장 (최종 완성본과 동일) ---
     with get_connection().cursor() as cursor:
         cursor.execute("SELECT condition_index, description FROM PostureCondition WHERE video_id = %s", (video_id,))
         condition_map = {row['condition_index']: row['description'] for row in cursor.fetchall()}
-
     result_lines = []
     for r in eval_result:
-        cond = r['condition']
-        score = r['score']
-        passed = r['value']
+        cond, score, passed = r['condition'], r['score'], r['value']
         desc = condition_map.get(cond, f"조건 {cond}")
         emoji = "✅" if passed else "❌"
         result_lines.append(f"{emoji} {desc} (score: {score:.2f})")
-
     result_text = "\n".join(result_lines)
-
+    
     with get_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute("""
                 INSERT INTO PostureResult (user_id, video_id, result_text, image_url, result_video_url, saved_at)
                 VALUES (%s, %s, %s, %s, %s, NOW())
-            """, (
-                user_id,
-                video_id,
-                result_text,
-                video_path,
-                output_path
-            ))
+            """, (user_id, video_id, result_text, original_s3_url, result_s3_url))
             conn.commit()
 
+    # --- 미리보기 프레임 생성 및 최종 응답 (최종 완성본과 동일) ---
     sampled_frames = [annotated_frames[i] for i in range(0, len(annotated_frames), 30)][:10]
     preview_frames = [
         base64.b64encode(cv2.imencode(".jpg", f)[1]).decode() for f in sampled_frames
@@ -424,8 +456,8 @@ def upload_posture_video(video_id):
     return jsonify({
         "message": "분석 완료",
         "result_text": result_text,
-        "image_url": f"/{video_path}",  # ✅ 프론트에서 사용하는 key 이름
-        "result_video_url": f"/{output_path}",
+        "original_video_url": original_s3_url,
+        "result_video_url": result_s3_url,
         "preview_frames": preview_frames
     }), 200
 
