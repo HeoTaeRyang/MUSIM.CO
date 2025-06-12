@@ -89,7 +89,7 @@ const VideoAnalyze: React.FC = () => {
 
     } catch (err: any) {
       console.error(err);
-      setResultText(err.response?.data?.error || "분석에 실패했습니다. 다시 시도해주세요.");
+      setResultText(err.response?.data?.error || "아직 올바른 동작이 감지되지 않았어요. 가이드 영상을 보며 자세를 맞춰 다시 시도해 주세요!");
     }
   };
 
@@ -195,7 +195,7 @@ const VideoAnalyze: React.FC = () => {
       setShowPanel(false);
     } catch (err: any) {
       console.error(err);
-      setResultText(err.response?.data?.error || "분석에 실패했습니다. 다시 시도해주세요.");
+      setResultText(err.response?.data?.error || "아직 올바른 동작이 감지되지 않았어요. 가이드 영상을 보며 자세를 맞춰 다시 시도해 주세요!");
     }
    };
 
