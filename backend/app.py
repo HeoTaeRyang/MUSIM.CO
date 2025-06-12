@@ -445,7 +445,7 @@ def upload_posture_video(video_id):
         cond, score, passed = r['condition'], r['score'], r['value']
         desc = condition_map.get(cond, f"조건 {cond}")
         emoji = "✅" if passed else "❌"
-        result_lines.append(f"{emoji} {desc} (score: {score:.2f})")
+        result_lines.append(f"{emoji} {desc} (score: {score:.4f})")
     result_text = "\n".join(result_lines)
     
     with get_connection() as conn:
@@ -525,9 +525,9 @@ def analyze_posture(video_id):
             description = condition_map.get(idx, f"Condition {idx}")
             score = r.get('score', 0)
             if r.get('value', True):
-                result_lines.append(f"✅ {description} (score: {score:.2f})")
+                result_lines.append(f"✅ {description} (score: {score:.4f})")
             else:
-                result_lines.append(f"❌ {description} 이상 감지 (score: {score:.2f})")
+                result_lines.append(f"❌ {description} 이상 감지 (score: {score:.4f})")
 
         result_text = "\n".join(result_lines)
 
