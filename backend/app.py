@@ -14,6 +14,7 @@ import boto3
 from datetime import date
 import numpy as np
 
+from pathlib import Path
 from ai import daily
 from db import user, video, rank, comment
 from db.db import get_connection
@@ -23,6 +24,11 @@ from db.posture import save_posture_result
 from utils import is_valid_id, is_valid_password, is_valid_email
 from ai.condition import evaluate
 from utils import read_video_to_frames, save_result_video
+
+BASE_DIR = Path(__file__).resolve().parent
+
+def abs_model_path(rel_path: str) -> str:
+    return str(BASE_DIR / rel_path)
 
 app = Flask(__name__)
 
@@ -408,8 +414,11 @@ def upload_posture_video(video_id):
         model_row = cursor.fetchone()
         if not model_row:
             return jsonify({"error": "해당 영상에 대한 분석 모델이 없습니다."}), 404
-    model_path = model_row["model_path"]
+    model_path = abs_model_path(model_row["model_path"])  # 상대→절대
     num_conditions = model_row["num_conditions"]
+
+    if not os.path.exists(model_path):
+        return jsonify({"error": f"모델 파일이 없습니다: {model_path}"}), 500
 
     eval_output = evaluate(frames, model_path=model_path, num_conditions=num_conditions)
     eval_result = eval_output["results"]
@@ -489,8 +498,8 @@ def analyze_posture(video_id):
             result = cursor.fetchone()
             if not result:
                 return jsonify({"error": "모델 설정이 없습니다."}), 400
-            model_path = result['model_path']
-            num_conditions = result['num_conditions']
+            model_path = abs_model_path(result["model_path"])
+            num_conditions = result["num_conditions"]
 
         # AI 평가
         eval_output = evaluate(frames, model_path=model_path, num_conditions=num_conditions)
