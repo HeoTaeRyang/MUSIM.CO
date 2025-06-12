@@ -28,8 +28,6 @@ from utils import read_video_to_frames, save_result_video
 BASE_DIR = Path(__file__).resolve().parent
 
 def abs_model_path(rel_path: str) -> str:
-    """DB에 저장된 'ai/1/1.pth' 같은 상대경로를
-    backend 기준 절대경로로 변환해 준다."""
     return str(BASE_DIR / rel_path)
 
 app = Flask(__name__)
