@@ -70,20 +70,20 @@
   box-sizing: border-box;
 }
 
-/* "시작하기" 버튼 스타일 */
 .start-button {
   background-color: #007bff;
   color: white;
   border: none;
   border-radius: 12px;
-  width: 130px;
-  height: 40px;
-  font-size: 0.95em;
+  width: 83px;
+  height: 40px; /* Your existing height */
+  font-size: 1em;
   cursor: pointer;
   transition: background-color 0.3s ease;
   flex-shrink: 0;
-  margin-left: 0;
-  text-align: center;
+  text-align: center; /* Your existing horizontal centering */
+  /* Added for vertical centering */
+  line-height: 40px; /* Make line-height equal to height */
 }
 
 /* "시작하기" 버튼 호버 시 스타일 */

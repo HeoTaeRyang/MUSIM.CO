@@ -8,6 +8,7 @@ const Signup = () => {
   const [password_confirm, setPassword_confirm] = useState<string>("");
   const [username, setUsername] = useState<string>("");
   const [email, setEmail] = useState<string>("");
+  const [usertype, setUsertype] = useState<string>("personal");
 
   const [telPrefix, setTelPrefix] = useState<string>("");
   const [telMiddle, setTelMiddle] = useState<string>("");
@@ -23,10 +24,12 @@ const Signup = () => {
 
   const navigate = useNavigate();
 
-
-
   const handleUseridChange = (event: ChangeEvent<HTMLInputElement>) => {
     setUserid(event.target.value);
+  };
+
+  const handleUsertypeChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setUsertype(event.target.value);
   };
 
   const handlePasswordChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -112,6 +115,7 @@ const Signup = () => {
       email: email,
       addr_detail: addr_detail,
       tel: tel,
+      usertype: usertype,
     };
 
     console.log("회원가입 정보 (백엔드로 전송될 데이터):", formData);
@@ -149,13 +153,50 @@ const Signup = () => {
   return (
     <div className="signup-frame">
       <div className="signup-title">회원가입</div> {/* style 제거 */}
+      <div className="align-left">회원인증</div>
+      <hr />
       <table>
         <tbody>
           <tr>
-            <td></td>
+            <td>
+              {/* member-type-label의 padding 제거, member-type-option 클래스 추가 */}
+              <div className="label member-type-label">
+                <span className="required">*</span>
+                <span>회원구분</span>
+                {/* 비어있는 label 제거 */}
+                <label className="member-type-option">
+                  <input
+                    type="radio"
+                    value="personal"
+                    checked={usertype === "personal"}
+                    onChange={handleUsertypeChange}
+                  />
+                  개인 회원
+                </label>
+                <label className="member-type-option">
+                  <input
+                    type="radio"
+                    value="instructor"
+                    checked={usertype === "instructor"}
+                    onChange={handleUsertypeChange}
+                  />
+                  강사
+                </label>
+                <label className="member-type-option">
+                  <input
+                    type="radio"
+                    value="business"
+                    checked={usertype === "business"}
+                    onChange={handleUsertypeChange}
+                  />
+                  사업자
+                </label>
+              </div>
+            </td>
           </tr>
         </tbody>
       </table>
+      <hr />
       <div className="align-left basic-info-title">기본정보</div>
       <div className="required-info-text-right">
         <span className="required">*</span>
@@ -170,15 +211,11 @@ const Signup = () => {
           <tr>
             <td>
               <div className="label id-label">
-                {" "}
-                {/* width 제거 */}
                 <span className="required">*</span>
                 <span>아이디</span>
               </div>
             </td>
             <td>
-              {" "}
-              {/* width 제거 */}
               <div className="input-box id-input">
                 <input
                   type="text"
@@ -198,14 +235,12 @@ const Signup = () => {
           <tr>
             <td>
               <div className="label password-label">
-                {" "}
                 {/* width 제거 */}
                 <span className="required">*</span>
                 <span>비밀번호</span>
               </div>
             </td>
             <td>
-              {" "}
               {/* width 제거 */}
               <div className="input-box password-input">
                 <input
@@ -227,7 +262,6 @@ const Signup = () => {
         <tbody>
           <tr>
             <td>
-              {" "}
               {/* width 제거 */}
               <div className="label confirm-password-label">
                 <span className="required">*</span>
@@ -235,7 +269,6 @@ const Signup = () => {
               </div>
             </td>
             <td>
-              {" "}
               {/* width 제거 */}
               <div className="input-box confirm-password-input">
                 <input
@@ -255,14 +288,12 @@ const Signup = () => {
           <tr>
             <td>
               <div className="label name-label">
-                {" "}
                 {/* width 제거 */}
                 <span className="required">*</span>
                 <span>이름</span>
               </div>
             </td>
             <td>
-              {" "}
               {/* width 제거 */}
               <div className="input-box name-input">
                 <input
@@ -282,14 +313,12 @@ const Signup = () => {
           <tr>
             <td>
               <div className="label address-label">
-                {" "}
                 {/* width 제거 */}
                 <span className="required">*</span>
                 <span>주소</span>
               </div>
             </td>
             <td>
-              {" "}
               {/* width 제거 */}
               <div className="input-row">
                 <div className="input-box zipcode-input">

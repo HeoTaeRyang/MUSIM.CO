@@ -7,6 +7,8 @@ import { MdOutlineFileUpload, MdPhotoCamera } from "react-icons/md";
 import axios from "axios";
 import classNames from "classnames";
 
+// [배포용 설정] 
+// 모든 API 요청이 실제 운영 서버를 향하도록 baseURL을 고정합니다.
 axios.defaults.baseURL = "https://web-production-6e732.up.railway.app";
 
 
@@ -20,7 +22,6 @@ const VideoAnalyze: React.FC = () => {
   const [resultText, setResultText] = useState<string>("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
@@ -28,30 +29,29 @@ const VideoAnalyze: React.FC = () => {
   const isRecordingRef = useRef(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [thumbnails, setThumbnails] = useState<string[]>([]);
-  const [previewFrames, setPreviewFrames] = useState<string[]>([]);  //추가
-  const [currentIndex, setCurrentIndex] = useState(0);  // 추가
-
-
+  
+  const [previewFrames, setPreviewFrames] = useState<string[]>([]);
+  const [analyzedVideoUrl, setAnalyzedVideoUrl] = useState<string | null>(null);
+  const [currentFrameIndex, setCurrentFrameIndex] = useState(0);
 
   useEffect(() => {
     if (!userId || !id) return;
     axios.get(`/video/${id}/posture/result`, { params: { user_id: userId } })
       .then((res) => {
-        if (res.data) {
-          setUploadedUrl(res.data.result_video_url || res.data.image_url);
-          setResultText(res.data.result_text || "정확한 평가를 위해 가이드 영상처럼 따라 해보세요!");
-          setPreviewFrames(res.data.preview_frames || []); //추가
+        if (res.data && res.data.result_text) {
+          setUploadedUrl(res.data.original_video_url || res.data.image_url);
+          setResultText(res.data.result_text);
+          setPreviewFrames(res.data.preview_frames || []);
+          setAnalyzedVideoUrl(res.data.result_video_url);
           setShowPanel(false);
         }
       }).catch(() => { });
   }, [id, userId]);
 
-  //추가: 프레임 이미지 자동 전환 타이머 
   useEffect(() => {
     if (previewFrames.length === 0) return;
     const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % previewFrames.length);
+      setCurrentFrameIndex((prev) => (prev + 1) % previewFrames.length);
     }, 1000);
     return () => clearInterval(timer);
   }, [previewFrames]);
@@ -60,15 +60,15 @@ const VideoAnalyze: React.FC = () => {
     setUploadedUrl(null);
     setResultText("");
     setRecordedBlob(null);
-    setThumbnails([]);
-
+    setPreviewFrames([]);
+    setAnalyzedVideoUrl(null);
     if (inputRef.current) inputRef.current.value = "";
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !userId || !id) return;
-
+    
     const preview = URL.createObjectURL(file);
     setUploadedUrl(preview);
     setResultText("분석 중입니다...");
@@ -82,17 +82,14 @@ const VideoAnalyze: React.FC = () => {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      const resultText = up.data.result_text || "정확한 평가를 위해 가이드 영상처럼 따라 해보세요!";
-      const resultVideoUrl = up.data.result_video_url;
+      setResultText(up.data.result_text || "분석 결과를 받아오지 못했습니다.");
+      setAnalyzedVideoUrl(up.data.result_video_url);
+      setPreviewFrames(up.data.preview_frames || []);
+      setShowPanel(false);
 
-      if (resultVideoUrl) {
-        setUploadedUrl(resultVideoUrl);
-      }
-
-      setResultText(resultText);
     } catch (err: any) {
       console.error(err);
-      setResultText(err.response?.data?.error || "분석 실패!");
+      setResultText(err.response?.data?.error || "아직 올바른 동작이 감지되지 않았어요. 가이드 영상을 보며 자세를 맞춰 다시 시도해 주세요!");
     }
   };
 
@@ -120,21 +117,12 @@ const VideoAnalyze: React.FC = () => {
 
       await videoEl.play();
 
-
       setTimeout(() => {
         if (webcamPreviewRef.current) {
           webcamPreviewRef.current.innerHTML = "";
           webcamPreviewRef.current.appendChild(canvas);
-          console.log("✅ canvas appended to webcamPreviewRef");
-        } else {
-          console.warn("⚠️ webcamPreviewRef.current is null");
         }
       }, 100);
-
-      //  웹캠 로그 찍기
-      console.log("✅ stream tracks:", stream.getTracks());
-      console.log("✅ videoEl.readyState:", videoEl.readyState);
-      console.log("✅ webcamPreviewRef.current:", webcamPreviewRef.current);
 
       const drawFrame = () => {
         ctx.drawImage(videoEl, 0, 0, width, height);
@@ -145,8 +133,10 @@ const VideoAnalyze: React.FC = () => {
 
       const canvasStream = canvas.captureStream();
       const audioTrack = stream.getAudioTracks()[0];
-      canvasStream.addTrack(audioTrack);
-
+      if (audioTrack) {
+        canvasStream.addTrack(audioTrack);
+      }
+      
       const recorder = new MediaRecorder(canvasStream);
       const chunks: Blob[] = [];
 
@@ -163,14 +153,9 @@ const VideoAnalyze: React.FC = () => {
         stream.getTracks().forEach((track) => track.stop());
       };
 
-      //  canvas 삽입 직후 로그
       if (webcamPreviewRef.current) {
         webcamPreviewRef.current.innerHTML = "";
         webcamPreviewRef.current.appendChild(canvas);
-
-        console.log("anvas appended to webcamPreviewRef");
-      } else {
-        console.warn("webcamPreviewRef.current is null");
       }
 
       setMediaRecorder(recorder);
@@ -184,46 +169,35 @@ const VideoAnalyze: React.FC = () => {
     }
   };
 
-
-
   const handleStopRecording = () => {
-    mediaRecorder?.stop();
-
-    // 캔버스 제거
+    if (mediaRecorder) {
+      mediaRecorder.stop();
+    }
     if (webcamPreviewRef.current) {
       webcamPreviewRef.current.innerHTML = "";
-      console.log(" 캔버스 제거 완료");
     }
   };
 
-
   const handleUploadRecorded = async () => {
-    if (!recordedBlob || !userId || !id) return;
+     if (!recordedBlob || !userId || !id) return;
     setResultText("분석 중입니다...");
-
     const formData = new FormData();
     formData.append("video_file", recordedBlob, "recorded_video.webm");
     formData.append("user_id", userId);
-
     try {
       const up = await axios.post(`/video/${id}/posture/upload`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-
-      const resultText = up.data.result_text || "정확한 평가를 위해 가이드 영상처럼 따라 해보세요!";
-      const resultVideoUrl = up.data.result_video_url;
-
-      if (resultVideoUrl) {
-        setUploadedUrl(resultVideoUrl);
-        setRecordedBlob(null);
-      }
-
-      setResultText(resultText);
+      setResultText(up.data.result_text || "분석 결과를 받아오지 못했습니다.");
+      setAnalyzedVideoUrl(up.data.result_video_url);
+      setPreviewFrames(up.data.preview_frames || []);
+      setRecordedBlob(null);
+      setShowPanel(false);
     } catch (err: any) {
       console.error(err);
-      setResultText(err.response?.data?.error || "분석 실패!");
+      setResultText(err.response?.data?.error || "아직 올바른 동작이 감지되지 않았어요. 가이드 영상을 보며 자세를 맞춰 다시 시도해 주세요!");
     }
-  };
+   };
 
   const handleSave = async () => {
     if (!uploadedUrl || !resultText || !userId || !id) {
@@ -234,10 +208,10 @@ const VideoAnalyze: React.FC = () => {
       await axios.post(`/video/${id}/posture/save`, {
         user_id: userId,
         result_text: resultText,
-        image_url: uploadedUrl,
+        image_url: uploadedUrl, 
+        result_video_url: analyzedVideoUrl,
       });
       alert("분석 결과가 저장되었습니다.");
-      setShowPanel(false);
     } catch (err) {
       console.error(err);
       alert("저장에 실패했습니다.");
@@ -277,20 +251,22 @@ const VideoAnalyze: React.FC = () => {
               ) : isRecording ? (
                 <div className="recording-preview">
                   <p>녹화 중...</p>
-                  <div ref={webcamPreviewRef} className="webcam-live-preview" /> {/* canvas가 여기 들어감 */}
+                  <div ref={webcamPreviewRef} className="webcam-live-preview" />
                   <button className="btn stop-btn" onClick={handleStopRecording}>녹화 중지</button>
                 </div>
               ) : (
                 <div className="preview-wrapper">
-                  <video ref={videoRef} src={uploadedUrl || undefined} className="uploaded-video" controls preload="metadata" />
-                  <div className="thumbnail-strip">
-                    {thumbnails.map((thumb, idx) => (
-                      <img key={idx} src={thumb} alt={`thumb-${idx}`} className="thumbnail-image" />
-                    ))}
-                  </div>
+                  <video ref={videoRef} src={uploadedUrl || undefined} className="uploaded-video" controls preload="metadata" crossOrigin="anonymous" />
+                  
+                  {/* 썸네일 표시 로직을 완전히 제거했습니다. */}
+
                   <div className="result-buttons">
-                    <button className="btn save-btn" onClick={handleUploadRecorded}>영상 업로드하기</button>
-                    <button className="btn reset-btn" onClick={handleReset}>다시 촬영하기</button>
+                    {recordedBlob ? (
+                      <button className="btn save-btn" onClick={handleUploadRecorded}>녹화 영상으로 분석하기</button>
+                    ) : (
+                      <></>
+                    )}
+                    <button className="btn reset-btn" onClick={handleReset}>다시 선택/촬영</button>
                   </div>
                 </div>
               )}
@@ -307,15 +283,16 @@ const VideoAnalyze: React.FC = () => {
           </div>
         ) : (
           <div className="analysis-result-below">
-            <h3>결과</h3>
-            <p>{resultText}</p>
-            {/*추가: 결과 프레임 이미지 출력 */}
+            <h3>분석 결과</h3>
+            <pre className="analysis-result-text">{resultText}</pre>
+            
             {previewFrames.length > 0 && (
-              <div className="preview-frame-result">
+              <div className="preview-frame-container">
+                <h4>분석 프레임</h4>
                 <img
-                  src={`data:image/jpeg;base64,${previewFrames[currentIndex]}`}
-                  alt="분석 프레임"
-                  style={{ width: "100%", maxWidth: "600px", borderRadius: "12px" }}
+                  src={`data:image/jpeg;base64,${previewFrames[currentFrameIndex]}`}
+                  alt={`분석 프레임 ${currentFrameIndex + 1}`}
+                  className="analyzed-frame-image"
                 />
               </div>
             )}
