@@ -1,0 +1,51 @@
+/* src/styles/DailyMissionSelect.css */
+
+.select-mission-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #f8faff;
+}
+
+.select-mission-title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: #222;
+}
+
+.select-mission-subtitle {
+    font-size: 1.2rem;
+    color: #555;
+    margin-bottom: 2rem;
+}
+
+.select-mission-button-group {
+    display: flex;
+    gap: 2rem;
+}
+
+.select-mission-button {
+    padding: 1rem 2rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    color: white;
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.select-situp-button {
+    background-color: #5a95d4;
+}
+
+.select-legraise-button {
+    background-color: #0b2244;
+}
+
+.select-mission-button:hover {
+    transform: scale(1.05);
+}
