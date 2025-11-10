@@ -1,6 +1,6 @@
 // src/components/DailyMissionVideo.tsx
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { useParams, useLocation, useNavigate } from "react-router-dom"; // useNavigate import 추가
+import { useLocation, useNavigate } from "react-router-dom"; // useNavigate import 추가
 import "../styles/DailyMissionVideo.css";
 import axios from "axios";
 import flameIcon from "../assets/flame.png";
@@ -8,8 +8,8 @@ import flameIcon from "../assets/flame.png";
 axios.defaults.baseURL = "https://web-production-6e732.up.railway.app";
 
 const DailyMissionVideo: React.FC = () => {
-  const { videoId } = useParams<{ videoId: string }>();
-  const id = Number(videoId);
+  //const { videoId } = useParams<{ videoId: string }>();
+  // const id = Number(videoId);  ❌ 제거
 
   const location = useLocation();
   const navigate = useNavigate(); // useNavigate 훅 사용
@@ -81,7 +81,7 @@ const DailyMissionVideo: React.FC = () => {
         "location.state에 데일리 미션 데이터가 없습니다. 데일리 미션 박스를 숨깁니다."
       );
     }
-  }, [id, userId, location.state]);
+  }, [userId, location.state]); // ✅ 여기서 id 삭제
 
   const captureFrameAndSend = useCallback(async () => {
     if (videoRef.current && canvasRef.current && !isAnalyzing.current) {
@@ -258,8 +258,8 @@ const DailyMissionVideo: React.FC = () => {
                       {currentStatus === 1
                         ? "몸 굽힘"
                         : currentStatus === 0
-                        ? "몸 폄"
-                        : "측정 대기 중..."
+                          ? "몸 폄"
+                          : "측정 대기 중..."
                       }
                     </p>
                     <p>운동 횟수: {currentCount}회</p>

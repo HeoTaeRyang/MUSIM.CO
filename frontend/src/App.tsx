@@ -18,7 +18,8 @@ import MyPage from "./components/mypage";
 import Ranking from "./components/HomePart/Ranking";
 import DailyMissionVideo from "./components/DailyMissionVideo";
 import "./App.css";
-
+import DailyMissionSelect from "./components/DailyMissionSelect"; // 미션선택 추가
+import DailyMissionLeg from "./components/DailyMissionLeg"; // 레그레이즈 페이지 추가
 
 function App() {
   // 메시지를 위한 상태
@@ -111,7 +112,9 @@ function App() {
               <Route path="/video/:videoId/purchase" element={<VideoPurchase />} />
               <Route path="/mypage" element={<MyPage />} />
               <Route path="/ranking" element={<Ranking />} />
-              <Route path="/dailymissionvideo/:videoId" element={<DailyMissionVideo />} />
+              <Route path="/daily-mission/select" element={<DailyMissionSelect />} />
+              <Route path="/daily-mission/video" element={<DailyMissionVideo />} />
+              <Route path="/daily-mission/leg" element={<DailyMissionLeg />} />
             </Route>
           </Routes>
         </div>
