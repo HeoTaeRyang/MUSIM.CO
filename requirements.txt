@@ -57,3 +57,4 @@ python-dotenv
 boto3
 imageio
 imageio-ffmpeg
+cryptography
