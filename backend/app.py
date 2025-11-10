@@ -90,10 +90,14 @@ user_states = {}
 @app.route('/api/analyze_frame', methods=['POST'])
 def analyze_frame():
     data = request.json
-    if not data or 'image' not in data or 'user_id' not in data:
-        return jsonify({'error': '이미지 또는 사용자 데이터가 없습니다.'}), 400
+    if not data or 'image' not in data or 'user_id' not in data or 'type' not in data:
+        return jsonify({'error': '이미지, 사용자 또는 운동 종류 데이터가 없습니다.'}), 400
     
     user_id = data['user_id']
+    type = data['type']
+
+    if type not in ['crunch', 'leg_raise']:
+        return jsonify({'error': '지원하지 않는 운동 종류 입니다.'}), 400
     
     # 이미지 디코딩
     image_b64 = data['image']
@@ -116,15 +120,18 @@ def analyze_frame():
     if angle is None:
         return jsonify({"error": "포즈 인식 실패"}), 200
     
+    # 사용자 id + 운동 종류 key 생성
+    key = f"{user_id}_{type}"
+
     # 사용자 상태 초기화
-    if user_id not in user_states:
-        user_states[user_id] = {
+    if key not in user_states:
+        user_states[key] = {
             'prev_status': 0,
             'ready_to_count': True,
             'count': 0
         }
         
-    state = user_states[user_id]
+    state = user_states[key]
     
     if angle <= 120:
         status = 1  # 몸 굽힌 상태
@@ -142,35 +149,42 @@ def analyze_frame():
         
     state['prev_status'] = status
     
-    return jsonify({'angle': angle, 'status': status, 'count': state['count']}), 200
+    return jsonify({'angle': angle, 'status': status, 'count': state['count'], 'exercise': type}), 200
 
 # 데일리미션 보상
 @app.route('/daily_mission/reward', methods=['POST'])
 def daily_mission_reward():
     data = request.json
     user_id = data.get('user_id')
+    type = data.get('type')
     
-    if not user_id:
-        return jsonify({'error': 'user_id가 없습니다.'}), 400
+    if not user_id or not type:
+        return jsonify({'error': 'user_id 또는 운동 종류 데이터가 없습니다.'}), 400
     
-    if user_id not in user_states:
-        return jsonify({'error': '미션 기록이 없습니다.'}), 400
+    if type not in ['crunch', 'leg_raise']:
+        return jsonify({'error': '지원하지 않는 운동 종류 입니다.'}), 400    
+
+    key = f"{user_id}_{type}"
+
+    if key not in user_states:
+        return jsonify({'error': f'{type} 미션 기록이 없습니다.'}), 400
 
     today = date.today().isoformat()
 
-    if user.daily_mission_exists(user_id, today):
-        return jsonify({'error': '오늘은 이미 보상을 받았습니다.'}), 400
+    if user.daily_mission_exists(user_id, today, type):
+        return jsonify({'error': '오늘은 이미 해당 미션의 보상을 받았습니다.'}), 400
     
-    count = user_states[user_id]['count']
-    success = count >= 5
+    count = user_states[key]['count']
+    mission_goal = 5
+    success = count >= mission_goal
     
     if success:    
-        user.save_daily_mission(user_id, today)
+        user.save_daily_mission(user_id, today, type)
         user.add_point(user_id)
-        del user_states[user_id]
-        return jsonify({'success': True}), 200
+        del user_states[key]
+        return jsonify({'success': True, 'type': type}), 200
     else:
-        return jsonify({'error': '미션 목표를 달성하지 못했습니다.'}), 400    
+        return jsonify({'error': f'미션 목표({mission_goal}회)를 달성하지 못했습니다.'}), 400    
     
 @app.route('/attendance/month', methods=['POST'])
 def attendance_month():
