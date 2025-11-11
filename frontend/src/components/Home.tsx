@@ -1,32 +1,26 @@
+// src/pages/Home.tsx
 import { useState, useEffect, useCallback } from "react";
 import "../styles/Home.css";
 import MainCalendar from "./HomePart/MainCalendar";
 import Ranking from "./HomePart/Ranking";
 import DailyMission from "./HomePart/DailyMission";
-// import axios from 'axios'; // axios 임포트 주석 처리 (기존과 동일)
-
-// axios.defaults.baseURL = "/"; // axios 기본 URL 설정 주석 처리 (기존과 동일)
 
 const Home = () => {
   const [username, setUsername] = useState("사용자");
   const [userId, setUserId] = useState<string | null>(null);
 
-  
-  const dailyMissionVideoId: string = "1";
+  // ✅ 여러 미션 목록 정의
+  const missions = [
+    { name: "윗몸일으키기", targetCount: 5, videoId: "1" },
+    { name: "레그레이즈", targetCount: 8, videoId: "2" },
+  ];
 
-  const dailyMissionName = "윗몸일으키기";
-  const targetDailyMissionCount = 5;
+  const [missionIndex, setMissionIndex] = useState(0);
+  const currentMission = missions[missionIndex];
 
-  // **** LOCAL STORAGE 관련 코드 시작 ****
   const getInitialDailyMissionCount = useCallback(() => {
     const storedUserId = localStorage.getItem("user_id");
-    if (
-      !storedUserId ||
-      typeof storedUserId !== "string" ||
-      storedUserId.trim() === ""
-    ) {
-      return 0;
-    }
+    if (!storedUserId) return 0;
     const storedCount = localStorage.getItem(
       `dailyMissionCount_${storedUserId}`
     );
@@ -41,7 +35,6 @@ const Home = () => {
   useEffect(() => {
     setCurrentDailyMissionCount(getInitialDailyMissionCount());
   }, [userId, getInitialDailyMissionCount]);
-  // **** LOCAL STORAGE 관련 코드 끝 ****
 
   useEffect(() => {
     const storedUsername = localStorage.getItem("username");
@@ -50,6 +43,14 @@ const Home = () => {
     if (storedUserId) setUserId(storedUserId);
   }, []);
 
+  // ✅ 미션 전환 함수
+  const handlePrevMission = () => {
+    setMissionIndex((prev) => (prev === 0 ? missions.length - 1 : prev - 1));
+  };
+
+  const handleNextMission = () => {
+    setMissionIndex((prev) => (prev === missions.length - 1 ? 0 : prev + 1));
+  };
 
   return (
     <div className="dashboard">
@@ -64,12 +65,23 @@ const Home = () => {
           <Ranking />
         </div>
 
-        <DailyMission
-          missionName={dailyMissionName}
-          currentCount={currentDailyMissionCount}
-          targetCount={targetDailyMissionCount}
-          videoId={dailyMissionVideoId}
-        />
+        {/* ✅ 미션 이름 좌우 화살표 */}
+        <div className="daily-mission-wrapper">
+          <button className="arrow left-arrow" onClick={handlePrevMission}>
+            ◀
+          </button>
+
+          <DailyMission
+            missionName={currentMission.name}
+            currentCount={currentDailyMissionCount}
+            targetCount={currentMission.targetCount}
+            videoId={currentMission.videoId}
+          />
+
+          <button className="arrow right-arrow" onClick={handleNextMission}>
+            ▶
+          </button>
+        </div>
 
         <div className="right-panel">
           {userId && <MainCalendar userId={userId} />}

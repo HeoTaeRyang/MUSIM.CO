@@ -49,7 +49,6 @@ const DailyMission: React.FC<DailyMissionProps> = ({
     navigate("/daily-mission/select");
   };
 
-
   const handleReward = async () => {
     const userId = localStorage.getItem("user_id");
     const isMissionCompleted = currentCount >= targetCount;
@@ -96,7 +95,8 @@ const DailyMission: React.FC<DailyMissionProps> = ({
         );
       } else {
         setRewardMessage(
-          `보상 중 오류 발생: ${error instanceof Error ? error.message : String(error)
+          `보상 중 오류 발생: ${
+            error instanceof Error ? error.message : String(error)
           }`
         );
       }
@@ -109,16 +109,13 @@ const DailyMission: React.FC<DailyMissionProps> = ({
     <div className="daily-mission-container">
       {/* 상단 카드: 데일리 미션 시작 */}     {" "}
       <div className="daily-mission-card top-card">
-        <img src={flameIcon} alt="Flame" className="flame-icon" />
-        {" "}
+        <img src={flameIcon} alt="Flame" className="flame-icon" />{" "}
         <div className="daily-mission-right-content">
           <div className="mission-title">데일리미션</div>         {" "}
           <button className="start-button" onClick={handleStartMission}>
             시작하기          {" "}
-          </button>
-          {" "}
-        </div>
-        {" "}
+          </button>{" "}
+        </div>{" "}
       </div>
       {/* 하단 카드: 운동 미션 진행 상황 */}     {" "}
       <div className="daily-mission-card bottom-card">
@@ -129,17 +126,16 @@ const DailyMission: React.FC<DailyMissionProps> = ({
         {/* 보상받기 버튼: 항상 표시, 조건부 활성화/스타일 */}
         <button
           // 50개 미만일 때, 또는 보상 처리 중일 때 비활성화
-          className={`reward-button ${currentCount >= targetCount ? "active" : "inactive"
-            }`}
+          className={`reward-button ${
+            currentCount >= targetCount ? "active" : "inactive"
+          }`}
           onClick={handleReward}
           disabled={!(currentCount >= targetCount) || isProcessingReward}
         >
           보상받기
         </button>
-        {rewardMessage && <p className="reward-message">{rewardMessage}</p>}
-        {" "}
-      </div>
-      {" "}
+        {rewardMessage && <p className="reward-message">{rewardMessage}</p>}{" "}
+      </div>{" "}
     </div>
   );
 };
