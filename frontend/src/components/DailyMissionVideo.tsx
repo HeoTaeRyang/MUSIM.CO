@@ -104,6 +104,7 @@ const DailyMissionVideo: React.FC = () => {
           const response = await axios.post("/api/analyze_frame", {
             image: imageData,
             user_id: userId,
+            type: "crunch",
           });
 
           const { angle, status, count } = response.data;
