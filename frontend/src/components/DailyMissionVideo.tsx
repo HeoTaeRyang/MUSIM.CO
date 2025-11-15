@@ -7,9 +7,6 @@ import flameIcon from "../assets/flame.png";
 
 axios.defaults.baseURL = "https://web-production-6e732.up.railway.app";
 
-const EXERCISE_TYPE = "crunch"; 
-const LS_COUNT_KEY = `dailyMissionCount_${EXERCISE_TYPE}`;
-
 const DailyMissionVideo: React.FC = () => {
   //const { videoId } = useParams<{ videoId: string }>();
   // const id = Number(videoId);  ❌ 제거
@@ -30,7 +27,7 @@ const DailyMissionVideo: React.FC = () => {
     if (!userId || typeof userId !== "string" || userId.trim() === "") {
       return 0;
     }
-    const storedCount = localStorage.getItem(`${LS_COUNT_KEY}_${userId}`);
+    const storedCount = localStorage.getItem(`dailyMissionCount_${userId}`);
     const parsedCount = storedCount ? parseInt(storedCount, 10) : 0;
     return isNaN(parsedCount) ? 0 : parsedCount;
   }, [userId]);
@@ -42,7 +39,7 @@ const DailyMissionVideo: React.FC = () => {
   useEffect(() => {
     if (userId && typeof userId === "string" && userId.trim() !== "") {
       localStorage.setItem(
-        `${LS_COUNT_KEY}_${userId}`,
+        `dailyMissionCount_${userId}`,
         currentCount.toString()
       );
     }
@@ -107,7 +104,7 @@ const DailyMissionVideo: React.FC = () => {
           const response = await axios.post("/api/analyze_frame", {
             image: imageData,
             user_id: userId,
-            type: EXERCISE_TYPE,
+            type: "crunch",
           });
 
           const { angle, status, count } = response.data;

@@ -90,12 +90,10 @@ user_states = {}
 @app.route('/api/analyze_frame', methods=['POST'])
 def analyze_frame():
     data = request.json
-    if not data or 'image' not in data or 'user_id' not in data or 'type' not in data:
-        return jsonify({'error': '이미지, 사용자 또는 운동 타입 데이터가 없습니다.'}), 400
+    if not data or 'image' not in data or 'user_id' not in data:
+        return jsonify({'error': '이미지 또는 사용자 데이터가 없습니다.'}), 400
     
     user_id = data['user_id']
-    exercise_type = data['type']
-    state_key = (user_id, exercise_type)
     
     # 이미지 디코딩
     image_b64 = data['image']
@@ -113,23 +111,20 @@ def analyze_frame():
         return jsonify({"error": "이미지 디코딩 실패"}), 400
 
     # 각도 측정
-    if exercise_type == 'crunch' or exercise_type == 'leg_raise':
-        angle = daily.get_crunch_angle_from_frame(frame)
-    else:
-        return jsonify({"error": "유효하지 않은 운동 타입입니다."}), 400
-
+    angle = daily.get_crunch_angle_from_frame(frame)
+    
     if angle is None:
         return jsonify({"error": "포즈 인식 실패"}), 200
     
     # 사용자 상태 초기화
-    if state_key not in user_states:
-        user_states[state_key] = {
+    if user_id not in user_states:
+        user_states[user_id] = {
             'prev_status': 0,
             'ready_to_count': True,
             'count': 0
         }
         
-    state = user_states[state_key]
+    state = user_states[user_id]
     
     if angle <= 120:
         status = 1  # 몸 굽힌 상태
@@ -154,34 +149,120 @@ def analyze_frame():
 def daily_mission_reward():
     data = request.json
     user_id = data.get('user_id')
-    exercise_type = data.get('type')
     
-    if not user_id or exercise_type:
-        return jsonify({'error': 'user_id 또는 운동 타입이 없습니다.'}), 400
+    if not user_id:
+        return jsonify({'error': 'user_id가 없습니다.'}), 400
     
-    state_key = (user_id, exercise_type)
-
-    if state_key not in user_states:
-        return jsonify({'error': '해당 미션 기록이 없습니다.'}), 400
+    if user_id not in user_states:
+        return jsonify({'error': '미션 기록이 없습니다.'}), 400
 
     today = date.today().isoformat()
 
-    if user.daily_mission_exists(user_id, today, exercise_type):
-        return jsonify({'error': f'오늘은 이미 {exercise_type} 미션 보상을 받았습니다.'}), 400
+    if user.daily_mission_exists(user_id, today, type="crunch"):
+        return jsonify({'error': '오늘은 이미 보상을 받았습니다.'}), 400
     
-    count = user_states[state_key]['count']
-    if exercise_type == 'crunch':
-        success = count >= 5
-    elif exercise_type == 'leg_raise':
-        success = count >= 8
+    count = user_states[user_id]['count']
+    success = count >= 5
     
     if success:    
-        user.save_daily_mission(user_id, today, exercise_type)
+        user.save_daily_mission(user_id, today, type="crunch")
         user.add_point(user_id)
-        del user_states[state_key]
+        del user_states[user_id]
         return jsonify({'success': True}), 200
     else:
-        return jsonify({'error': '미션 목표를 달성하지 못했습니다.'}), 400      
+        return jsonify({'error': '미션 목표를 달성하지 못했습니다.'}), 400
+
+### 레그레이즈 추가 ###
+
+user_states_leg = {}
+
+# frame 분석
+@app.route('/api/analyze_frame/leg_raise', methods=['POST'])
+def analyze_leg_raise():
+    data = request.json
+    if not data or 'image' not in data or 'user_id' not in data:
+        return jsonify({'error': '이미지 또는 사용자 데이터가 없습니다.'}), 400
+    
+    user_id = data['user_id']
+    
+    # 이미지 디코딩
+    image_b64 = data['image']
+    if ',' in image_b64:
+        image_b64 = image_b64.split(',')[1]
+    
+    try:
+        image_bytes = base64.b64decode(image_b64)
+        np_arr = np.frombuffer(image_bytes, np.uint8)
+        frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+    except Exception as e:
+        return jsonify({"error": f"이미지 디코딩 실패: {str(e)}"}), 400
+
+    if frame is None:
+        return jsonify({"error": "이미지 디코딩 실패"}), 400
+
+    # 각도 측정
+    angle = daily.get_crunch_angle_from_frame(frame)
+    
+    if angle is None:
+        return jsonify({"error": "포즈 인식 실패"}), 200
+    
+    # 사용자 상태 초기화
+    if user_id not in user_states_leg:
+        user_states_leg[user_id] = {
+            'prev_status': 0,
+            'ready_to_count': True,
+            'count': 0
+        }
+        
+    state = user_states_leg[user_id]
+    
+    if angle <= 120:
+        status = 1  # 몸 굽힌 상태
+    elif angle >= 150:
+        status = 0  # 몸 편 상태
+    else:
+        status = state['prev_status']  # 중간 상태에서는 이전 상태 유지
+        
+    if state['ready_to_count'] and state['prev_status'] == 0 and status == 1:
+        state['count'] += 1
+        state['ready_to_count'] = False
+    
+    if not state['ready_to_count'] and status == 0:
+        state['ready_to_count'] = True
+        
+    state['prev_status'] = status
+    
+    return jsonify({'angle': angle, 'status': status, 'count': state['count']}), 200
+
+# 데일리미션 보상
+@app.route('/daily_mission/reward/leg_raise', methods=['POST'])
+def daily_mission_leg_reward():
+    data = request.json
+    user_id = data.get('user_id')
+    
+    if not user_id:
+        return jsonify({'error': 'user_id가 없습니다.'}), 400
+    
+    if user_id not in user_states_leg:
+        return jsonify({'error': '미션 기록이 없습니다.'}), 400
+
+    today = date.today().isoformat()
+
+    if user.daily_mission_exists(user_id, today, type="leg_raise"):
+        return jsonify({'error': '오늘은 이미 보상을 받았습니다.'}), 400
+    
+    count = user_states_leg[user_id]['count']
+    success = count >= 8
+    
+    if success:    
+        user.save_daily_mission(user_id, today, type="leg_raise")
+        user.add_point(user_id)
+        del user_states_leg[user_id]
+        return jsonify({'success': True}), 200
+    else:
+        return jsonify({'error': '미션 목표를 달성하지 못했습니다.'}), 400
+    
+### 레그레이즈 추가 ###
     
 @app.route('/attendance/month', methods=['POST'])
 def attendance_month():
