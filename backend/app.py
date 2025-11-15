@@ -120,18 +120,31 @@ def analyze_frame():
     if angle is None:
         return jsonify({"error": "포즈 인식 실패"}), 200
     
-    # 사용자 id + 운동 종류 key 생성
-    key = f"{user_id}_{type}"
+    # 수정 부분
+    if user_id not in user_states:
+        user_states[user_id] = {}
 
-    # 사용자 상태 초기화
-    if key not in user_states:
-        user_states[key] = {
+    if type not in user_states[user_id]:
+        user_states[user_id][type] = {
             'prev_status': 0,
             'ready_to_count': True,
             'count': 0
-        }
+        } 
+    
+    state = user_states[user_id][type]
+
+    # # 사용자 id + 운동 종류 key 생성
+    # key = f"{user_id}_{type}"
+
+    # # 사용자 상태 초기화
+    # if key not in user_states:
+    #     user_states[key] = {
+    #         'prev_status': 0,
+    #         'ready_to_count': True,
+    #         'count': 0
+    #     }
         
-    state = user_states[key]
+    # state = user_states[key]
     
     if angle <= 120:
         status = 1  # 몸 굽힌 상태
@@ -164,24 +177,32 @@ def daily_mission_reward():
     if type not in ['crunch', 'leg_raise']:
         return jsonify({'error': '지원하지 않는 운동 종류 입니다.'}), 400    
 
-    key = f"{user_id}_{type}"
+    # 수정 부분
 
-    if key not in user_states:
+    if user_id not in user_states or type not in user_states[user_id]:
         return jsonify({'error': f'{type} 미션 기록이 없습니다.'}), 400
+
+    # key = f"{user_id}_{type}"
+    #
+    # if key not in user_states:
+    #    return jsonify({'error': f'{type} 미션 기록이 없습니다.'}), 400
 
     today = date.today().isoformat()
 
     if user.daily_mission_exists(user_id, today, type):
         return jsonify({'error': '오늘은 이미 해당 미션의 보상을 받았습니다.'}), 400
     
-    count = user_states[key]['count']
-    mission_goal = 5
+    count = user_states[user_id][type]['count']
+    if type == 'crunch':
+        mission_goal = 5
+    else:
+        mission_goal = 8
     success = count >= mission_goal
     
     if success:    
         user.save_daily_mission(user_id, today, type)
         user.add_point(user_id)
-        del user_states[key]
+        del user_states[user_id][type]
         return jsonify({'success': True, 'type': type}), 200
     else:
         return jsonify({'error': f'미션 목표({mission_goal}회)를 달성하지 못했습니다.'}), 400    
