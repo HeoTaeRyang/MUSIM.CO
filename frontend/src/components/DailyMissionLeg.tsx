@@ -7,9 +7,6 @@ import flameIcon from "../assets/flame.png";
 // DailyMissionVideo.tsx와 동일하게 baseURL 설정
 axios.defaults.baseURL = "https://web-production-6e732.up.railway.app";
 
-const EXERCISE_TYPE = "leg_raise"; 
-const LS_COUNT_KEY = `dailyMissionCount_${EXERCISE_TYPE}`;
-
 const DailyMissionLeg: React.FC = () => {
   // 훅 및 상태 정의
   const location = useLocation();
@@ -31,7 +28,7 @@ const DailyMissionLeg: React.FC = () => {
     if (!userId || typeof userId !== "string" || userId.trim() === "") {
       return 0;
     }
-    const storedCount = localStorage.getItem(`${LS_COUNT_KEY}_${userId}`);
+    const storedCount = localStorage.getItem(`dailyMissionCount_${userId}`);
     const parsedCount = storedCount ? parseInt(storedCount, 10) : 0;
     return isNaN(parsedCount) ? 0 : parsedCount;
   }, [userId]);
@@ -43,7 +40,7 @@ const DailyMissionLeg: React.FC = () => {
   useEffect(() => {
     if (userId && typeof userId === "string" && userId.trim() !== "") {
       localStorage.setItem(
-        `${LS_COUNT_KEY}_${userId}`,
+        `dailyMissionCount_${userId}`,
         currentCount.toString()
       );
     }
@@ -112,7 +109,7 @@ const DailyMissionLeg: React.FC = () => {
           const response = await axios.post("/api/analyze_frame", {
             image: imageData,
             user_id: userId,
-            type: EXERCISE_TYPE,
+            type: "leg_raise",
           });
 
           const { angle, status, count } = response.data;
@@ -165,8 +162,8 @@ const DailyMissionLeg: React.FC = () => {
           captureFrameAndSend,
           50
         );
-        // 🦵 레그레이즈 안내 문구로 변경
-                setResultText("다리를 수직에 가깝게 올리고 바닥에 닿기 직전까지 내리세요.");
+        // 🦵 하체 운동 안내 문구로 변경
+        setResultText("무릎을 90도 이하로 굽히고 일어서면 횟수가 올라갑니다. (스쿼트 기준)");
       }
     } catch (err) {
       console.error("카메라 접근 오류: ", err);
@@ -269,9 +266,9 @@ const DailyMissionLeg: React.FC = () => {
                     <p>
                       자세 상태:{" "}
                       {currentStatus === 1
-                        ? "다리 올림" // 스쿼트라면 '앉는 중'
+                        ? "몸 굽힘" // 스쿼트라면 '앉는 중'
                         : currentStatus === 0
-                          ? "다리 내림" // 스쿼트라면 '일어서는 중'
+                          ? "몸 폄" // 스쿼트라면 '일어서는 중'
                           : "측정 대기 중..."
                       }
                     </p>
