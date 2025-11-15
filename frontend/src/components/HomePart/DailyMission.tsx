@@ -18,7 +18,7 @@ const DailyMission: React.FC<DailyMissionProps> = ({
   missionName,
   currentCount,
   targetCount,
-  videoId,
+  // videoId, // videoId는 현재 사용되지 않음
 }) => {
   const navigate = useNavigate();
   // 보상 메시지 상태
@@ -32,17 +32,21 @@ const DailyMission: React.FC<DailyMissionProps> = ({
     setRewardMessage(null);
   }, [currentCount, targetCount]);
 
+  /*  const handleStartMission = () => {
+      console.log(
+        `Navigating to /DailyMissionVideo/${videoId} with mission data`
+      );
+      navigate(`/DailyMissionVideo/${videoId}`, {
+        state: {
+          missionName: missionName,
+          currentCount: currentCount,
+          targetCount: targetCount,
+        },
+      });
+    }; */
+  // 아래가 수정된 코드(데일리 미션 선택 페이지로 이동
   const handleStartMission = () => {
-    console.log(
-      `Navigating to /DailyMissionVideo/${videoId} with mission data`
-    );
-    navigate(`/DailyMissionVideo/${videoId}`, {
-      state: {
-        missionName: missionName,
-        currentCount: currentCount,
-        targetCount: targetCount,
-      },
-    });
+    navigate("/daily-mission/select");
   };
 
   const handleReward = async () => {
@@ -103,22 +107,19 @@ const DailyMission: React.FC<DailyMissionProps> = ({
 
   return (
     <div className="daily-mission-container">
-            {/* 상단 카드: 데일리 미션 시작 */}     {" "}
+      {/* 상단 카드: 데일리 미션 시작 */}     {" "}
       <div className="daily-mission-card top-card">
-                <img src={flameIcon} alt="Flame" className="flame-icon" />     
-         {" "}
+        <img src={flameIcon} alt="Flame" className="flame-icon" />{" "}
         <div className="daily-mission-right-content">
-                    <div className="mission-title">데일리미션</div>         {" "}
+          <div className="mission-title">데일리미션</div>         {" "}
           <button className="start-button" onClick={handleStartMission}>
-                        시작하기          {" "}
-          </button>
-                 {" "}
-        </div>
-             {" "}
+            시작하기          {" "}
+          </button>{" "}
+        </div>{" "}
       </div>
-            {/* 하단 카드: 운동 미션 진행 상황 */}     {" "}
+      {/* 하단 카드: 운동 미션 진행 상황 */}     {" "}
       <div className="daily-mission-card bottom-card">
-                <div className="exercise-name">{missionName}</div>       {" "}
+        <div className="exercise-name">{missionName}</div>       {" "}
         <div className="exercise-progress">
           {currentCount}/{targetCount}
         </div>
@@ -133,10 +134,8 @@ const DailyMission: React.FC<DailyMissionProps> = ({
         >
           보상받기
         </button>
-        {rewardMessage && <p className="reward-message">{rewardMessage}</p>}   
-         {" "}
-      </div>
-         {" "}
+        {rewardMessage && <p className="reward-message">{rewardMessage}</p>}{" "}
+      </div>{" "}
     </div>
   );
 };

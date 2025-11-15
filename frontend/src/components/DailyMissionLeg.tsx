@@ -1,21 +1,21 @@
-// src/components/DailyMissionVideo.tsx
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { useLocation, useNavigate } from "react-router-dom"; // useNavigate import 추가
-import "../styles/DailyMissionVideo.css";
+import { useLocation, useNavigate } from "react-router-dom";
+import "../styles/DailyMissionVideo.css"; // CSS는 DailyMissionVideo와 공유 (스타일 재활용)
 import axios from "axios";
 import flameIcon from "../assets/flame.png";
 
+// DailyMissionVideo.tsx와 동일하게 baseURL 설정
 axios.defaults.baseURL = "https://web-production-6e732.up.railway.app";
 
-const DailyMissionVideo: React.FC = () => {
-  //const { videoId } = useParams<{ videoId: string }>();
-  // const id = Number(videoId);  ❌ 제거
-
+const DailyMissionLeg: React.FC = () => {
+  // 훅 및 상태 정의
   const location = useLocation();
-  const navigate = useNavigate(); // useNavigate 훅 사용
+  const navigate = useNavigate();
 
   const [showCameraFeed, setShowCameraFeed] = useState(false);
+  // 🦵 하체 운동에 맞게 안내 문구 수정
   const [resultText, setResultText] = useState<string>("운동을 시작하려면 실시간 촬영을 시작해주세요.");
+  
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const userId = localStorage.getItem("user_id") || "";
@@ -23,6 +23,7 @@ const DailyMissionVideo: React.FC = () => {
   const [currentAngle, setCurrentAngle] = useState<number | null>(null);
   const [currentStatus, setCurrentStatus] = useState<number | null>(null);
 
+  // **** Local Storage 관련 로직 (DailyMissionVideo.tsx와 동일) ****
   const getInitialCountFromLocalStorage = useCallback(() => {
     if (!userId || typeof userId !== "string" || userId.trim() === "") {
       return 0;
@@ -44,6 +45,7 @@ const DailyMissionVideo: React.FC = () => {
       );
     }
   }, [currentCount, userId]);
+  // *************************************************************
 
   const captureIntervalId = useRef<number | null>(null);
   const isAnalyzing = useRef(false);
@@ -54,6 +56,7 @@ const DailyMissionVideo: React.FC = () => {
     targetCount: number;
   } | null>(null);
 
+  // **** 미션 데이터 로드 로직 (DailyMissionVideo.tsx와 동일) ****
   useEffect(() => {
     if (
       location.state &&
@@ -81,8 +84,9 @@ const DailyMissionVideo: React.FC = () => {
         "location.state에 데일리 미션 데이터가 없습니다. 데일리 미션 박스를 숨깁니다."
       );
     }
-  }, [userId, location.state]); // ✅ 여기서 id 삭제
+  }, [userId, location.state]);
 
+  // **** 프레임 캡처 및 백엔드 전송 로직 (DailyMissionVideo.tsx와 거의 동일) ****
   const captureFrameAndSend = useCallback(async () => {
     if (videoRef.current && canvasRef.current && !isAnalyzing.current) {
       const video = videoRef.current;
@@ -101,10 +105,11 @@ const DailyMissionVideo: React.FC = () => {
 
         isAnalyzing.current = true;
         try {
+          // 동일한 분석 API 사용 가정
           const response = await axios.post("/api/analyze_frame", {
             image: imageData,
             user_id: userId,
-            type: "crunch",
+            type: "leg_raise",
           });
 
           const { angle, status, count } = response.data;
@@ -120,8 +125,9 @@ const DailyMissionVideo: React.FC = () => {
             setCurrentCount(count);
           }
 
+          // 🦵 하체 운동 안내 문구로 변경
           setResultText(
-            "자세를 120도 이하로 굽히고 150도 이상으로 펴면 횟수가 올라갑니다."
+            "다리를 수직에 가깝게 올리고 바닥에 닿기 직전까지 내리면 횟수가 올라갑니다."
           );
         } catch (error) {
           console.error("프레임 분석 오류:", error);
@@ -139,8 +145,9 @@ const DailyMissionVideo: React.FC = () => {
         }
       }
     }
-  }, [userId]);
+  }, [userId]); // dailyMissionDisplayData가 captureFrameAndSend 안에서 쓰이지 않으므로 의존성 배열에서 제외했습니다.
 
+  // **** 카메라 제어 로직 (DailyMissionVideo.tsx와 동일) ****
   const startLiveCamera = async () => {
     setShowCameraFeed(true);
     setResultText("카메라 스트림 시작 중...");
@@ -155,7 +162,8 @@ const DailyMissionVideo: React.FC = () => {
           captureFrameAndSend,
           50
         );
-        setResultText("자세를 120도 이하로 굽히고 150도 이상으로 펴면 횟수가 올라갑니다.");
+        // 🦵 하체 운동 안내 문구로 변경
+        setResultText("무릎을 90도 이하로 굽히고 일어서면 횟수가 올라갑니다. (스쿼트 기준)");
       }
     } catch (err) {
       console.error("카메라 접근 오류: ", err);
@@ -183,7 +191,7 @@ const DailyMissionVideo: React.FC = () => {
   // 홈으로 이동하는 함수
   const handleGoHome = () => {
     stopLiveCamera(); // 카메라 종료
-    navigate("/"); // 홈 경로로 이동 (루트 경로로 가정)
+    navigate("/"); // 홈 경로로 이동
   };
 
   useEffect(() => {
@@ -191,10 +199,12 @@ const DailyMissionVideo: React.FC = () => {
       stopLiveCamera();
     };
   }, []);
+  // *************************************************************
 
   return (
     <div className="page-center-container">
       <div className="video-analyze-container">
+        {/* 데일리 미션 디스플레이 (UI는 DailyMissionVideo.tsx와 동일) */}
         {dailyMissionDisplayData && (
           <div className="daily-mission-cont">
             <img src={flameIcon} alt="불꽃 아이콘" className="flame-icon" />
@@ -218,16 +228,15 @@ const DailyMissionVideo: React.FC = () => {
               <div className="analyze-panel full-width">
                 <div className="analyze-header">
                   <h3>운동 분석</h3>
-                  <div className="button-group"> {/* 버튼들을 감싸는 div 추가 */}
+                  <div className="button-group">
                     <button
                       className="stop-camera-button"
                       onClick={stopLiveCamera}
                     >
                       촬영 종료
                     </button>
-                    {/* 홈으로 돌아가기 버튼 추가 */}
                     <button
-                      className="go-home-button" // 새로운 CSS 클래스 추가
+                      className="go-home-button"
                       onClick={handleGoHome}
                     >
                       홈으로 돌아가기
@@ -257,9 +266,9 @@ const DailyMissionVideo: React.FC = () => {
                     <p>
                       자세 상태:{" "}
                       {currentStatus === 1
-                        ? "몸 굽힘"
+                        ? "몸 굽힘" // 스쿼트라면 '앉는 중'
                         : currentStatus === 0
-                          ? "몸 폄"
+                          ? "몸 폄" // 스쿼트라면 '일어서는 중'
                           : "측정 대기 중..."
                       }
                     </p>
@@ -275,4 +284,4 @@ const DailyMissionVideo: React.FC = () => {
   );
 };
 
-export default DailyMissionVideo;
+export default DailyMissionLeg;
