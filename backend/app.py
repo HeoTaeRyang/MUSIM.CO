@@ -91,13 +91,11 @@ user_states = {}
 def analyze_frame():
     data = request.json
     if not data or 'image' not in data or 'user_id' not in data or 'type' not in data:
-        return jsonify({'error': '이미지, 사용자 또는 운동 종류 데이터가 없습니다.'}), 400
+        return jsonify({'error': '이미지, 사용자 또는 운동 타입 데이터가 없습니다.'}), 400
     
     user_id = data['user_id']
-    type = data['type']
-
-    if type not in ['crunch', 'leg_raise']:
-        return jsonify({'error': '지원하지 않는 운동 종류 입니다.'}), 400
+    exercise_type = data['type']
+    state_key = (user_id, exercise_type)
     
     # 이미지 디코딩
     image_b64 = data['image']
@@ -115,36 +113,23 @@ def analyze_frame():
         return jsonify({"error": "이미지 디코딩 실패"}), 400
 
     # 각도 측정
-    angle = daily.get_crunch_angle_from_frame(frame)
-    
+    if exercise_type == 'crunch' or exercise_type == 'leg_raise':
+        angle = daily.get_crunch_angle_from_frame(frame)
+    else:
+        return jsonify({"error": "유효하지 않은 운동 타입입니다."}), 400
+
     if angle is None:
         return jsonify({"error": "포즈 인식 실패"}), 200
     
-    # 수정 부분
-    if user_id not in user_states:
-        user_states[user_id] = {}
-
-    if type not in user_states[user_id]:
-        user_states[user_id][type] = {
+    # 사용자 상태 초기화
+    if state_key not in user_states:
+        user_states[state_key] = {
             'prev_status': 0,
             'ready_to_count': True,
             'count': 0
-        } 
-    
-    state = user_states[user_id][type]
-
-    # # 사용자 id + 운동 종류 key 생성
-    # key = f"{user_id}_{type}"
-
-    # # 사용자 상태 초기화
-    # if key not in user_states:
-    #     user_states[key] = {
-    #         'prev_status': 0,
-    #         'ready_to_count': True,
-    #         'count': 0
-    #     }
+        }
         
-    # state = user_states[key]
+    state = user_states[state_key]
     
     if angle <= 120:
         status = 1  # 몸 굽힌 상태
@@ -162,50 +147,41 @@ def analyze_frame():
         
     state['prev_status'] = status
     
-    return jsonify({'angle': angle, 'status': status, 'count': state['count'], 'exercise': type}), 200
+    return jsonify({'angle': angle, 'status': status, 'count': state['count']}), 200
 
 # 데일리미션 보상
 @app.route('/daily_mission/reward', methods=['POST'])
 def daily_mission_reward():
     data = request.json
     user_id = data.get('user_id')
-    type = data.get('type')
+    exercise_type = data.get('type')
     
-    if not user_id or not type:
-        return jsonify({'error': 'user_id 또는 운동 종류 데이터가 없습니다.'}), 400
+    if not user_id or exercise_type:
+        return jsonify({'error': 'user_id 또는 운동 타입이 없습니다.'}), 400
     
-    if type not in ['crunch', 'leg_raise']:
-        return jsonify({'error': '지원하지 않는 운동 종류 입니다.'}), 400    
+    state_key = (user_id, exercise_type)
 
-    # 수정 부분
-
-    if user_id not in user_states or type not in user_states[user_id]:
-        return jsonify({'error': f'{type} 미션 기록이 없습니다.'}), 400
-
-    # key = f"{user_id}_{type}"
-    #
-    # if key not in user_states:
-    #    return jsonify({'error': f'{type} 미션 기록이 없습니다.'}), 400
+    if state_key not in user_states:
+        return jsonify({'error': '해당 미션 기록이 없습니다.'}), 400
 
     today = date.today().isoformat()
 
-    if user.daily_mission_exists(user_id, today, type):
-        return jsonify({'error': '오늘은 이미 해당 미션의 보상을 받았습니다.'}), 400
+    if user.daily_mission_exists(user_id, today, exercise_type):
+        return jsonify({'error': f'오늘은 이미 {exercise_type} 미션 보상을 받았습니다.'}), 400
     
-    count = user_states[user_id][type]['count']
-    if type == 'crunch':
-        mission_goal = 5
-    else:
-        mission_goal = 8
-    success = count >= mission_goal
+    count = user_states[state_key]['count']
+    if exercise_type == 'crunch':
+        success = count >= 5
+    elif exercise_type == 'leg_raise':
+        success = count >= 8
     
     if success:    
-        user.save_daily_mission(user_id, today, type)
+        user.save_daily_mission(user_id, today, exercise_type)
         user.add_point(user_id)
-        del user_states[user_id][type]
-        return jsonify({'success': True, 'type': type}), 200
+        del user_states[state_key]
+        return jsonify({'success': True}), 200
     else:
-        return jsonify({'error': f'미션 목표({mission_goal}회)를 달성하지 못했습니다.'}), 400    
+        return jsonify({'error': '미션 목표를 달성하지 못했습니다.'}), 400      
     
 @app.route('/attendance/month', methods=['POST'])
 def attendance_month():
