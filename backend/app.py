@@ -237,31 +237,47 @@ def analyze_leg_raise():
 # 데일리미션 보상
 @app.route('/daily_mission/reward/leg_raise', methods=['POST'])
 def daily_mission_leg_reward():
-    data = request.json
-    user_id = data.get('user_id')
-    
-    if not user_id:
-        return jsonify({'error': 'user_id가 없습니다.'}), 400
-    
-    if user_id not in user_states_leg:
-        return jsonify({'error': '미션 기록이 없습니다.'}), 400
+    try:
+        data = request.json
+        user_id = data.get('user_id')
+        
+        if not user_id:
+            return jsonify({'error': 'user_id가 없습니다.'}), 400
+        
+        if user_id not in user_states_leg:
+            return jsonify({'error': '미션 기록이 없습니다.'}), 400
 
-    today = date.today().isoformat()
+        today = date.today().isoformat()
 
-    if user.daily_mission_exists(user_id, today, type="leg_raise"):
-        return jsonify({'error': '오늘은 이미 보상을 받았습니다.'}), 400
-    
-    count = user_states_leg[user_id]['count']
-    success = count >= 8
-    
-    if success:    
-        user.save_daily_mission(user_id, today, type="leg_raise")
-        user.add_point(user_id)
-        del user_states_leg[user_id]
-        return jsonify({'success': True}), 200
-    else:
-        return jsonify({'error': '미션 목표를 달성하지 못했습니다.'}), 400
-    
+        try:
+            exists = user.daily_mission_exists(user_id, today, type="leg_raise")
+        except Exception as e:
+            return jsonify({'error': f'DB 조회 실패: {str(e)}'}), 500
+
+        if exists:
+            return jsonify({'error': '오늘은 이미 보상을 받았습니다.'}), 400
+        
+        count = user_states_leg[user_id]['count']
+        success = count >= 8
+        
+        if success:    
+            try:
+                user.save_daily_mission(user_id, today, type="leg_raise")
+            except Exception as e:
+                return jsonify({'error': f'DB 저장 실패: {str(e)}'}), 500
+            
+            try:
+                user.add_point(user_id)
+            except Exception as e:
+                return jsonify({'error': f'포인트 추가 실패: {str(e)}'})
+            
+            del user_states_leg[user_id]
+            return jsonify({'success': True}), 200
+        else:
+            return jsonify({'error': '미션 목표를 달성하지 못했습니다.'}), 400
+    except Exception as e:
+        return jsonify({'error': f'서버 오류: {str(e)}'}), 500
+
 ### 레그레이즈 추가 ###
     
 @app.route('/attendance/month', methods=['POST'])
