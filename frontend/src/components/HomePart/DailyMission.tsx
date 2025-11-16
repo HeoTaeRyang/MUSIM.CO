@@ -1,5 +1,5 @@
 // src/pages/HomePart/DailyMission.tsx
-import React, { useState, useEffect } from "react"; // useEffect도 필요, currentCount 변경 감지
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../styles/DailyMission.css";
 import flameIcon from "../../assets/flame.png";
@@ -7,50 +7,36 @@ import axios from "axios";
 
 axios.defaults.baseURL = "https://web-production-6e732.up.railway.app";
 
+type MissionKey = "crunch" | "leg_raise";
+
 interface DailyMissionProps {
   missionName: string;
   currentCount: number;
   targetCount: number;
-  videoId: string;
+  missionKey: MissionKey;
 }
 
 const DailyMission: React.FC<DailyMissionProps> = ({
   missionName,
   currentCount,
   targetCount,
-  // videoId, // videoId는 현재 사용되지 않음
+  missionKey,
 }) => {
   const navigate = useNavigate();
-  // 보상 메시지 상태
   const [rewardMessage, setRewardMessage] = useState<string | null>(null);
-  // 보상 버튼 클릭으로 API 호출 중인지 여부 (중복 클릭 방지)
   const [isProcessingReward, setIsProcessingReward] = useState(false);
 
-  // currentCount나 targetCount가 변경될 때마다 rewardMessage 초기화
-  // (예: 미션 진행 중 횟수가 증가하면 이전 보상 메시지 숨김)
   useEffect(() => {
     setRewardMessage(null);
   }, [currentCount, targetCount]);
 
-  /*  const handleStartMission = () => {
-      console.log(
-        `Navigating to /DailyMissionVideo/${videoId} with mission data`
-      );
-      navigate(`/DailyMissionVideo/${videoId}`, {
-        state: {
-          missionName: missionName,
-          currentCount: currentCount,
-          targetCount: targetCount,
-        },
-      });
-    }; */
-  // 아래가 수정된 코드(데일리 미션 선택 페이지로 이동
   const handleStartMission = () => {
     navigate("/daily-mission/select");
   };
 
   const handleReward = async () => {
-    const userId = localStorage.getItem("user_id");
+    const rawUserId = localStorage.getItem("user_id");
+    const userId = rawUserId ? rawUserId.trim() : "";
     const isMissionCompleted = currentCount >= targetCount;
 
     if (!userId) {
@@ -63,24 +49,41 @@ const DailyMission: React.FC<DailyMissionProps> = ({
       return;
     }
 
-    if (isProcessingReward) {
-      // 중복 클릭 방지
-      return;
-    }
+    if (isProcessingReward) return;
 
-    setIsProcessingReward(true); // 보상 처리 시작
+    setIsProcessingReward(true);
     setRewardMessage("보상 처리 중...");
 
     try {
-      const response = await axios.post("/daily_mission/reward", {
+      // ✔ crunch와 leg_raise 라우트 분기
+      const endpoint =
+        missionKey === "crunch"
+          ? "/daily_mission/reward"
+          : "/daily_mission/reward/leg_raise";
+
+      // ✔ MUST: JSON 데이터 명시적으로 보내야 Flask가 request.json 안 놓침
+      const payload = {
         user_id: userId,
+        count: currentCount,
+      };
+
+      console.log("보상 요청 endpoint:", endpoint, payload);
+
+      const response = await axios.post(endpoint, payload, {
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
+
+      console.log("보상 API 응답:", response.data);
 
       if (response.data.success) {
         setRewardMessage("미션 성공! 보상을 받았습니다!");
-        // 보상을 받은 후 localStorage의 횟수를 0으로 초기화
-        localStorage.setItem(`dailyMissionCount_${userId}`, "0");
-        // 페이지 새로고침하여 Home 컴포넌트의 currentCount를 업데이트 (가장 간단한 방법)
+
+        // ✔ 해당 운동 카운트만 초기화
+        localStorage.setItem(`dailyMissionCount_${userId}_${missionKey}`, "0");
+
+        // ✔ 새로고침
         window.location.reload();
       } else {
         setRewardMessage(
@@ -89,10 +92,11 @@ const DailyMission: React.FC<DailyMissionProps> = ({
       }
     } catch (error) {
       console.error("보상 API 호출 오류:", error);
+
       if (axios.isAxiosError(error) && error.response) {
-        setRewardMessage(
-          `보상 오류: ${error.response.data.error || error.message}`
-        );
+        const data = error.response.data;
+        console.error("보상 API 에러 응답:", data);
+        setRewardMessage(`보상 오류: ${data?.error || error.message}`);
       } else {
         setRewardMessage(
           `보상 중 오류 발생: ${
@@ -101,31 +105,31 @@ const DailyMission: React.FC<DailyMissionProps> = ({
         );
       }
     } finally {
-      setIsProcessingReward(false); // 보상 처리 완료 (성공/실패 무관)
+      setIsProcessingReward(false);
     }
   };
 
   return (
     <div className="daily-mission-container">
-      {/* 상단 카드: 데일리 미션 시작 */}     {" "}
+      {/* 상단 카드 */}
       <div className="daily-mission-card top-card">
-        <img src={flameIcon} alt="Flame" className="flame-icon" />{" "}
+        <img src={flameIcon} alt="Flame" className="flame-icon" />
         <div className="daily-mission-right-content">
-          <div className="mission-title">데일리미션</div>         {" "}
+          <div className="mission-title">데일리미션</div>
           <button className="start-button" onClick={handleStartMission}>
-            시작하기          {" "}
-          </button>{" "}
-        </div>{" "}
+            시작하기
+          </button>
+        </div>
       </div>
-      {/* 하단 카드: 운동 미션 진행 상황 */}     {" "}
+
+      {/* 하단 카드 */}
       <div className="daily-mission-card bottom-card">
-        <div className="exercise-name">{missionName}</div>       {" "}
+        <div className="exercise-name">{missionName}</div>
         <div className="exercise-progress">
           {currentCount}/{targetCount}
         </div>
-        {/* 보상받기 버튼: 항상 표시, 조건부 활성화/스타일 */}
+
         <button
-          // 50개 미만일 때, 또는 보상 처리 중일 때 비활성화
           className={`reward-button ${
             currentCount >= targetCount ? "active" : "inactive"
           }`}
@@ -134,8 +138,9 @@ const DailyMission: React.FC<DailyMissionProps> = ({
         >
           보상받기
         </button>
-        {rewardMessage && <p className="reward-message">{rewardMessage}</p>}{" "}
-      </div>{" "}
+
+        {rewardMessage && <p className="reward-message">{rewardMessage}</p>}
+      </div>
     </div>
   );
 };
