@@ -13,7 +13,7 @@ interface DailyMissionProps {
   missionName: string;
   currentCount: number;
   targetCount: number;
-  missionKey: MissionKey;
+  missionKey: MissionKey; // ✅ 어떤 운동인지 구분
 }
 
 const DailyMission: React.FC<DailyMissionProps> = ({
@@ -26,6 +26,7 @@ const DailyMission: React.FC<DailyMissionProps> = ({
   const [rewardMessage, setRewardMessage] = useState<string | null>(null);
   const [isProcessingReward, setIsProcessingReward] = useState(false);
 
+  // 진행도 바뀌면 메시지 초기화
   useEffect(() => {
     setRewardMessage(null);
   }, [currentCount, targetCount]);
@@ -55,35 +56,33 @@ const DailyMission: React.FC<DailyMissionProps> = ({
     setRewardMessage("보상 처리 중...");
 
     try {
-      // ✔ crunch와 leg_raise 라우트 분기
-      const endpoint =
-        missionKey === "crunch"
-          ? "/daily_mission/reward"
-          : "/daily_mission/reward/leg_raise";
+      // 🔥 분기 안정화
+      const safeKey = String(missionKey).trim();
+      let endpoint = "/daily_mission/reward";
 
-      // ✔ MUST: JSON 데이터 명시적으로 보내야 Flask가 request.json 안 놓침
+      if (
+        safeKey === "leg_raise" ||
+        safeKey === "legraise" ||
+        safeKey === "leg-raise"
+      ) {
+        endpoint = "/daily_mission/reward/leg_raise";
+      }
+
+      console.log("🔥 최종 보상 endpoint =", endpoint);
+      console.log("🔥 missionKey =", missionKey);
+
       const payload = {
         user_id: userId,
         count: currentCount,
       };
 
-      console.log("보상 요청 endpoint:", endpoint, payload);
-
       const response = await axios.post(endpoint, payload, {
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
       });
-
-      console.log("보상 API 응답:", response.data);
 
       if (response.data.success) {
         setRewardMessage("미션 성공! 보상을 받았습니다!");
-
-        // ✔ 해당 운동 카운트만 초기화
         localStorage.setItem(`dailyMissionCount_${userId}_${missionKey}`, "0");
-
-        // ✔ 새로고침
         window.location.reload();
       } else {
         setRewardMessage(
@@ -111,7 +110,7 @@ const DailyMission: React.FC<DailyMissionProps> = ({
 
   return (
     <div className="daily-mission-container">
-      {/* 상단 카드 */}
+      {/* 상단 카드: 데일리 미션 시작 */}
       <div className="daily-mission-card top-card">
         <img src={flameIcon} alt="Flame" className="flame-icon" />
         <div className="daily-mission-right-content">
@@ -122,7 +121,7 @@ const DailyMission: React.FC<DailyMissionProps> = ({
         </div>
       </div>
 
-      {/* 하단 카드 */}
+      {/* 하단 카드: 운동 미션 진행 상황 */}
       <div className="daily-mission-card bottom-card">
         <div className="exercise-name">{missionName}</div>
         <div className="exercise-progress">

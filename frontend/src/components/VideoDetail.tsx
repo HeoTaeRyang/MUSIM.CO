@@ -158,11 +158,6 @@ const VideoDetail: React.FC<Props> = (props) => {
     }
   };
 
-  const handleCartClick = () => {
-    props.onCartClick?.();
-    navigate(`/video/${video.id}/purchase`, { state: { video } });
-  };
-
   const handleAnalyzeClick = () => {
     props.onAnalyzeClick?.();
     navigate(`/video/${video.id}/VideoAnalyze`, { state: { video } });
@@ -294,9 +289,9 @@ const VideoDetail: React.FC<Props> = (props) => {
             <button className="side-btn" onClick={handleAnalyzeClick}>
               <img src="/camera.png" alt="분석" />
             </button>
-            <button className="side-btn" onClick={handleCartClick}>
+            {/* <button className="side-btn" onClick={handleCartClick}>
               <img src="/cart.png" alt="장바구니" />
-            </button>
+            </button> */}
             <button className="side-btn" onClick={toggleFavorite}>
               <img
                 src={isFavorite ? "/star-filled.png" : "/Star.png"}
