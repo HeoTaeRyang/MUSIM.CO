@@ -528,9 +528,8 @@ const Exercise = () => {
 
     return (
       <div
-        className={`banner-container ${
-          !videoData || videoData.id < 0 ? "empty" : ""
-        } ${isCentral ? "central" : "side"}`}
+        className={`banner-container ${!videoData || videoData.id < 0 ? "empty" : ""
+          } ${isCentral ? "central" : "side"}`}
         onClick={handleBannerClick}
         style={{
           cursor: videoData && videoData.id > 0 ? "pointer" : "default",
@@ -606,9 +605,8 @@ const Exercise = () => {
               // `carouselLength`에 기반하여 전체 너비 중 각 슬라이드의 비율을 계산합니다.
               // `transition` 속성은 CSS에서 정의하여 애니메이션을 적용합니다.
               style={{
-                transform: `translateX(-${
-                  centralBannerIndex * (100 / carouselLength)
-                }%)`,
+                transform: `translateX(-${centralBannerIndex * (100 / carouselLength)
+                  }%)`,
                 transition: isAnimating.current
                   ? "transform 0.5s ease-in-out"
                   : "none", // 애니메이션 중일 때만 transition 적용
@@ -762,14 +760,7 @@ const Exercise = () => {
             운동 영상 데이터를 불러오는 중...
           </div>
         )}
-        {errorVideos && (
-          <div
-            className="error-message"
-            style={{ color: "red", textAlign: "center", padding: "20px" }}
-          >
-            데이터 로드 중 오류가 발생했습니다: {errorVideos}
-          </div>
-        )}
+
 
         {!loadingVideos && videosToDisplay.length > 0 ? (
           videosToDisplay.map((video) => (
